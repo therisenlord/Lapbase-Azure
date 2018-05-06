@@ -1,0 +1,544 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="GroupReportForm.aspx.cs"
+    Inherits="Reports_GroupReport_GroupReportForm" %>
+
+<%@ Register TagPrefix="wucMenu" TagName="Menu" Src="~/UserControl/MenuWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucTextBox" TagName="TextBox" Src="~/UserControl/TextBoxWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucHospital" TagName="HospitalList" Src="~/UserControl/HospitalListWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucRegion" TagName="RegionList" Src="~/UserControl/RegionListWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucDoctor" TagName="DoctorList" Src="~/UserControl/DoctorsListWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucCode" TagName="CodeList" Src="~/UserControl/CodeWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucSystemCode" TagName="SystemCodeList" Src="~/UserControl/SystemCodeWUCtrl.ascx" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>LapBase - A Data Manager for Bariatric Surgery</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link href='<%$ AppSettings:CssUrl%>' rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript" src="../../Scripts/Global.js"></script>
+
+    <script type="text/javascript" src="Includes/GroupReport.js"></script>
+
+    <style type="text/css">
+	    .Paginationbody {
+		    margin: 20px;
+		    padding: 0;
+		    color: #5f626a;
+		    font-size: 76%;
+		    behavior: url(csshover.htc);
+		    font-family: "lucida grande", arial, verdana, helvetica, sans-serif;
+		    background: #fff url(../img/bg.gif) repeat-x top left;
+		    text-align: left;
+		    }
+    </style>
+</head>
+<body runat="server" id="bodyGroupReport">
+    <wucMenu:Menu runat="server" ID="mainMenu" />
+    <div class="tabMenus">
+        <div class="greyTabMenu">
+            <ul>
+                <%--<li id = "li_Home" ><a id="a_Home" href="~/Forms/PatientsVisits/PatientsVisitsForm.aspx" runat = "server" >Patient List</a></li>--%>
+                <li id="li_Div1" class="current"><a id="a_GroupReport" href="#" onclick="javascript:LoadDiv(1);">
+                    Group Reports</a></li>
+                <li id="li_Div2" runat="server" style="display: none"><a id="a_ACSReport" href="#"
+                    onclick="javascript:LoadDiv(2);">ACS Reports</a></li>
+            </ul>
+        </div>
+    </div>
+    <form id="frmGroupReport" runat="server">
+        <asp:ScriptManager ID="_ScriptManager" runat="server" AsyncPostBackTimeout="60000">
+        </asp:ScriptManager>
+        <div class="contentArea">
+            <div id="divErrorMessage" style="display: none;" runat="server">
+                <span>
+                    <p id="pErrorMessage" runat="server">
+                    </p>
+                </span>
+            </div>
+            <div class="greyContentWrap">
+                <div class="groupReportsSection" id="divGroupReport">
+                    <div class="groupReports">
+                        <h3>
+                            <img runat="server" alt="." src="~/img/ico_group.gif" height="16" width="16" />Group
+                            Reports - Selection Criteria</h3>
+                        <h3 id="hDoctorHospital">
+                            Surgeon and Hospital</h3>
+                        <ul>
+                            <asp:UpdatePanel runat="server" ID="updatePanel1">
+                                <ContentTemplate>
+                                    <table style="width: 100%">
+                                        <tr>
+                                            <td style="width: 20%">
+                                                <asp:Label runat="server" ID="lblDoctor" Text="Surgeon" IsSurgeon="True" />
+                                            </td>
+                                            <td style="width: 80%">
+                                                <asp:LinkButton runat="Server" ID="btnSurgeon" OnClick="btnSurgeon_OnClick" Style="display: none"
+                                                    OnClientClick="alert(1);" />
+                                                <wucDoctor:DoctorList runat="server" ID="cmbSurgeon" Width="75" IsSurgeon="True"
+                                                    IsHide="False" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <asp:Label runat="server" ID="lblHospital" Text="Hospital" />
+                                            </td>
+                                            <td>
+                                                <wucHospital:HospitalList runat="Server" ID="cmbHospital" Width="75" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <asp:Label runat="server" ID="lblRegion" Text="Region" />
+                                            </td>
+                                            <td>
+                                                <wucRegion:RegionList runat="Server" ID="cmbRegion" Width="75" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </ContentTemplate>
+                                <Triggers>
+                                    <asp:AsyncPostBackTrigger ControlID="btnSurgeon" EventName="Click" />
+                                </Triggers>
+                            </asp:UpdatePanel>
+                        </ul>
+                        <br />
+                        <h3 id="hOperationDate">
+                            Surgeon and Hospital</h3>
+                        <ul>
+                            <asp:UpdatePanel runat="server" ID="updatePanel2">
+                                <ContentTemplate>
+                                    <table border="0" style="width: 100%">
+                                        <tr>
+                                            <td style="width: 20%">
+                                                <asp:Label ID="lblOperationDate" runat="Server" Text="Start" /></td>
+                                            <td style="width: 80%">
+                                                <wucTextBox:TextBox ID="txtSDate" runat="server" maxLength="10" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <asp:Label ID="Label1" runat="Server" Text="End" /></td>
+                                            <td>
+                                                <wucTextBox:TextBox ID="txtEDate" runat="server" maxLength="10" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </ContentTemplate>
+                                <Triggers>
+                                    <asp:AsyncPostBackTrigger ControlID="btnSurgeon" EventName="Click" />
+                                </Triggers>
+                            </asp:UpdatePanel>
+                        </ul>
+                        <br />
+                        <h3 id="hPatientAge">
+                            Patient</h3>
+                        <ul>
+                            <asp:UpdatePanel runat="server" ID="updatePanel3">
+                                <ContentTemplate>
+                                    <table style="width: 100%">
+                                        <tr>
+                                            <td style="width: 10%">
+                                                <b>
+                                                    <asp:Label ID="lblAge" runat="Server" Text="Age" /></b></td>
+                                            <td style="width: 10%">
+                                                <asp:Label ID="lblPatientAge" runat="Server" Text="Min" /></td>
+                                            <td style="width: 10%">
+                                                <wucTextBox:TextBox ID="txtMinAge" runat="server" maxLength="4" width="30px" />
+                                            </td>
+                                            <td style="width: 15%">
+                                                &nbsp;</td>
+                                            <td style="width: 20%">
+                                                <b>
+                                                    <asp:Label ID="lblInitBMI" runat="Server" Text="Initial BMI" /></b></td>
+                                            <td style="width: 10%">
+                                                <asp:Label ID="lblPatientBMI" runat="Server" Text="Min" /></td>
+                                            <td style="width: 10%">
+                                                <wucTextBox:TextBox ID="txtMinBMI" runat="server" maxLength="4" width="30px" />
+                                            </td>
+                                            <td style="width: 15%">
+                                                &nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                &nbsp;</td>
+                                            <td>
+                                                <asp:Label ID="Label7" runat="Server" Text="Max" /></td>
+                                            <td>
+                                                <wucTextBox:TextBox ID="txtMaxAge" runat="server" maxLength="4" width="30px" />
+                                            </td>
+                                            <td colspan="2">
+                                                &nbsp;</td>
+                                            <td>
+                                                <asp:Label ID="Label8" runat="Server" Text="Max" /></td>
+                                            <td>
+                                                <wucTextBox:TextBox ID="txtMaxBMI" runat="server" maxLength="4" width="30px" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="8">
+                                                <table width="100%">
+                                                    <tr>
+                                                        <td style="width: 20%">
+                                                            <b>
+                                                                <asp:Label ID="lblSurgeryType" runat="Server" Text="Operation" /></b></td>
+                                                        <td style="width: 80%">
+                                                            <wucSystemCode:SystemCodeList runat="server" ID="cmbSurgeryType" Width="100" CriteriaString="BST"
+                                                                BoldData="BST" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <b>
+                                                                <asp:Label ID="lblApproachType" runat="Server" Text="Approach" /></b></td>
+                                                        <td>
+                                                            <wucSystemCode:SystemCodeList runat="server" ID="cmbApproach" Width="100" CriteriaString="Approach"
+                                                                BoldData="Approach" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <b>
+                                                                <asp:Label ID="lblCategoryType" runat="Server" Text="Category" /></b></td>
+                                                        <td>
+                                                            <wucCode:CodeList runat="server" ID="cmbCategory" Width="100" CriteriaString="PC" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <b>
+                                                                <asp:Label ID="lblGroup" runat="Server" Text="Group" /></b></td>
+                                                        <td>
+                                                            <wucCode:CodeList runat="server" ID="cmbGroup" Width="100" CriteriaString="GRO" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <b>
+                                                                <asp:Label ID="lblBandType" runat="Server" Text="Band Type" /></b></td>
+                                                        <td>
+                                                            <wucSystemCode:SystemCodeList runat="server" ID="ddlBandType" Width="100" CriteriaString="BandType"
+                                                                BoldData="BandType" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <b>
+                                                                <asp:Label ID="lblBandSize" runat="Server" Text="Band Size" /></b></td>
+                                                        <td>
+                                                            <wucSystemCode:SystemCodeList runat="server" ID="cmbBandSize" Width="100" CriteriaString="SIZE" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </ContentTemplate>
+                                <Triggers>
+                                    <asp:AsyncPostBackTrigger ControlID="btnSurgeon" EventName="Click" />
+                                </Triggers>
+                            </asp:UpdatePanel>
+                        </ul>
+                        <br />
+                        <div class="boxBtm">
+                        </div>
+                    </div>
+                    <div class="excellReports">
+                        <h3>
+                            <img runat="server" alt="." src="~/img/ico_award.gif" height="16" width="16" />Select
+                            your reports to generate</h3>
+                        <ul>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(0);"
+                                    checked />&nbsp;
+                                <label id="Label3" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(0);">
+                                    Weight Loss</label><br />
+                                <table border="0">
+                                    <tr>
+                                        <td rowspan="2" style="width: 20px" />
+                                        <td>
+                                            <input type="checkbox" id="chkPatientDetails" /></td>
+                                        <td>
+                                            <label id="lblPatientDetails" onmouseover="javascript:if (!this.disabled) this.style.cursor='pointer';"
+                                                onmouseout="javascript:this.style.cursor='';" onclick="javascript:if (!this.disabled) $get('chkPatientDetails').checked = !$get('chkPatientDetails').checked;">
+                                                All Patient Details</label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" id="chkEWLdistribution" /></td>
+                                        <td>
+                                            <label id="lblEWLDistribution" onmouseover="javascript:if (!this.disabled) this.style.cursor='pointer';"
+                                                onmouseout="javascript:this.style.cursor='';" onclick="javascript:if (!this.disabled) $get('chkEWLdistribution').checked = !$get('chkEWLdistribution').checked;">
+                                                Summary Details</label>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </li>
+                            <li>
+                                <img src="../../img/line.png" alt="." /><br />
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(1);" />&nbsp;
+                                <label id="lblComplicationSummary" onmouseover="javascript:this.style.cursor='pointer';"
+                                    onmouseout="javascript:this.style.cursor='';" onclick="javascript:CheckGroupReportRadioBtn(1);">
+                                    Adverse Event Summary
+                                </label>
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(2);" />&nbsp;
+                                <label id="lblComplicationSummaryByPatient" onmouseover="javascript:this.style.cursor='pointer';"
+                                    onmouseout="javascript:this.style.cursor='';" onclick="javascript:CheckGroupReportRadioBtn(2);">
+                                    Adverse Event Summary By Patient</label>
+                            </li>
+                            <li style="display: none">
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(3);" />&nbsp;
+                                <label id="lblOperationLOS" onmouseover="javascript:this.style.cursor='pointer';"
+                                    onmouseout="javascript:this.style.cursor='';" onclick="javascript:CheckGroupReportRadioBtn(3);">
+                                    Operation duration with LOS</label>
+                            </li>
+                            <li style="display: none">
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(4);" />&nbsp;
+                                <label id="Label2" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(4);">
+                                    Patient list with complications</label>
+                            </li>
+                            <li style="display: none">
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(5);" />&nbsp;
+                                <label id="Label4" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(5);">
+                                    Summary Only</label>
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(6);" />&nbsp;
+                                <label id="Label5" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(6);">
+                                    BMI and %EWL Graph</label>
+                            </li>
+                            <li>
+                                <img src="../../img/line.png" alt="." /><br />
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(7);" />&nbsp;
+                                <label id="Label6" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(7);">
+                                    Operation Details</label>
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(8);" />&nbsp;
+                                <label id="Label2" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(8);">
+                                    Patient Progress</label>
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(9);" />&nbsp;
+                                <label id="lblPatientList" onmouseover="javascript:this.style.cursor='pointer';"
+                                    onmouseout="javascript:this.style.cursor='';" onclick="javascript:CheckGroupReportRadioBtn(9);">
+                                    Patient Lists</label>
+                                <table border="0">
+                                    <tr>
+                                        <td rowspan="2" style="width: 20px" />
+                                        <td>
+                                            <input type="checkbox" id="chkPatientFollowUp" /></td>
+                                        <td>
+                                            <label id="lblPatientFollowUp" onmouseover="javascript:if (!this.disabled) this.style.cursor='pointer';"
+                                                onmouseout="javascript:this.style.cursor='';" onclick="javascript:if (!this.disabled) $get('chkPatientFollowUp').checked = !$get('chkPatientFollowUp').checked;">
+                                                Display patients that have not been followed up for </label> <input type="text" id="monthsFollowup" size="2" maxlength="3"/> <label> months</label>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </li>
+                            <li>
+                                <input type="radio" name="rdGroupReports" onclick="javascript:CheckGroupReportRadioBtn(10);" />&nbsp;
+                                <label id="lblPatientContact" onmouseover="javascript:this.style.cursor='pointer';" onmouseout="javascript:this.style.cursor='';"
+                                    onclick="javascript:CheckGroupReportRadioBtn(10);">
+                                    Patient Contact</label>
+                            </li>
+                            <li>
+                                <br />
+                                <table border="0" style="width: 100%">
+                                    <tr>
+                                        <td style="width: 150px">
+                                            Select report format :
+                                        </td>
+                                        <td>
+                                            <select id="cmbReportFormat" style="display: block; width: 100px">
+                                                <option value="3" selected="true">PDF</option>
+                                                <option value="2">Excel</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </li>
+                        </ul>
+                        <div id="divPrintBtns" style="display: block" class="printButtons">
+                            <iframe id="frameReport" style="width: 0; height: 0; visibility: hidden"></iframe>
+                            <input type="button" id="btnPreview" value="Preview" onclick="javascript:BuildReport(1);"
+                                style="width: 80px" />&nbsp;
+                            <input type="button" id="btnPrint" value="Print" onclick="javascript:BuildReport(0);"
+                                style="width: 80px" />
+                        </div>
+                    </div>
+                    <div class="clr">
+                    </div>
+                </div>
+                <div class="home" id="divACSReport" style="display: none">
+                    <div class="homeTopPanelWrap">
+                        <div class="homeTopPanel">
+                            <div class="boxTop">
+                                <div class="frontSearchBox">
+                                    <h3 id="hPatientSearch">
+                                        Patient Search</h3>
+                                    <div class="frontSearchBoxBg">
+                                        <table width="385" border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td align="right">
+                                                    <asp:Label Text="Surname" ID="lblSurName" runat="server" /></td>
+                                                <td align="right">
+                                                    <wucTextBox:TextBox runat="server" ID="txtSurName" width="150px" AutoPostBack="false" />
+                                                </td>
+                                                <td align="right">
+                                                    <input style="width: 60px" type="button" value="Search" onclick="javascript:LoadAllPatients('ShowAll', document.getElementById('cmbSortBy').value, document.getElementById('cmbSortBy').value == 3 ? 'DESC' : 'ASC');" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td align="right">
+                                                    <asp:Label Text="Firstname" ID="lblName" runat="server" /></td>
+                                                <td align="right">
+                                                    <wucTextBox:TextBox runat="server" ID="txtName" width="150px" AutoPostBack="false" />
+                                                </td>
+                                                <td align="right">
+                                                    <input style="width: 60px" type="button" value="Clear" onclick="javascript:btnShowAll_onclick();" />
+                                                    <input type="button" value="Search" id="btnSearch" style="display: none" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="quickLinkPanel">
+                                    <h3 id="hBrowseByFirstLetter">
+                                        Browse patients by first letter of surname</h3>
+                                    <div class="letterSort" id="divCharacters" runat="server">
+                                    </div>
+                                </div>
+                                <div class="addNewPatient" runat="server" id="divAddNewPatient">
+                                    <h3 id="hAddNewPatient">
+                                        Applies to Form 5 6 7</h3>
+                                    <div class="addNewPatientBg">
+                                        Period
+                                        <input type="text" id="form5PeriodNum" maxlength="3" style="width: 22px" />
+                                        <select id="form5Period" style="width: 65px">
+                                            <option value="m" selected="true">Month</option>
+                                            <option value="y">Year</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="boxBtm">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clr">
+                        </div>
+                    </div>
+                    <div class="visitSortBy" style="display: none">
+                        <label for="cmbSortBy">
+                            <asp:Label runat="server" ID="lblSortBy" Text="Sort by" />
+                            <wucSystemCode:SystemCodeList runat="server" ID="cmbSortBy" Width="30" FirstRow="false"
+                                autoPostBack="false" CriteriaString="SORT" onchange="javascript:cmbSortBy_onchange();" />
+                        </label>
+                    </div>
+                    <div class="viewPatientList">
+                        <div class="boxTop">
+                            <div class="viewPatientListTitle">
+                                <table style="width: 900px" cellpadding="0" cellspacing="1" border="0">
+                                    <tr>
+                                        <td style="width: 85px">
+                                            <a href="#" onclick="javascript:SortByPatientID(this);" id="lblPatientID_TC" runat="server">
+                                                Patient ID</a>
+                                        </td>
+                                        <td style="width: 131px">
+                                            <a href="#" onclick="javascript:SortByName(this);" id="lblName_TC" runat="server">Surname</a>
+                                        </td>
+                                        <td style="width: 107px">
+                                            <a href="#" onclick="javascript:SortByFName(this);" id="lblFName_TC" runat="server">
+                                                First Name</a>
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 1
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 2
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 3
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 4
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 5
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 6
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 7
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 8
+                                        </td>
+                                        <td style="width: 56px">
+                                            Form 9
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <asp:UpdatePanel runat="server" ID="up_PatientsList" UpdateMode="Conditional">
+                                <ContentTemplate>
+                                    <div class="patientACSScroll" id="div_PatientsList" runat="server" />
+                                    <div class="Paginationbody">
+                                        <div id="div_PagesNo" runat="Server" class="pagination" style="width: 100%; text-align: center" />
+                                    </div>
+                                </ContentTemplate>
+                                <Triggers>
+                                    <asp:AsyncPostBackTrigger ControlID="btnLoad" EventName="Click" />
+                                    <asp:AsyncPostBackTrigger ControlID="btnACSForm" EventName="Click" />
+                                </Triggers>
+                            </asp:UpdatePanel>
+                            <div class="boxBtm">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clr">
+                    </div>
+                    <asp:UpdatePanel runat="server" ID="upHidden" UpdateMode="Conditional">
+                        <ContentTemplate>
+                            <asp:HiddenField runat="Server" ID="txtHPageNo" Value="1" />
+                            <asp:HiddenField runat="server" ID="txtHText" />
+                            <asp:HiddenField runat="server" ID="txtHAction" />
+                            <asp:HiddenField runat="server" ID="txtHSurgeryType" />
+                            <asp:HiddenField runat="Server" ID="txtHApplicationURL" />
+                            <asp:HiddenField runat="Server" ID="txtHCulture" />
+                            <asp:HiddenField runat="Server" ID="TitleLoaded" Value="0" />
+                            <asp:HiddenField runat="server" ID="txtHShowType" Value="" />
+                            <asp:HiddenField runat="server" ID="txtHSortOrder" Value="" />
+                            <asp:HiddenField runat="server" ID="txtHPageQty" Value="0" />
+                            <asp:HiddenField runat="server" ID="txtHPatientId" Value="0" />
+                            <asp:HiddenField runat="server" ID="txtHACSValue" Value="" />
+                            <asp:HiddenField runat="server" ID="txtHACSForm" Value="" />
+                            <asp:LinkButton ID="btnLoad" runat="server" Text="My Link" OnClick="btnLoad_onlick"
+                                Style="display: none;" />
+                            <asp:LinkButton ID="btnACSForm" runat="server" OnClick="btnACSForm_OnClick" Style="display: none;" />
+                        </ContentTemplate>
+                        <Triggers>
+                            <asp:AsyncPostBackTrigger ControlID="btnLoad" EventName="Click" />
+                            <asp:AsyncPostBackTrigger ControlID="btnACSForm" EventName="Click" />
+                        </Triggers>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+        </div>
+        <input type="text" id="ReportCode" value="" style="display: none" />
+    </form>
+</body>
+</html>

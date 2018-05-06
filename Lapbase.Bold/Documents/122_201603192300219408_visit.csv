@@ -1,0 +1,2 @@
+surname,firstname,dob(mm/dd/yyyy),visitdate(mm/dd/yyyy),visitseenbyid(value always 0),visitweight,visitheight,visitseenbysurname,visitseenbyfirstname,visitnotes
+Smithy,Joos,12/03/1980,12/03/1980,0,120,180,test,test,

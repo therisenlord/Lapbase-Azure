@@ -1,0 +1,157 @@
+10
+
+dir
+4
+file:///C:/Web%20Apps/Repository/Trunk/Lapbase/Lapbase/Lapbase.Business
+file:///C:/Web%20Apps/Repository
+
+
+
+2012-01-13T03:41:37.978270Z
+4
+Ferry I
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9f95a3f6-a9fc-4845-8951-31950289fa43
+
+Web References
+dir
+
+Lapbase.Business.csproj
+file
+
+
+
+
+2012-01-13T05:29:18.007250Z
+5136993eee7760dab093a09780b9dfc8
+2012-01-10T05:26:32.180500Z
+2
+Ferry I
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+6305
+
+PatientsList
+dir
+
+Patient
+dir
+
+app.config
+file
+
+
+
+
+2012-01-13T05:29:18.007250Z
+8898fbf9f89b32d76e150f26bf33d507
+2012-01-10T05:26:32.180500Z
+2
+Ferry I
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+917
+
+Login
+dir
+
+bin
+dir
+
+Base
+dir
+
+obj
+dir
+
+ExportToSRC
+dir
+
+Properties
+dir
+
+Lapbase.Business.csproj.user
+file
+
+
+
+
+2012-01-13T05:29:18.022875Z
+7fbff98b64d947ecb8664144197fcc02
+2012-01-10T05:26:32.180500Z
+2
+Ferry I
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+168
+

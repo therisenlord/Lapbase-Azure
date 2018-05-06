@@ -1,0 +1,345 @@
+using System;
+using System.Data;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using Microsoft.Web.UI;
+
+public partial class Forms_ImportExportData_ImportExportDatabase : System.Web.UI.Page
+{
+    GlobalClass gClass = new GlobalClass();
+    string strScript = "";
+    Boolean ExportFlag = false;
+    string strMDBFileName = "";
+    string strMDBPath = "";
+    string strLDBFileName = "";
+    string strLDBPath = "";
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+
+        try
+        {
+            strMDBFileName = "MyLapbase" + Request.Cookies["UserPracticeCode"].Value + ".MDB";
+            strMDBPath = Server.MapPath(".") + "/MDB/" + strMDBFileName;
+            strLDBFileName = "MyLapbase" + Request.Cookies["UserPracticeCode"].Value + ".LDB";
+            strLDBPath = Server.MapPath(".") + "/MDB/" + strLDBFileName;
+
+            Page.Culture = Request.Cookies["CultureInfo"].Value;
+            gClass.LanguageCode = Request.Cookies["LanguageCode"].Value;
+            gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+            if (gClass.IsUserLogoned(Session.SessionID, Request.Cookies["UserPracticeCode"].Value, Request.Url.Host))
+            {
+                if (!IsPostBack)
+                {
+                    gClass.SaveUserLogFile(Request.Cookies["UserPracticeCode"].Value,
+                                            Request.Cookies["Logon_UserName"].Value,
+                                            Request.Url.Host,
+                                            "Import/Export Data Form", 2, "Browse", "", "");
+                    bodyImportExportData.Style.Add("Direction", Request.Cookies["Direction"].Value);
+                    CheckQueryString();
+
+                }
+            }
+            else
+            {
+                gClass.ReturnToLoginPage(Request.Url.Host, Request.Cookies["LanguageCode"].Value, Response);
+            }
+        }
+        catch(Exception err)
+        {
+            string strLanguageCode;
+            try
+            {
+                strLanguageCode = Request.Cookies["LanguageCode"].Value;
+                gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Import/Export data form", "Loading Patient List (Page_Load function)", err.ToString());
+            }
+            catch { strLanguageCode = "en-US"; }
+            gClass.ReturnToLoginPage(Request.Url.Host, strLanguageCode, Response);
+        }
+        return;
+    }
+    #endregion 
+
+    #region private void CheckQueryString()
+    private void CheckQueryString()
+    {
+        try
+        {
+            if (Request.QueryString.Count > 0)
+            {
+                if (Request.QueryString["import"] == "1")
+                    importMDB.Visible = true;
+
+                if (Request.QueryString["TYPE"].ToUpper().Equals("IMP") && Request.QueryString["ACTION"].Equals("0"))
+                    bodyImportExportData.Attributes.Add("onload", "javascript:alert('Error in importing data from your local MS Access MDB file...');");
+            }
+        }
+        catch (Exception err)
+        {
+            strScript = "HideDivMessage();document.getElementById('divErrorMessage').style.display = 'block';SetInnerText(document.getElementById('pErrorMessage'), 'Error in exporting data from Lapbase ...');";
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Import/Export data Form", "CheckQueryString function", err.ToString());
+        }
+    }
+    #endregion
+
+    #region protected void btnExportData_OnClick(object sender, EventArgs e)
+    protected void btnExportData_OnClick(object sender, EventArgs e)
+    {
+        lblProgress.Text = "The export process is running in the background. It might take some time, depending on the data size. Please wait.";
+                
+        ExportDataToMDB();
+        ScriptManager.RegisterStartupScript(updatePanel1, btnExportData.GetType(), "key", strScript, true);
+    }
+    #endregion 
+
+    #region private void ExportDataToMDB()
+    private void ExportDataToMDB()
+    {
+        // 1. we make a copy of EMPTY MDB file 'MyLapbase.MDB' 
+        try
+        {
+            if (System.IO.File.Exists(strMDBPath))  System.IO.File.Delete(strMDBPath);
+            System.IO.File.Copy(Server.MapPath(".") + "/MDB/MyLapbase.MDB", strMDBPath, true);
+
+            // 2. start reading data from Sql Server to new MS Access MDB file
+            ExportFromSqlServerToMDB(strMDBPath);
+
+            if (ExportFlag)
+            {
+                String strURL = Request.Url.ToString().ToUpper();
+
+                linkLocalMDB.Text = "Press here to download your MS Access MDB file....";
+                linkLocalMDB.NavigateUrl = "http://" +  Request.Url.Host + Request.ApplicationPath + "/Forms/ImportExportData/MDB/" + strMDBFileName;
+                strScript = "HideDivMessage();document.getElementById('btnImportData').disabled = false;document.getElementById('btnExportData').disabled = false;";
+            }
+            else
+            {
+                linkLocalMDB.Text = "ERROR";
+                linkLocalMDB.NavigateUrl = "#";
+                strScript = "HideDivMessage();document.getElementById('divErrorMessage').style.display = 'block';SetInnerText(document.getElementById('pErrorMessage'), 'Error in exporting data from Lapbase ...');";
+            }
+        }
+        catch (Exception err)
+        {
+            strScript = "HideDivMessage();document.getElementById('divErrorMessage').style.display = 'block';SetInnerText(document.getElementById('pErrorMessage'), 'Error in exporting data from Lapbase ...');";
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Import/Export data Form", "btnExportData_OnClick function", err.ToString());
+        }
+    }
+    #endregion
+
+    #region private void ExportFromSqlServerToMDB(string strMDBPath)
+    private void ExportFromSqlServerToMDB(string strMDBPath)
+    {
+        System.Data.OleDb.OleDbConnection cnnDest = new System.Data.OleDb.OleDbConnection();
+        System.Data.SqlClient.SqlConnection cnnSource = new System.Data.SqlClient.SqlConnection();
+
+        System.Data.OleDb.OleDbCommand cmdDest;
+        System.Data.SqlClient.SqlCommand cmdSource;
+        System.Data.SqlClient.SqlDataReader drSource;
+
+        string[,] strTablesName = {{"tblCodes", "Codes"}, 
+                                   {"tblDoctors", "Doctors"},
+                                   {"tblIdealWeights", "IdealWeights"},
+                                   {"tblSystemCodes", "SystemCodes"}, 
+                                   {"tblSystemDetails", "SystemDetails"},
+                                   {"tblSystemNormals", "tblSystemNormals"},
+                                   {"tblHospitals", "Hospitals"},
+                                   {"tblReferringDoctors", "ReferringDoctors"},
+                                   {"tblPatients", "Patients"},
+                                   {"tblPatientConsult", "PatientConsult"},
+                                   {"tblOpEvents", "OpEvents"},
+                                   {"tblPatientWeightData", "PatientWeightData"},
+                                   {"tblComplications", "tblComplications"}
+                                  };
+
+        String strSql = "", strSql_Source = String.Empty;
+
+        String selectCodes = " UserPracticeCode, Code, CategoryCode, Description, Field2 ";
+        String selectDoctors = "  OrganizationCode, UserPracticeCode, DoctorID, Surname, Firstname, Initial, Title, DoctorName, Address1, Address2, Suburb, Postcode, State, Country, Telephone, Fax, Degrees, Speciality, UseOwnLetterHead, PrefSurgeryType, PrefApproach, PrefCategory, CountryCode, LapBandCode, OtherType, IsSurgeon, Hide ";
+        String selectIdealWeights = " OrganizationCode, UserPracticeCode, Height, IdealWeight, IdealWeightFemale ";
+        String selectSystemCodes = " distinct 0 as UserPracticeCode, Code, CategoryCode, Score, Description, Description2 ";
+        String selectSystemDetails = " SystemId, SystemName, SystemType, DateInstalled, UpdateDate, CountryCode, SystemCode, Imperial, WOScale, TargetBMI, ReferenceBMI, BackUpLocation, MFU3, MFU6, MFU12, FU1Y, FU2Y, FU3Y, FU4Y, FU1, FU2, FU3, RD1, RD2, CV, UseRace, EWPerCent, DateCreated, CreatedByUser, CreatedByComputer, LastModified, ModifiedByUser, ModifiedByComputer, ComordityVisitMonths, IdealOnBMI, FUPNotes, FUCom, FUinv, PatCOM, PatInv, UserPracticeCode, VisitWeeksFlag, OrganizationCode ";
+        String selectSystemNormals = " UserPracticeCode, Code, TestType, ImperialLow, ImperialLow_F, ImperialHigh, ImperialHigh_F, ImperialUnits, MetricLow, MetricLow_F, MetricHigh, MetricHigh_F, MetricUnits, ConversionImpToMetric, Description ";
+        String selectHospitals = " OrganizationCode, UserPracticeCode, [Hospital Id], [Hospital Name], Street, Suburb, PostCode, Phone, Fax ";
+        String selectReferringDoctors = " OrganizationCode, UserPracticeCode, RefDrId, Surname, FirstName, Title, UseFirst, Address1, Address2, Suburb, PostalCode, State, Phone, Fax ";
+        String selectPatient = " OrganizationCode, UserPracticeCode, CASE WHEN dbo.fn_GetPatientCustomID([Patient Id], OrganizationCode) IS NULL OR dbo.fn_GetPatientCustomID([Patient Id], OrganizationCode) = '' OR dbo.fn_GetPatientCustomID([Patient Id], OrganizationCode) = '0' THEN cast([Patient ID] as varchar(50)) ELSE dbo.fn_GetPatientCustomID([Patient Id], OrganizationCode) END AS [Patient Id], [Name Id], [Reference Id], Surname, Firstname, Title, Street, Suburb, State, Postcode, [Home Phone], [Work Phone], MobilePhone, EmailAddress, Birthdate, Sex, Race, Insurance, [Doctor Id], [Date First Visit], [Date Last Visit], RefDrId1, RefDrId2, RefDrId3, [Select], Select2, Select3, [Date Next Visit], DateCreated, CreatedByUser, CreatedByComputer, LastModified, ModifiedByUser, ModifiedByComputer, RemoteDrId, CreatedByWindowsUser, ModifiedByWindowsUser, WebExport, [Marital status], ReferralDate, ReferralDuration, [Patient MD Id], SocialHistory ";
+        String selectPatientConsult = " A.ConsultID, A.OrganizationCode, A.UserPracticeCode, CASE WHEN dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) IS NULL OR dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) = '' OR dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) = '0' THEN cast(A.[Patient ID] as varchar(50)) ELSE dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) END AS [Patient Id], A.ConsultType, A.DateSeen, A.VisitType, A.CoMorbidityVisit, A.Seenby, A.Height, A.Weight, A.WaistCircumference, A.HipCircumference, A.SagittalDiameter, A.ReportSent, A.ReservoirVolume, A.UpdateD, A.Months, A.BMIWeight, A.DateNextVisit, A.BloodPressure, A.Neck, A.Hip, A.Waist, A.ImageName, A.Image, A.ImageLocation, A.ImageDate, A.Image1, A.ImageLocation1, A.ImageName1, A.ImageDate1, A.Image2, A.ImageLocation2, A.ImageName2, A.ImageDate2, A.Video, A.VideoLocation, A.VideoName, A.VideoResult, A.VideoDate, A.WeightLastVisit, A.WeeksLastVisit, A.BMR, A.Impedance, A.FatPerCent, A.FreeFatMass, A.TotalBodyWater, A.FirstVisitWeight, A.SystolicBP, A.DiastolicBP, A.BPRxDetails, A.Triglycerides, A.TotalCholesterol, A.HDLCholesterol, A.LDLCholesterol, A.LipidRxDetails, A.HBA1C, A.FSerumInsulin, A.FBloodGlucose, A.DiabetesRxDetails, A.Hemoglobin, A.Platelets, A.WCC, A.Iron, A.Ferritin, A.Transferrin, A.IBC, A.Folate, A.B12, A.Sodium, A.Potassium, A.Chloride, A.Bicarbonate, A.Urea, A.Creatinine, A.Homocysteine, A.TSH, A.T4, A.T3, A.Albumin, A.Calcium, A.Phosphate, A.VitD, A.Bilirubin, A.AlkPhos, A.ALT, A.AST, A.GGT, A.TProtein, A.UserField1, A.UserField2, A.UserField3, A.UserField4, A.UserField5, A.AsthmaLevel, A.RefluxLevel, A.SleepLevel, A.FertilityLevel, A.IncontinenceLevel, A.BackLevel, A.ArthritisLevel, A.CVDLevel, A.DateCreated, A.CreatedByUser, A.CreatedByComputer, A.LastModified, A.ModifiedByUser, A.ModifiedByComputer, A.CreatedByWindowsUser, A.ModifiedByWindowsUser, A.OtherRxDetails, A.HypertensionProblems, A.LipidRx, A.DiabetesRx, A.BloodPressureRx, A.OtherRx, A.LipidProblems, A.AsthmaProblems, A.SleepProblems, A.IncontinenceProblems, A.BackProblems, A.ArthritisProblems, A.FertilityProblems, A.RefluxProblems, A.DiabetesProblems, A.UserMemoField1, A.UserMemoField2, A.Notes2, A.Notes, A.DateDeleted, A.DeletedByUser, A.PulseRate, A.RespiratoryRate, A.BloodPressureUpper, A.BloodPressureLower, A.GeneralReview, A.CardiovascularReview, A.RespiratoryReview, A.GastroReview, A.GenitoReview, A.ExtremitiesReview, A.NeurologicalReview, A.SatietyStaging, A.ChiefComplaint, A.MusculoskeletalReview, A.SkinReview, A.PsychiatricReview, A.EndocrineReview, A.HematologicReview, A.ENTReview, A.EyesReview, A.PFSHReview, A.MedicationsReview, A.LapbandAdjustment, A.MedicalProvider, A.AdjConsent, A.AdjAntiseptic, A.AdjAnesthesia, A.AdjAnesthesiaVol, A.AdjNeedle, A.AdjVolume, A.AdjInitialVol, A.AdjAddVol, A.AdjRemoveVol, A.AdjTolerate ";
+        String selectOpEvents = " A.OrganizationCode, A.AdmitId, A.UserPracticeCode, CASE WHEN dbo.fn_GetPatientCustomID([PatientId], A.OrganizationCode) IS NULL OR dbo.fn_GetPatientCustomID([PatientId], A.OrganizationCode) = '' OR dbo.fn_GetPatientCustomID([PatientId], A.OrganizationCode) = '0' THEN cast([Patient ID] as varchar(50)) ELSE dbo.fn_GetPatientCustomID([PatientId], A.OrganizationCode)  END AS PatientId, A.AdmitDate, A.OpWeight, A.HospitalCode, A.SurgeonId, A.OperationDate, A.Duration, A.DaysInHospital, A.SurgeryType, A.Approach, A.Category, A.[Group], A.StartNeck, A.StartWaist, A.StartHip, A.BandSize, A.ReservoirSite, A.BalloonVolume, A.Pathway, A.Indication, A.[Procedure], A.Findings, A.Closure, A.BloodLoss, A.RouxLimbLength, A.RouxColic, A.RouxGastric, A.RouxEnterostomy, A.Banded, A.VBGStomaSize, A.VBGStomaWrap, A.BPDStomachSize, A.BPDIlealLength, A.BPDChannelLength, A.BPDDuodenalSwitch, A.TubeSize, A.PreviousSurgery, A.PrevAbdoSurgery1, A.PrevAbdoSurgery2, A.PrevAbdoSurgery3, A.PrevAbdoSurgeryNotes, A.PrevPelvicSurgery, A.PrevPelvicSurgery1, A.PrevPelvicSurgery2, A.PrevPelvicSurgery3, A.PrevPelvicSurgeryNotes, A.ComcomitantSurgery, A.ComcomitantSurgery1, A.ComcomitantSurgery2, A.ComcomitantSurgery3, A.ComcomitantSurgeryNotes, A.DateCreated, A.CreatedByUser, A.CreatedByComputer, A.LastModified, A.ModifiedByUser, A.ModifiedByComputer, A.CreatedByWindowsUser, A.ModifiedByWindowsUser, A.GeneralNotes, A.DateDeleted, A.DeletedByUser ";
+        String selectPatientWeightData = " A.OrganizationCode, A.UserPracticeCode, CASE WHEN dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) IS NULL OR dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) = '' OR dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) = '0' THEN cast(A.[Patient ID] as varchar(50)) ELSE dbo.fn_GetPatientCustomID(A.[Patient Id], A.OrganizationCode) END AS [Patient Id], A.LapBandDate, A.Notes, A.Height, A.StartWeight, A.StartWeightDate, A.IdealWeight, A.CurrentWeight, A.OpWeight, A.TargetWeight, A.Excluded, A.LastReservoirVol, A.losttofollowup, A.StartBMIWeight, A.BMIHeight, A.LastImageLocation, A.LastImageDate, A.SurgeryType, A.Approach, A.Category, A.[Group], A.BaseAssessmentDate, A.BaseOtherDetails, A.BaseHypertensionProblems, A.BaseBloodPressureRxDetails, A.BaseSystolicBP, A.BaseDiastolicBP, A.HypertensionResolved, A.HypertensionResolvedDate, A.HypertensionResolvedSystolic, A.HypertensionResolvedDiastolic, A.BaseLipidProblems, A.BaseLipidRxDetails, A.BaseTriglycerides, A.BaseTotalCholesterol, A.BaseHDLCholesterol, A.LipidsResolved, A.LipidsResolvedDate, A.BaseDiabetesProblems, A.BaseDiabetesRxDetails, A.DiabetesResolved, A.DiabetesResolvedDate, A.DiabetesResolvedFBglucose, A.BaseAsthmaProblems, A.BaseAsthmaLevel, A.BaseAsthmaDetails, A.AsthmaResolved, A.AsthmaResolvedDate, A.AsthmaResolvedLevel, A.AsthmaCurrentLevel, A.BaseRefluxProblems, A.BaseRefluxDetails, A.BaseRefluxLevel, A.RefluxResolved, A.RefluxResolvedDate, A.RefluxResolvedLevel, A.RefluxCurrentLevel, A.BaseOtherRx, A.BaseOtherRxDetails, A.BaseSleepProblems, A.BaseSleepDetails, A.BaseSleepLevel, A.SleepResolved, A.SleepResolvedDate, A.SleepResolvedLevel, A.SleepCurrentLevel, A.BaseFertilityProblems, A.BaseFertilityLevel, A.BaseFertilityDetails, A.FertilityResolved, A.FertilityResolvedDate, A.FertilityResolvedLevel, A.FertilityCurrentLevel, A.BaseArthritisProblems, A.BaseArthritisDetails, A.BaseArthritisLevel, A.ArthritisResolved, A.ArthritisResolvedDate, A.ArthritisResolvedLevel, A.ArthritisCurrentLevel, A.BaseIncontinenceProblems, A.BaseIncontinenceDetails, A.BaseIncontinenceLevel, A.IncontinenceResolved, A.IncontinenceResolvedDate, A.IncontinenceResolvedLevel, A.IncontinenceCurrentLevel, A.BaseBackProblems, A.BaseBackDetails, A.BaseBackPainLevel, A.BackResolved, A.BackResolvedDate, A.BackResolvedLevel, A.BackCurrentLevel, A.BaseCVDProblems, A.BaseCVDDetails, A.BaseCVDLevel, A.CVDLevelResolved, A.CVDLevelResolvedDate, A.CVDLevelCurrentLevel, A.CVDLevelResolvedLevel, A.StartNeck, A.StartWaist, A.StartHip, A.BaseBodyFat, A.BaseFatMass, A.BaseBMR, A.BaseImpedance, A.BaseFatPerCent, A.BaseFreeFatMass, A.BaseTotalBodyWater, A.BaseHomocysteine, A.BaseTSH, A.BaseT4, A.BaseT3, A.BaseHBA1C, A.BaseFSerumInsulin, A.BaseFBloodGlucose, A.BaseIron, A.BaseFerritin, A.BaseTransferrin, A.BaseIBC, A.BaseFolate, A.BaseB12, A.BaseHemoglobin, A.BasePlatelets, A.BaseWCC, A.BaseCalcium, A.BasePhosphate, A.BaseVitD, A.BaseBilirubin, A.BaseTProtein, A.BaseAlkPhos, A.BaseALT, A.BaseAST, A.BaseGGT, A.BaseCPK, A.BaseAlbumin, A.BaseSodium, A.BasePotassium, A.BaseChloride, A.BaseBicarbonate, A.BaseUrea, A.BaseCreatinine, A.BaseUserField1, A.BaseUserField2, A.BaseUserField3, A.BaseUserField4, A.BaseUserField5, A.DateCreated, A.NextComorbidVisit, A.ComorbidityMonths, A.ComorbidtyOnFile, A.OpBMIWeight, A.BaseLDLCholesterol, A.BaseUserMemoField1, A.BaseUserMemoField2, A.BaseReason7, A.BaseReason8, A.BMI, A.BaseHDLCholesterolProblems, A.BaseTriglycerideProblems, A.BaseBaselineHStatus, A.BaseCholesterolProblems, A.BaseOtherProblems, A.BaseDiabetesRx, A.BaseLipidRx, A.BaseBloodPressureRx, A.BaseBloodGlucoseLevel, A.FirstVisitWeight, A.BaseBMC, A.BaseLeanBodyMass, A.BaseBodyFatPC, A.BaseBMIPercentile, A.BaseZScore, A.COMData, A.Status, A.MaxWeightYr, A.MaxWeight, A.Updated, A.PatientReport, A.ProcedureReport, A.TempFlag, StartPR, StartRR, StartBP1, StartBP2, A.ZeroDate ";
+        String selectComplications = " A.ComplicationNum, A.OrganizationCode, A.UserPracticeCode, CASE WHEN dbo.fn_GetPatientCustomID(A.[PatientID], A.OrganizationCode) IS NULL OR dbo.fn_GetPatientCustomID(A.[PatientID], A.OrganizationCode) = '' OR dbo.fn_GetPatientCustomID(A.[PatientID], A.OrganizationCode) = '0' THEN cast([Patient ID] as varchar(50)) ELSE dbo.fn_GetPatientCustomID(A.[PatientID], A.OrganizationCode) END AS PatientID, A.ComplicationDate, A.ComplicationCode, A.TypeCode, A.Readmitted, A.DateCreated, A.CreatedByUser, A.CreatedByWindowsUser, A.CreatedByComputer, A.LastModified, A.ModifiedByUser, A.ModifiedByWindowsUser, A.ModifiedByComputer, A.ReOperation, A.Notes, A.Complication, A.FacilityCode, A.Facility_Other, A.AdverseSurgery, A.DoctorID ";
+        
+        try
+        {
+            cnnSource.ConnectionString = GlobalClass.strSqlCnnString;
+            cnnDest.ConnectionString = @"PROVIDER=Microsoft.Jet.OLEDB.4.0;Data Source=" + strMDBPath;
+            cnnSource.Open();
+            cnnDest.Open();
+            cmdDest = cnnDest.CreateCommand();
+            cmdSource = cnnSource.CreateCommand();
+            cmdSource.CommandType = CommandType.Text;
+            cmdDest.CommandType = CommandType.Text;
+
+            for (int Xh = 0; Xh < strTablesName.Length / strTablesName.Rank; Xh++)
+            {
+                switch (strTablesName[Xh, 0])
+                {
+                    case "tblPatients":
+                        cmdSource.CommandText = "Select " + selectPatient + " from " + strTablesName[Xh, 0];
+                        cmdSource.CommandText += " with(nowait, nolock) where DateDeleted is null AND OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblOpEvents":
+                        cmdSource.CommandText = "Select " + selectOpEvents + " from " + strTablesName[Xh, 0] + " A with(nowait, nolock) ";
+                        cmdSource.CommandText += "inner join tblPatients B with(nowait, nolock) on A.[PatientID] = B.[Patient ID] and (A.OrganizationCode = B.OrganizationCode) ";
+                        cmdSource.CommandText += "where A.DateDeleted is NULL AND B.DateDeleted is NULL AND B.OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblComplications":
+                        cmdSource.CommandText = "Select " + selectComplications + " from " + strTablesName[Xh, 0] + " A with(nowait, nolock) ";
+                        cmdSource.CommandText += "inner join tblPatients B with(nowait, nolock) on A.[PatientID] = B.[Patient ID] and (A.OrganizationCode = B.OrganizationCode) ";
+                        cmdSource.CommandText += "where B.DateDeleted is NULL AND B.OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblPatientConsult":
+                        cmdSource.CommandText = "Select " + selectPatientConsult + " from " + strTablesName[Xh, 0] + " A with(nowait, nolock) ";
+                        cmdSource.CommandText += "inner join tblPatients B with(nowait, nolock) on (A.[Patient ID] = B.[Patient ID]) and (A.OrganizationCode = B.OrganizationCode) ";
+                        cmdSource.CommandText += "where A.DateDeleted is NULL AND B.DateDeleted is NULL AND B.OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblPatientWeightData":
+                        cmdSource.CommandText = "Select " + selectPatientWeightData + " from " + strTablesName[Xh, 0] + " A with(nowait, nolock) ";
+                        cmdSource.CommandText += "inner join tblPatients B with(nowait, nolock) on (A.[Patient ID] = B.[Patient ID]) and (A.OrganizationCode = B.OrganizationCode) ";
+                        cmdSource.CommandText += "where B.DateDeleted is NULL AND B.OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblCodes":
+                        cmdSource.CommandText = "Select " + selectCodes + " from " + strTablesName[Xh, 0] + " where UserPracticeCode = " + Request.Cookies["UserPracticeCode"].Value;
+                        break;
+
+                    case "tblSystemNormals":
+                        cmdSource.CommandText = "Select " + selectSystemNormals + " from " + strTablesName[Xh, 0] + " where UserPracticeCode = " + Request.Cookies["UserPracticeCode"].Value;
+                        break;
+
+                    case "tblSystemDetails":
+                        cmdSource.CommandText = "Select " + selectSystemDetails + " from " + strTablesName[Xh, 0] + " where OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblSystemCodes" :
+                        cmdSource.CommandText = "Select " + selectSystemCodes + " from " + strTablesName[Xh, 0];
+                        break;
+
+                    case "tblDoctors":
+                        cmdSource.CommandText = "Select " + selectDoctors + " from " + strTablesName[Xh, 0] + " where OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblIdealWeights":
+                        cmdSource.CommandText = "Select " + selectIdealWeights + " from " + strTablesName[Xh, 0] + " where OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblHospitals":
+                        cmdSource.CommandText = "Select " + selectHospitals + " from " + strTablesName[Xh, 0] + " where OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+
+                    case "tblReferringDoctors":
+                        cmdSource.CommandText = "Select " + selectReferringDoctors + " from " + strTablesName[Xh, 0] + " where OrganizationCode = " + gClass.OrganizationCode;
+                        break;
+                }
+
+                strSql_Source = cmdSource.CommandText;
+                drSource = cmdSource.ExecuteReader(CommandBehavior.Default);
+                while (drSource.Read())
+                {
+                    strSql = "insert into " + strTablesName[Xh, 1] + "( ";
+                    for (int Idx = 0; Idx < drSource.FieldCount; Idx++)
+                        strSql += "[" + drSource.GetName(Idx) + "] , ";
+
+                    strSql = strSql.Substring(0, strSql.Length - 2) + ") values ( ";
+                    for (int Idx = 0; Idx < drSource.FieldCount; Idx++)
+                        switch (drSource.GetFieldType(Idx).ToString().ToUpper())
+                        {
+                            case "SYSTEM.DATETIME":
+                                if (drSource.IsDBNull(Idx))
+                                    strSql += "null, ";
+                                else
+                                {
+                                    string strDate = drSource.GetValue(Idx).ToString();
+                                    strDate = strDate.Substring(0, strDate.IndexOf(" "));
+                                    string[] tempDate = strDate.Split('/');
+                                    strSql += "#" + tempDate[1] + "/" + tempDate[0] + "/" + tempDate[2] + "#, ";
+                                }
+                                break;
+                            case "SYSTEM.STRING":
+                                if (drSource.IsDBNull(Idx))
+                                    strSql += "'', ";
+                                else
+                                    strSql += "'" + drSource.GetValue(Idx).ToString().Replace("'", "`") + "', ";
+                                break;
+
+                            case "SYSTEM.BOOLEAN":
+                                strSql += (drSource.GetValue(Idx).ToString().Equals("TRUE") ? "-1" : "0") + ", ";
+                                break;
+
+                            default:
+                                if (drSource.IsDBNull(Idx))
+                                    strSql += "0, ";
+                                else
+                                    strSql += drSource.GetValue(Idx) + ", ";
+                                break;
+                        }
+                    strSql = strSql.Substring(0, strSql.Length - 2) + ")";
+                    cmdDest.CommandText = strSql;
+                    cmdDest.ExecuteNonQuery();
+                }
+                drSource.Close();
+            }
+            ExportFlag = true;
+        }
+        catch (Exception err) {
+            ExportFlag = false;
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, 
+                    Request.Cookies["Logon_UserName"].Value, "Import/Export data Form", "ExportFromSqlServerToMDB function",
+                    strSql_Source + " " + strSql + " ... " + err.ToString());
+        }
+        finally { cnnDest.Close(); cnnSource.Close(); cnnSource.Dispose(); cnnDest.Dispose(); }
+        return;
+    }
+    #endregion 
+
+    
+    #region protected void btnCheckExportData_OnClick(object sender, EventArgs e)
+    protected void btnCheckExportData_OnClick(object sender, EventArgs e)
+    {
+        try
+        {
+            if (System.IO.File.Exists(strMDBPath) && System.IO.File.Exists(strLDBPath))
+                lblProgress.Text = "Data is not ready yet. Please try again later.";
+            else if (System.IO.File.Exists(strMDBPath) && System.IO.File.Exists(strLDBPath) == false)
+            {
+                lblProgress.Text = "Data is ready. Please click the link below to start downloading.";
+
+                linkLocalMDB.Text = "Press here to download your MS Access MDB file....";
+                linkLocalMDB.NavigateUrl = "http://" + Request.Url.Host + Request.ApplicationPath + "/Forms/ImportExportData/MDB/" + strMDBFileName;                
+            }
+            else
+                lblProgress.Text = "Please click EXPORT to export data.";
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host,
+                    Request.Cookies["Logon_UserName"].Value, "Import/Export data Form", "ExportFromSqlServerToMDB function",
+                     err.ToString());
+        }
+    }
+    #endregion        
+}

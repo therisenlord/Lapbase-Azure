@@ -1,0 +1,239 @@
+using System;
+using System.Transactions;
+using System.Diagnostics;
+using System.Configuration;
+using System.Collections;
+using System.IO;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+using System.Web;
+using System.Web.UI;
+using System.Web.Security;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using Microsoft.Web.UI;
+using Telerik.WebControls;
+
+public partial class Forms_ImportExportData_UpdateSurgeryType : System.Web.UI.Page
+{
+    GlobalClass gClass = new GlobalClass();
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+        try
+        {
+            Page.Culture = Request.Cookies["CultureInfo"].Value;
+            gClass.LanguageCode = Request.Cookies["LanguageCode"].Value;
+            if (gClass.IsUserLogoned(Session.SessionID, Request.Cookies["UserPracticeCode"].Value, Request.Url.Host))
+            {
+                if (!IsPostBack)
+                {
+                    gClass.SaveUserLogFile(Request.Cookies["UserPracticeCode"].Value,
+                                            Request.Cookies["Logon_UserName"].Value,
+                                            Request.Url.Host,
+                                            "Update Date Form", 2, "Browse", "", "");
+                }
+            }
+            else
+            {
+                gClass.ReturnToLoginPage(Request.Url.Host, Request.Cookies["LanguageCode"].Value, Response);
+            }
+        }
+        catch (Exception err)
+        {
+            string strLanguageCode;
+            try
+            {
+                strLanguageCode = Request.Cookies["LanguageCode"].Value;
+                gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Import/Export data form", "Loading Patient List (Page_Load function)", err.ToString());
+            }
+            catch { strLanguageCode = "en-US"; }
+            gClass.ReturnToLoginPage(Request.Url.Host, strLanguageCode, Response);
+        }
+        return;
+    }
+    #endregion
+
+    #region protected void checkSurgery(object sender, EventArgs e)
+    protected void checkSurgery(object sender, EventArgs e)
+    {
+        ArrayList patientList = new ArrayList();
+        String selectSql = "";
+        String updateSql = "";
+
+        System.Data.SqlClient.SqlConnection cnnSource = new System.Data.SqlClient.SqlConnection();
+        System.Data.SqlClient.SqlCommand cmdSource;
+        System.Data.SqlClient.SqlDataReader drSource;
+        System.Data.SqlClient.SqlDataReader drSourceValidate;
+        cnnSource.ConnectionString = GlobalClass.strSqlCnnString;
+        cnnSource.Open();
+        String strRes = "", strSql_Source = String.Empty;
+        cmdSource = cnnSource.CreateCommand();
+        cmdSource.CommandType = CommandType.Text;
+
+        String OperationBPD = "BAA1058";
+        String OperationGastricBaloon = "BAA1060";
+        String OperationGastricAdjustable = "BAA1061";
+        String OperationGastricBypassRoux = "BAA1063";
+
+        //get all operation
+        selectSql = "SELECT OrganizationCode, PatientID, AdmitID, SurgeryType FROM tblOpEvents ";
+        selectSql = selectSql + " WHERE SurgeryType in('" + OperationBPD + "','" + OperationGastricBaloon + "','" + OperationGastricAdjustable + "','" + OperationGastricBypassRoux + "') ";
+        selectSql = selectSql + " AND OrganizationCode = '" + Request.Cookies["OrganizationCode"].Value + "' ORDER BY SurgeryType, PatientID";
+
+        cmdSource.CommandText = selectSql;
+
+        strSql_Source = cmdSource.CommandText;
+        drSource = cmdSource.ExecuteReader(CommandBehavior.Default);
+
+        while (drSource.Read())
+        {
+            String tempOrganizationCode = drSource.GetValue(0).ToString();
+            String tempPatientID = drSource.GetValue(1).ToString();
+            String tempAdmitID = drSource.GetValue(2).ToString();
+            String tempSurgeryCode = drSource.GetValue(3).ToString();
+            
+            if(tempSurgeryCode != OperationBPD)
+            {
+                String BPDIlealLength = "";
+                String BPDChannelLength = "";
+                Boolean BPDDuodenalSwitch = false;
+                String BPDStomachSize = "";    
+            }
+
+            if (tempSurgeryCode != OperationGastricBaloon && tempSurgeryCode != OperationGastricAdjustable)
+            {
+                String SerialNo = "";
+            }
+
+            if (tempSurgeryCode != OperationGastricAdjustable)
+            {
+               String ReservoirSite = "";
+               String BalloonVolume = "";
+               Int32 Pathway = 0;
+               String BandSize = "";
+               String BandType = "";        
+            }
+
+            if (tempSurgeryCode != OperationGastricBypassRoux)
+            {
+               String RouxLimbLength = "";
+               String RouxEnterostomy = "";
+               String RouxColic = "";
+               String RouxGastric= "";
+               Boolean Banded = false;
+            }
+
+            //loop
+            // update tblopevents set x = y 
+            // where patient, organization, admit
+            //end loop
+
+            // update tblpatientweightdata set lapbandtype = "" where surgerytype != 'BAA1061'
+
+
+
+            //take first found
+                /* print sql
+                String updateCmd = "UPDATE tblOpEvents SET LapbandType = '" + tempBandType + "' ";
+                updateCmd = updateCmd + "WHERE organizationcode = '" + tempOrganizationCode + "' AND patientid = '" + tempPatientID + "' ";
+                updateCmd = updateCmd + "AND admitid = '" + tempAdmitID + "'";
+
+                String updatePWDCmd = "UPDATE tblPatientWeightData SET LapbandType = '" + tempBandType + "' ";
+                updatePWDCmd = updatePWDCmd + "WHERE organizationcode = '" + tempOrganizationCode + "' AND patientid = '" + tempPatientID + "' ";
+                updatePWDCmd = updatePWDCmd + "AND surgeryType = '" + tempSurgeryCode + "'";
+                */
+
+                txtNotes.Value = txtNotes.Value + "Patient ID: " + tempPatientID + "\n";
+                txtNotes.Value = txtNotes.Value + "Admit ID: " + tempAdmitID + "\n";
+                txtNotes.Value = txtNotes.Value + "Surgery Type: " + tempSurgeryCode + "\n\n";
+
+                /*
+                txtNotes.Value = txtNotes.Value + "** " + updateCmd + "\n";
+                txtNotes.Value = txtNotes.Value + "** " + updatePWDCmd + "\n\n";
+                  */
+        }
+        drSource.Close();
+    }
+    #endregion
+
+    #region protected void updateSurgery(object sender, EventArgs e)
+    protected void updateSurgery(object sender, EventArgs e)
+    {
+        ArrayList patientList = new ArrayList();
+        String tempOrganizationCode;
+        String tempPatientID;
+        String tempAdmitID;
+        String tempSurgeryCode;
+        String tempBandType;
+        String prevPatientID = "";
+
+        System.Data.SqlClient.SqlConnection cnnSource = new System.Data.SqlClient.SqlConnection();
+        System.Data.SqlClient.SqlCommand cmdSource;
+        System.Data.SqlClient.SqlDataReader drSource;
+        System.Data.SqlClient.SqlDataReader drSourceValidate;
+        cnnSource.ConnectionString = GlobalClass.strSqlCnnString;
+        cnnSource.Open();
+        String strRes = "", strSql_Source = String.Empty;
+        cmdSource = cnnSource.CreateCommand();
+        cmdSource.CommandType = CommandType.Text;
+
+        SqlCommand cmdUpdate = new SqlCommand();
+
+
+        //get all patient with adjustable surgery type and not empty band type
+        cmdSource.CommandText = "SELECT OrganizationCode, PatientID, AdmitID, SurgeryType, BandType FROM tblOpEvents_Bold WHERE BandType is not null AND BandType != '' AND SurgeryType = 'BAA1061'";
+        
+        strSql_Source = cmdSource.CommandText;
+        drSource = cmdSource.ExecuteReader(CommandBehavior.Default);
+
+        while (drSource.Read())
+        {
+            tempOrganizationCode = drSource.GetValue(0).ToString();
+            tempPatientID = drSource.GetValue(1).ToString();
+            tempAdmitID = drSource.GetValue(2).ToString();
+            tempSurgeryCode = drSource.GetValue(3).ToString();
+            tempBandType = drSource.GetValue(4).ToString();
+            
+
+            //take first found
+            if (tempPatientID != prevPatientID)
+            {
+                cmdUpdate = new SqlCommand();
+
+                gClass.MakeStoreProcedureName(ref cmdUpdate, "sp_PatientData_UpdateBandType", true);
+                cmdUpdate.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(tempOrganizationCode);
+                cmdUpdate.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(tempPatientID);
+                cmdUpdate.Parameters.Add("@AdmitID", SqlDbType.Int).Value = Convert.ToInt32(tempAdmitID);
+                cmdUpdate.Parameters.Add("@SurgeryType", SqlDbType.VarChar, 10).Value = tempSurgeryCode;
+                cmdUpdate.Parameters.Add("@BandType", SqlDbType.VarChar, 10).Value = tempBandType;
+
+                try
+                {
+                    gClass.ExecuteDMLCommand(cmdUpdate);
+                    gClass.SaveUserLogFile(Request.Cookies["UserPracticeCode"].Value, Request.Cookies["Logon_UserName"].Value,
+                                                Request.Url.Host, "ImportExport", 2, "Update Band Type", "User Practice Code", Request.Cookies["UserPracticeCode"].Value);
+                }
+                catch (Exception err)
+                {
+                    txtNotes.Value = txtNotes.Value + "\nError in Updating Band Type\n";
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "ImportExport", "Data saving bandtype", err.ToString());
+                }
+
+                txtNotes.Value = txtNotes.Value + "\nUpdate Band Type - " + tempOrganizationCode + " - " + tempPatientID + " - " + tempAdmitID + " - " + tempSurgeryCode + " - " + tempBandType + " - Success\n";
+                cmdUpdate.Dispose();
+            }
+            prevPatientID = tempPatientID;
+        }
+        drSource.Close();
+    }
+    #endregion
+}
+

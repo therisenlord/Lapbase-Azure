@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<discovery xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.xmlsoap.org/disco/">
+  <contractRef ref="https://209.34.248.70/BoldServices/BoldService.asmx?wsdl" docRef="https://209.34.248.70/BoldServices/BoldService.asmx" xmlns="http://schemas.xmlsoap.org/disco/scl/" />
+  <soap address="https://209.34.248.70/BoldServices/BoldService.asmx" xmlns:q1="http://www.surgicalreview.org/Bold" binding="q1:BoldServiceSoap" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
+  <soap address="https://209.34.248.70/BoldServices/BoldService.asmx" xmlns:q2="http://www.surgicalreview.org/Bold" binding="q2:BoldServiceSoap12" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
+</discovery>

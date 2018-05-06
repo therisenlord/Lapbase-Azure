@@ -1,0 +1,76 @@
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using Lapbase.Configuration.ConfigurationApplication;
+
+public partial class UserControl_AppSchemaWUCtrl : System.Web.UI.UserControl
+{
+    GlobalClass gClass = new GlobalClass();
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        String strDisplay = (LapbaseSession.PatientId == 0) ? "none" : "block";
+
+        a_Visits.Style["display"] = strDisplay;
+        a_Operations.Style["display"] = strDisplay;
+        a_Files.Style["display"]= strDisplay;
+        a_Complications.Style["display"] = strDisplay;
+        a_Biochemistry.Style["display"] = strDisplay;
+        a_Labs.Style["display"] = strDisplay;
+
+        /*
+        if (Convert.ToBoolean(Request.Cookies["EMR"].Value) == false)
+            a_EMR.Style["display"] = "none";
+        else
+            li_Baseline.Style["display"] = strDisplay;
+        */
+
+        /*
+        if (LapbaseConfiguration.SRCVisibility && Request.Cookies["SubmitData"].Value.IndexOf("bold") >= 0)
+        {
+            Lapbase.Data.Baseline objBaseLine = new Lapbase.Data.Baseline();
+
+            objBaseLine.OrganizationCode = LapbaseSession.OrganizationCode;
+            objBaseLine.PatientID = LapbaseSession.PatientId;
+            objBaseLine.LoadPatientBaselineData();
+            strDisplay = objBaseLine.ConsentRecieved ? "block" : "none"; 
+            hlinkExportToSRC.Style["display"] = strDisplay;
+        }
+        else
+            hlinkExportToSRC.Style["display"] = "none";
+        */
+
+        checkMenuDisplay();
+        return;
+    }
+
+    #region Properties
+    public string currentItem
+    {
+        set {((HtmlControl)FindControl("li_" + value)).Attributes.Add("class", "current");}
+    }
+    #endregion
+
+    #region checkMenuDisplay()
+    public void checkMenuDisplay()
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        DataSet dsBiochemistryList = new DataSet();
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Biochemistry_LoadData", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+
+        dsBiochemistryList = gClass.FetchData(cmdSelect, "tblBiochemistry");
+        if (dsBiochemistryList.Tables[0].Rows.Count == 0)
+            a_Biochemistry.Style["display"] = "none";
+    }
+    #endregion
+}

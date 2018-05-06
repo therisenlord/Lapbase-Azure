@@ -1,0 +1,177 @@
+﻿// JScript File
+
+//----------------------------------------------------------------------------------------------------------------
+var PageNo, PageQty, PlayTimer;
+
+//----------------------------------------------------------------------------------------------------------------     
+function PageInitialize(){
+    SetEvents();
+    GetSet_PageNo_Qty("Get");
+    return;
+}
+
+//---------------------------------------------------------------------------------------------------------------
+function SetEvents()
+{
+    if (document.getElementById("txtPageNo_txtGlobal"))
+        document.getElementById("txtPageNo_txtGlobal").onchange = function(){
+            txtPageNo_onchange();
+        }
+    return;
+}
+    
+//----------------------------------------------------------------------------------------------------------------  
+function txtPageNo_onchange(){
+    var tempPageNo = 0;
+    
+    try{
+        tempPageNo = parseInt(document.getElementById("txtPageNo_txtGlobal").value);
+        if (isNaN(tempPageNo)) tempPageNo = 0;
+    }
+    catch(e){
+        tempPageNo = 0;
+    }
+    if (tempPageNo <= 0)
+        if (PageQty > 0) tempPageNo = 1;
+        else tempPageNo = 0;
+    else 
+        if (tempPageNo > PageQty) tempPageNo = PageQty;
+        
+    PageNo = tempPageNo;
+    GetSet_PageNo_Qty("Set");
+    return;
+}
+    
+//----------------------------------------------------------------------------------------------------------------  
+function GetSet_PageNo_Qty(action){
+
+    if (document.all) // Internet Explorer
+    {
+        if (action == "Get"){
+            PageNo = document.getElementById("txtPageNo_txtGlobal").value;
+            PageQty = document.getElementById("lblPageQty").innerText;
+        }
+        else{
+            document.getElementById("txtPageNo_txtGlobal").value = PageNo ;
+            document.getElementById("lblPageQty").innerText = PageQty ;
+        }
+    }
+    else
+    {
+        if (action == "Get"){
+            PageNo = document.getElementById("txtPageNo_txtGlobal").value;
+            PageQty = document.getElementById("lblPageQty").textContent;
+        }
+        else{
+            document.getElementById("txtPageNo_txtGlobal").value = PageNo ;
+            document.getElementById("lblPageQty").textContent = PageQty ;
+        }
+    }
+    CheckPrev_NextImages();
+    
+    if (PageNo > 0){
+        if (document.all){
+            document.getElementById("txtFileName").innerText = GetFileName(document.getElementById("listDocURL").options[PageNo-1].text);
+            document.getElementById("lblDocName").innerText = document.getElementById("listDocName").options[PageNo-1].text;
+            document.getElementById("lblDocDescription").innerText = document.getElementById("listDocDescription").options[PageNo-1].text;
+        }
+        else
+        {
+            document.getElementById("txtFileName").textContent = GetFileName(document.getElementById("listDocURL").options[PageNo-1].text);
+            document.getElementById("lblDocName").textContent = document.getElementById("listDocName").options[PageNo-1].text;
+            document.getElementById("lblDocDescription").textContent = document.getElementById("listDocDescription").options[PageNo-1].text;
+        }
+        //if ((document.getElementById("divImage")) && (document.getElementById("divImage").style.visibility == "visible")) {
+        if (document.getElementById("divImage")){
+            document.images["imgPhoto"].src = document.getElementById("listDocURL").options[PageNo-1].text;
+        }
+        else if (document.getElementById("divVideo")){
+            var FO = {	movie:"flvplayer.swf",width:"500",height:"400",majorversion:"7",build:"0",bgcolor:"#FFFFFF",
+                flashvars:"file=" + document.getElementById("listDocURL").options[PageNo-1].text + "&showdigits=true&autostart=false&showfsbutton=false" };
+            UFO.create(	FO, "player2");
+        }
+        else if (document.getElementById("divDocument")){
+            document.getElementById("hlinkDocument").href = document.getElementById("listDocURL").options[PageNo-1].text;
+        }
+    }
+    else
+    {
+        if (document.all){
+            document.getElementById("txtFileName").innerText = "";
+            document.getElementById("lblDocName").innerText = "";
+            document.getElementById("lblDocDescription").innerText = "";
+        }
+        else
+        {
+            document.getElementById("txtFileName").textContent = "";
+            document.getElementById("lblDocName").textContent = "";
+            document.getElementById("lblDocDescription").textContent = "";
+        }
+        if (document.getElementById("divImage"))
+            document.images["imgPhoto"].src = "";
+        else if (document.getElementById("divDocument")){
+            document.images["hlinkDocument"].style.visibility = "hidden";
+            document.images["hlinkDocument"].style.display = "none";
+        }
+    }
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------     
+function GetFileName(strFilePath){
+    strFilePath = strFilePath.substr(strFilePath.lastIndexOf ("/")+1);
+    strFilePath = strFilePath.replace(document.getElementById("txtHConsultID").value + "_", "");
+    return(strFilePath);
+}
+
+
+//------------------------------------------------------
+function CheckPrev_NextImages(){
+    document.getElementById("imgPrev").disabled = (PageNo == 1);
+    document.getElementById("imgNext").disabled = (PageNo == PageQty);
+    
+    document.getElementById("imgPlay").disabled = (PageQty == 1);
+    document.getElementById("imgPause").disabled = (PageQty == 1);
+}
+
+//----------------------------------------------------------------------------------------------------------------     
+function ShowImage(Move){
+    var flag = false;
+    if (Move == "Prev")
+    {
+        if (PageNo > 1){
+            PageNo--;
+            flag = true;
+        }
+    }
+    else{
+        if (PageNo < PageQty){
+            PageNo++;
+            flag = true;
+        }
+    }
+    if (flag)
+        GetSet_PageNo_Qty("Set");
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------     
+function imgPlay_onlick(){
+    PageNo = 0;
+    clearTimeout(PlayTimer);
+    PlayAlbum();
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------     
+function PlayAlbum(){
+    if (PageNo < PageQty){
+        PageNo++;
+        GetSet_PageNo_Qty("Set");
+        PlayTimer = setTimeout("PlayAlbum();", 3 * 1000, "javascript");
+    }
+    else clearTimeout(PlayTimer);
+    return;
+}
+
+

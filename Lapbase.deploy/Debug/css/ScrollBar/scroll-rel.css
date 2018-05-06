@@ -1,0 +1,100 @@
+
+	#divScroll{
+		/* The total width of the scrolling div including scrollbar */
+		position:absolute;	/* Never change this one */
+		width:530px;	    /* Width of box */
+		height:200px;	    /* Height of box */
+		/*overflow:auto;	    /* Scrolling features */
+		/*border:1px solid #A9A9A9;	/* Dark green border */
+		/*background-color:#FFF;	    /* White background color */
+		/*text-align:left;
+		font-size:0.9em;
+		/*z-index:100;*/
+	}
+	
+	#divScroll_iframe{
+    background-color:#F1A;/*F00*/
+    position:absolute;
+    z-index:5;
+	}
+
+	#divScroll_parentContainer{
+		/*width:500px;	/* Width of the scrolling text */
+		width:500px;	/* Width of the scrolling text */
+		height:100%;
+		overflow:hidden;
+		border:1px solid #BC8FBD;
+		float:left;
+		position:relative;
+	}
+	
+	/*
+	CSS for the scrolling content 
+	*/
+	#divScroll_content{
+		padding: 1px;
+		position:relative;
+		font-family: Trebuchet MS, Lucida Sans Unicode, Arial, sans-serif;
+		font-size: 0.9em;
+		/*line-height:130%;*/
+		color: #333;
+		top:0px;
+	}
+	
+	/*
+	The scrollbar slider 
+	*/
+	#divScroll_slider{
+		width:15px;
+		margin-left:2px;
+		/*height:500px;*/
+		height:200px;
+		float:left;
+	}
+	
+	/*
+	The scrollbar (The bar between the up and down arrow )
+	*/
+	#divScroll_scrollbar{
+		width:15px;
+		/*height:460px;	/* Total height - 40 pixels */
+		height:160px;	/* Total height - 40 pixels */
+		border:1px solid #BC8FBD;
+		position:relative;
+		
+	}
+	/*
+	The scrollbar handle
+	*/
+	#divScroll_theScroll{
+		margin:1px;
+		width:13px;
+		height:13px;
+		background-color:#BC8FBD;
+		position:absolute;	
+		top:0px;
+		left:0px;
+		cursor:pointer;
+	}
+	/*
+	Scroll buttons(The up and down arrows)
+	*/
+	#divScroll_scrollUp,#divScroll_scrollDown{
+		width:15px;
+		height:16px;
+		border:1px solid #BC8FBD;
+		color: #BC8FBD;
+		text-align:center;
+		font-size:16px;
+		line-height:16px;
+		cursor:pointer;
+	}
+	#divScroll_scrollUp{
+		margin-bottom:2px;
+	}
+	#divScroll_scrollDown{
+		margin-top:2px;
+	}
+	#divScroll_scrollDown span,#divScroll_scrollUp span{
+		font-family: Symbol;
+	}

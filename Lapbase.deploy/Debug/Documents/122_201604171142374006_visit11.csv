@@ -1,0 +1,4 @@
+surname *,firstname *,dob(mm/dd/yyyy) *,visitdate(mm/dd/yyyy) *,visitseenbyid(value always 0),visitweight *,visitheight,visitseenbysurname *,visitseenbyfirstname *,visitseenbycity *,visitnotes
+Birch,Anthony,8/04/1955,3/02/2014,0,120,,Ferry,Indrawan,Southbank,
+Lagana,Antonia,9/12/1959,1/08/2015,0,111,,Ferry,Ind,,
+Ferry,Test,9/12/1959,1/08/2015,0,123,,,,,

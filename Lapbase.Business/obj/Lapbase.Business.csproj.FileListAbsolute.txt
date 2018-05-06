@@ -1,0 +1,23 @@
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Lapbase.Business.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Lapbase.Business.pdb
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\obj\Debug\Lapbase.Business.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\obj\Debug\Lapbase.Business.pdb
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Lapbase.Data.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Microsoft.Practices.EnterpriseLibrary.Common.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Microsoft.Practices.EnterpriseLibrary.Data.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Microsoft.Practices.ObjectBuilder.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Microsoft.Practices.EnterpriseLibrary.Common.xml
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Microsoft.Practices.EnterpriseLibrary.Data.xml
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Lapbase.Data.pdb
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\localhost\Lapbase.Business\bin\Debug\Lapbase.Business.dll.config
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Lapbase.Business.dll.config
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Lapbase.Business.dll
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Lapbase.Business.pdb
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Lapbase.Data.dll
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Microsoft.Practices.EnterpriseLibrary.Common.dll
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Microsoft.Practices.EnterpriseLibrary.Data.dll
+C:\Projects\Lapbase\Lapbase.Business\bin\Debug\Lapbase.Data.pdb
+C:\Projects\Lapbase\Lapbase.Business\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\Lapbase\Lapbase.Business\obj\Debug\Lapbase.Business.dll
+C:\Projects\Lapbase\Lapbase.Business\obj\Debug\Lapbase.Business.pdb

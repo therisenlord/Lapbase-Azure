@@ -1,0 +1,27 @@
+<browsers>
+  <browser id="Safari60x_bugfix" parentID="Safari60">
+    <identification>
+      <capability name="appleWebTechnologyVersion" match="60\d" />
+    </identification>
+    <capture>
+    </capture>
+    <capabilities>
+      <capability name="ecmascriptversion"       value="1.4" />
+      <capability name="w3cdomversion"           value="1.0" />
+      <capability name="supportsCallback"        value="true" />
+    </capabilities>
+  </browser>
+
+  <browser id="Safari85x_bugfix" parentID="Safari85">
+    <identification>
+      <capability name="appleWebTechnologyVersion" match="85\d" />
+    </identification>
+    <capture>
+    </capture>
+    <capabilities>
+      <capability name="ecmascriptversion"       value="1.4" />
+      <capability name="w3cdomversion"           value="1.0" />
+      <capability name="supportsCallback"        value="true" />
+    </capabilities>
+  </browser>
+</browsers>

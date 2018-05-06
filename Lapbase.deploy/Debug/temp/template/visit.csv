@@ -1,0 +1,1 @@
+surname *,firstname *,dob(mm/dd/yyyy) *,visitdate(mm/dd/yyyy) *,visitseenbyid(value always 0),visitweight *,visitheight,visitseenbysurname *,visitseenbyfirstname *,visitseenbycity *,visitnotes

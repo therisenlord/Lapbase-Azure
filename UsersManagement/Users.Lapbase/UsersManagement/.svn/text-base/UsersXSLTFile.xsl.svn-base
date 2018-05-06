@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+<xsl:template match="/">
+    <html>
+    <body>
+      <table style="width:100%" cellpadding = "0" cellspacing = "0" border="0" id ="tblVisitXSLT" class="testNameTable">
+        <xsl:for-each select="dsSchema/tblUsers">
+          <!--<xsl:variable name="ConsultID" select="ConsultId"/>-->
+        <tr>
+          
+			<td >
+            <xsl:if test='position() mod 2 = 1'>
+              <xsl:attribute name="class">row01</xsl:attribute>
+            </xsl:if>
+            <xsl:if test='position() mod 2 != 1'>
+              <xsl:attribute name="class">row02</xsl:attribute>
+            </xsl:if>
+			  
+            <table style="width:100%" cellpadding = "0" cellspacing = "0" border="0">
+              <xsl:attribute name="id">tblUsersRow_<xsl:value-of select="UserPracticeCode"/></xsl:attribute>
+              <tr>
+                <xsl:attribute name="id">TR_<xsl:value-of select="UserPracticeCode"/></xsl:attribute>
+                <td style="width:5%">
+                  <xsl:attribute name ="onclick">javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);</xsl:attribute>
+                  <xsl:value-of select="position()"/>
+                </td>
+                <td style="width:15%">
+                  <xsl:attribute name ="onclick">
+                    javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);</xsl:attribute>
+                  <xsl:attribute name="id">Username_<xsl:value-of select="position()"/></xsl:attribute>
+                  <xsl:value-of select="USERID"/>
+                </td>
+                <td style="width:20%">
+                  <xsl:attribute name ="onclick">
+                    javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);</xsl:attribute>
+                  <xsl:attribute name="id">
+                    Organization_<xsl:value-of select="position()"/>
+                  </xsl:attribute>
+                  <xsl:value-of select="OrgDomainName"/>
+                </td>
+
+                <td style="width:10%">
+                  <xsl:attribute name ="onclick">
+                    javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);
+                  </xsl:attribute>
+					        <xsl:attribute name="id">Role_<xsl:value-of select="position()"/></xsl:attribute>
+					        <xsl:value-of select="RoleName"/>
+				        </td>
+                <td style="width:15%" >
+                  <xsl:attribute name ="onclick">
+                    javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);
+                  </xsl:attribute>
+                  <xsl:attribute name="id">Firstname_<xsl:value-of select="position()"/></xsl:attribute>
+                  <xsl:value-of select="USER_NAME"/>
+                </td>
+                <td style="width:20%">
+                  <xsl:attribute name ="onclick">
+                    javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);
+                  </xsl:attribute>
+                  <xsl:attribute name="id">Lastname_<xsl:value-of select="position()"/></xsl:attribute>
+                  <xsl:value-of select="USER_SIRNAME"/>
+                </td>
+                <td style="width:10%">
+                  <xsl:attribute name ="onclick">
+                    javascript:UserRow_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="OrgCode"/>);
+                  </xsl:attribute>
+                </td>
+                <td style="width:5%">
+					        <a href = "#">
+						        <xsl:attribute name="id">Delete_<xsl:value-of select="position()"/></xsl:attribute>	
+					          <xsl:attribute name ="onclick">javascript:hDelete_onclick(<xsl:value-of select="UserPracticeCode"/>, <xsl:value-of select="PERMISSION_FLAG"/>);</xsl:attribute>
+                    <xsl:choose>
+                      <xsl:when test ="PERMISSION_FLAG = 1">
+                        <xsl:attribute name="style">color:GREEN</xsl:attribute>
+                      </xsl:when>
+                      <xsl:when test ="PERMISSION_FLAG = 0">
+                        <xsl:attribute name="style">color:RED</xsl:attribute>
+                      </xsl:when>
+                    </xsl:choose>
+                    <xsl:value-of select="Permission_Status"/>
+                  </a>
+                </td>
+                <td style="display:none">
+                  <xsl:attribute name="id">
+                    PermissionLevel_<xsl:value-of select="position()"/>
+                  </xsl:attribute>
+                  <xsl:value-of select="PermissionLevel"/>
+                </td>
+                <td style="display:none">
+                  <xsl:attribute name="id">
+                    SurgeonID_<xsl:value-of select="position()"/>
+                  </xsl:attribute>
+                  <xsl:value-of select="SurgeonID"/>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        </xsl:for-each>
+      </table>
+    </body>
+    </html>
+</xsl:template>
+
+</xsl:stylesheet> 
+

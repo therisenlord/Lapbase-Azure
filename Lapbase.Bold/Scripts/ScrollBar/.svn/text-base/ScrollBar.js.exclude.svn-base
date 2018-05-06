@@ -1,0 +1,263 @@
+﻿// JScript File
+
+	var contentHeight = 0; 	// The total height of the content
+	var visibleContentHeight = 0;	
+	var scrollActive = false;
+	
+	var scrollHandleObj = false; // reference to the scroll handle
+	var scrollHandleHeight = false;
+	var scrollbarTop = false;
+	var eventYPos = false;
+
+	var scrollbuttonActive = false;
+	var scrollbuttonDirection = false;
+	var scrollbuttonSpeed = 2; // How fast the content scrolls when you click the scroll buttons(Up and down arrows)
+	var scrollTimer = 10;	// Also how fast the content scrolls. By decreasing this value, the content will move faster	
+	
+	var scrollMoveToActive = false;
+	var scrollMoveToYPosition = false;
+	
+	var RecQtyInDev = 0;
+	
+	var operaBrowser = false;
+	if(navigator.userAgent.indexOf('Opera')>=0)operaBrowser=1;
+		
+	function scrollDiv_startScroll(e)
+	{
+		if(document.all && !operaBrowser)e = event;
+		scrollbarTop = document.getElementById('divScroll_theScroll').offsetTop;
+		eventYPos = e.clientY;
+		scrollActive = true;
+	}
+	
+	function scrollDiv_stopScroll()
+	{
+		scrollActive = false;
+		scrollbuttonActive = false;
+		scrollMoveToActive = false;
+	}
+	function scrollDiv_scroll(e)
+	{
+		if(!scrollActive)return;
+		if(document.all && !operaBrowser)e = event;
+		if(e.button!=1 && document.all)return;
+		var topPos = scrollbarTop + e.clientY - eventYPos; 
+		if(topPos<0)topPos=0;
+		if(topPos/1>visibleContentHeight-(scrollHandleHeight+4)/1)topPos = visibleContentHeight-(scrollHandleHeight+4);
+		document.getElementById('divScroll_theScroll').style.top = topPos + 'px';
+		document.getElementById('divScroll_content').style.top = 0 - Math.floor((contentHeight) * ((topPos)/(visibleContentHeight-scrollHandleHeight)))+'px' 
+	}
+	
+	/*
+	Click on the slider
+	Move the content to the this point
+	*/
+	function scrolldiv_scrollMoveToInit(e)
+	{		
+	    
+		if(document.all && !operaBrowser)e = event;
+		scrollMoveToActive = true;
+		scrollMoveToYPosition = e.clientY - document.getElementById('divScroll_scrollbar').offsetTop;
+		if(document.getElementById('divScroll_theScroll').offsetTop/1 > scrollMoveToYPosition) scrollbuttonDirection = scrollbuttonSpeed*-2; else  scrollbuttonDirection = scrollbuttonSpeed*2;
+		scrolldiv_scrollMoveTo();	
+	}
+	
+	function scrolldiv_scrollMoveTo()
+	{
+		if(!scrollMoveToActive || scrollActive)return;
+		var topPos = document.getElementById('divScroll_theScroll').style.top.replace('px','');
+		topPos = topPos/1 + scrollbuttonDirection;
+		if(topPos<0){
+			topPos=0;
+			scrollMoveToActive=false;
+		}
+		if(topPos/1>visibleContentHeight-(scrollHandleHeight+4)/1){
+			topPos = visibleContentHeight-(scrollHandleHeight+4);	
+			scrollMoveToActive=false;
+		}
+		if(scrollbuttonDirection<0 && topPos<scrollMoveToYPosition-scrollHandleHeight/2)return;	
+		if(scrollbuttonDirection>0 && topPos>scrollMoveToYPosition-scrollHandleHeight/2)return;			
+		document.getElementById('divScroll_theScroll').style.top = topPos + 'px';
+		document.getElementById('divScroll_content').style.top = 0 - Math.floor((contentHeight) * ((topPos)/(visibleContentHeight-scrollHandleHeight)))+'px' 		
+		setTimeout('scrolldiv_scrollMoveTo()',scrollTimer);		
+	}
+	
+	function cancelEvent()
+	{
+		return false;			
+	}
+
+	function scrolldiv_scrollButton()
+	{
+		if(this.id=='divScroll_scrollDown')scrollbuttonDirection = scrollbuttonSpeed; else scrollbuttonDirection = scrollbuttonSpeed*-1;
+		scrollbuttonActive=true;
+		scrolldiv_scrollButtonScroll( );
+	} 
+	
+	function scrolldiv_scrollButtonScroll()
+	{
+		if(!scrollbuttonActive)return;
+		var topPos = document.getElementById('divScroll_theScroll').style.top.replace('px','');
+		topPos = topPos/1 + scrollbuttonDirection;
+		if(topPos<0){
+			topPos=0;
+			scrollbuttonActive=false;
+		}
+		if(topPos/1>visibleContentHeight-(scrollHandleHeight+4)/1){
+			topPos = visibleContentHeight-(scrollHandleHeight+4);	
+			scrollbuttonActive=false;
+		}	
+		document.getElementById('divScroll_theScroll').style.top = topPos + 'px';
+		document.getElementById('divScroll_content').style.top = 0 - Math.floor((contentHeight) * ((topPos)/(visibleContentHeight-scrollHandleHeight)))+'px' 			
+		setTimeout('scrolldiv_scrollButtonScroll()',scrollTimer);
+	}
+	
+	/** /
+	function scrolldiv_scrollButtonScroll(MoveDownFlag)
+	{
+		if(!scrollbuttonActive)return;
+		var Factor = MoveDownFlag ? -1 : 1;
+		var topPos = document.getElementById('divScroll_theScroll').style.top.replace('px','');
+		var topPosScroll = document.getElementById('divScroll_theScroll').style.top.replace('px','');
+		
+		topPos = topPos/1 + scrollbuttonDirection;
+		if(topPos<0){
+			topPos=0;
+			topPosScroll = 8 ;
+			//scrollbuttonActive=false;
+		}
+		
+		if(topPos/1>visibleContentHeight-(scrollHandleHeight+4)/1){
+			topPos = visibleContentHeight-(scrollHandleHeight+4);	
+			topPosScroll = topPos ;
+			//scrollbuttonActive=false;
+		}	
+		else
+		{
+		    //var stepheight = parseInt((contentHeight - visibleContentHeight - scrollHandleHeight) / RecQtyInDev);
+		    var stepheight = parseInt((visibleContentHeight - scrollHandleHeight) / (RecQtyInDev - RecNoInDiv));
+		    
+		    //var stepheight = ((contentHeight - visibleContentHeight - scrollHandleHeight) / contentHeight) * RecQtyInDev;
+		    topPosScroll = parseInt(topPosScroll) - Factor*parseInt(stepheight) ;
+		}
+		document.getElementById('divScroll_theScroll').style.top = topPosScroll + 'px';
+		//document.getElementById('divScroll_content').style.top = 0 - Math.floor((contentHeight) * ((topPos)/(visibleContentHeight-scrollHandleHeight)))+'px' ; //Original version
+		
+		document.forms[0].txtRow.value = contentHeight +"  " +visibleContentHeight + "  " +  scrollHandleHeight + "  " + RecQtyInDev + " Step : " + stepheight ;
+		
+		if (scrollbuttonActive)
+		    if (isNaN(parseInt(document.getElementById('divScroll_content').style.top.replace('px',''))))
+		        document.getElementById('divScroll_content').style.top = Factor*Math.abs(scrollbuttonDirection) +'px' ;
+		    else
+		        document.getElementById('divScroll_content').style.top = (parseInt(document.getElementById('divScroll_content').style.top.replace('px','')) + Factor*Math.abs(scrollbuttonDirection)) +'px' ;
+		setTimeout('scrolldiv_scrollButtonScroll(' + MoveDownFlag + ')',scrollTimer); 
+	}
+	/**/
+	
+	function ScrollByArrowKeys(MoveDownFlag){
+	    var Factor = MoveDownFlag ? -1 : 1;
+        var topPosScroll = document.getElementById('divScroll_theScroll').style.top.replace('px','');
+		var stepheight = parseInt((visibleContentHeight - scrollHandleHeight) / (RecQtyInDev - RecNoInDiv));
+		
+		topPosScroll = parseInt(topPosScroll) - Factor*parseInt(stepheight) ;
+		document.getElementById('divScroll_theScroll').style.top = topPosScroll + 'px';
+
+	    
+	    if (scrollbuttonActive)
+		    if (isNaN(parseInt(document.getElementById('divScroll_content').style.top.replace('px',''))))
+		        document.getElementById('divScroll_content').style.top = Factor*Math.abs(scrollbuttonDirection) +'px' ;
+		    else
+		        document.getElementById('divScroll_content').style.top = (parseInt(document.getElementById('divScroll_content').style.top.replace('px','')) + Factor*Math.abs(scrollbuttonDirection)) +'px' ;
+	}
+	
+	
+	function scrolldiv_scrollButtonStop()
+	{
+		scrollbuttonActive = false;
+	}
+	
+	
+	function scrolldiv_initScroll()
+	{
+		visibleContentHeight = document.getElementById('divScroll_scrollbar').offsetHeight ;
+		contentHeight = document.getElementById('divScroll_content').offsetHeight - visibleContentHeight;		
+		
+		scrollHandleObj = document.getElementById('divScroll_theScroll');
+		scrollHandleHeight = scrollHandleObj.offsetHeight;
+		scrollbarTop = document.getElementById('divScroll_scrollbar').offsetTop;		
+		document.getElementById('divScroll_theScroll').onmousedown = scrollDiv_startScroll;
+		document.body.onmousemove = scrollDiv_scroll;
+		document.getElementById('divScroll_scrollbar').onselectstart = cancelEvent;
+		document.getElementById('divScroll_theScroll').onmouseup = scrollDiv_stopScroll;
+		if(document.all)document.body.onmouseup = scrollDiv_stopScroll; else document.documentElement.onmouseup = scrollDiv_stopScroll;
+		document.getElementById('divScroll_scrollDown').onmousedown = scrolldiv_scrollButton;
+		document.getElementById('divScroll_scrollUp').onmousedown = scrolldiv_scrollButton;
+		document.getElementById('divScroll_scrollDown').onmouseup = scrolldiv_scrollButtonStop;
+		document.getElementById('divScroll_scrollUp').onmouseup = scrolldiv_scrollButtonStop;
+		document.getElementById('divScroll_scrollUp').onselectstart = cancelEvent;
+		document.getElementById('divScroll_scrollDown').onselectstart = cancelEvent;
+		document.getElementById('divScroll_scrollbar').onmousedown = scrolldiv_scrollMoveToInit;
+	}
+	/*
+	Change from the default color
+	*/	
+	function scrolldiv_setColor(rgbColor)
+	{
+		document.getElementById('divScroll_scrollbar').style.borderColor = rgbColor;
+		document.getElementById('divScroll_theScroll').style.backgroundColor = rgbColor;
+		document.getElementById('divScroll_scrollUp').style.borderColor = rgbColor;
+		document.getElementById('divScroll_scrollDown').style.borderColor = rgbColor;
+		document.getElementById('divScroll_scrollUp').style.color = rgbColor;
+		document.getElementById('divScroll_scrollDown').style.color = rgbColor;
+		document.getElementById('divScroll_parentContainer').style.borderColor = rgbColor;
+	}
+	/*
+	Setting total width of scrolling div
+	*/
+	function scrolldiv_setWidth(newWidth)
+	{
+		document.getElementById('divScroll').style.width = newWidth + 'px';
+		document.getElementById('divScroll_parentContainer').style.width = newWidth-30 + 'px';		
+	}
+	
+	/*
+	Setting total height of scrolling div
+	*/
+	function scrolldiv_setHeight(newHeight)
+	{
+		document.getElementById('divScroll').style.height = newHeight + 'px';
+		document.getElementById('divScroll_parentContainer').style.height = newHeight + 'px';
+		document.getElementById('divScroll_slider').style.height = newHeight + 'px';
+		document.getElementById('divScroll_scrollbar').style.height = newHeight-40 + 'px';		
+	}
+	/*
+	Setting new background color to the slider 
+	*/
+	function setSliderBgColor(rgbColor)
+	{
+		document.getElementById('divScroll_scrollbar').style.backgroundColor = rgbColor;
+		document.getElementById('divScroll_scrollUp').style.backgroundColor = rgbColor;
+		document.getElementById('divScroll_scrollDown').style.backgroundColor = rgbColor;
+	}
+	/*
+	Setting new content background color
+	*/
+	function setContentBgColor(rgbColor)
+	{
+		document.getElementById('divScroll_parentContainer').style.backgroundColor = rgbColor;
+	}
+	
+	/*
+	Setting scroll button speed
+	*/
+	function setScrollButtonSpeed(newScrollButtonSpeed)
+	{
+		scrollbuttonSpeed = newScrollButtonSpeed;
+	}
+	/*
+	Setting interval of the scroll
+	*/
+	function setScrollTimer(newInterval)
+	{
+		scrollTimer = newInterval;
+	}

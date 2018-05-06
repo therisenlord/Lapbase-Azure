@@ -1,0 +1,186 @@
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Data.OleDb;
+using System.Globalization;
+
+public partial class Forms_PatientsVisits_ConsultFU1_Includes_VisitAjaxForm : System.Web.UI.Page
+{
+    GlobalClass gClass = new GlobalClass();
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+        Page.Culture = Request.Cookies["CultureInfo"].Value;
+        CheckRequestQueryString();
+    }
+
+    #region private void CheckRequestQueryString()
+    private void CheckRequestQueryString()
+    {
+        if (Request.QueryString.Count > 0)
+        {
+            Response.Clear();
+            switch (Request.QueryString["QSN"].ToString().ToUpper()) //QSN
+            {
+                case "LOADVISITDATA" :
+                    FetchVisitData();
+                    break;
+
+                case "LOADDOCTORS" :
+                    try
+                    {
+                        LoadDoctorsList();
+                    }
+                    catch (Exception err)
+                    {
+                        Response.Write(err.ToString());
+                    }
+                    break;
+                case "LOADGENERALNOTES":
+                    LoadPatientGeneralNotes();
+                    break;
+            }
+            Response.End();
+        }
+    }
+    #endregion
+
+    #region private void UpdateNextDateVisit(string strDateSeen, string strMonthWeek, string strMonthWeekFlag)
+    private void UpdateNextDateVisit(string strDateSeen, string strMonthWeek, string strMonthWeekFlag)
+    {
+        DateTimeFormatInfo myDTFI = new CultureInfo(Request.Cookies["CultureInfo"].Value, false).DateTimeFormat;
+        DateTime resultDate = DateTime.Now;
+        int intMonthWeek = 0;
+        string strValue = "";
+        
+        try
+        {
+            intMonthWeek = Convert.ToInt32(strMonthWeek);
+            if (!DateTime.TryParse(strDateSeen, myDTFI, DateTimeStyles.None, out resultDate))
+                strValue = "E1";
+            else
+            {
+                DateTime tempDate = new DateTime();
+
+                if (strMonthWeekFlag == "1") //Month
+                    strValue = gClass.TruncateDate(resultDate.AddMonths(intMonthWeek).ToString(), Request.Cookies["CultureInfo"].Value, 1);
+                else
+                    strValue = gClass.TruncateDate(resultDate.AddDays(intMonthWeek * 7).ToString(), Request.Cookies["CultureInfo"].Value, 1);
+                tempDate = Convert.ToDateTime(strValue);
+                strValue += ";" + gClass.GetMonthName(tempDate.Month) + " " + tempDate.Year.ToString();
+            }
+        }
+        catch
+        {
+            strValue = "E2";
+        }
+
+        Response.Write(strValue);
+        Response.End();
+        return;
+    }
+    #endregion 
+
+    #region private void LoadDoctorsList()
+    private void LoadDoctorsList()
+    {
+        Response.Write(gClass.FillReferredDoctorList(Request.Cookies["OrganizationCode"].Value, Request.Cookies["UserPracticeCode"].Value).GetXml());
+    }
+    #endregion
+
+    #region private void LoadPatientGeneralNotes
+    private void LoadPatientGeneralNotes()
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        DataSet dsPatient = new DataSet();
+        string strGeneralNotes = "";
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_PatientData_LoadData", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+        cmdSelect.Parameters.Add("@Patient_CustomID", SqlDbType.VarChar, 20).Value = String.Empty;
+        dsPatient = gClass.FetchData(cmdSelect, "tblPatientData");
+
+        if ((dsPatient.Tables.Count > 0) && (dsPatient.Tables[0].Rows.Count > 0))
+            strGeneralNotes = dsPatient.Tables["tblPatientData"].Rows[0]["Notes"].ToString();
+        else
+            strGeneralNotes = "";
+        dsPatient.Dispose();
+        Response.Write(strGeneralNotes);
+    }
+    #endregion
+
+    #region private void FetchVisitData()
+    private void FetchVisitData()
+    {
+        SqlCommand cmdSelect = new SqlCommand(); 
+        DataSet dsTemp;
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_ConsultFU1_ProgressNotes_LoadVisitData", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@ConsultID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["CID"]);
+        try
+        {
+            dsTemp = gClass.FetchData(cmdSelect, "tblVisitData");
+            if (dsTemp.Tables.Count > 0)
+                AddTempFields(ref dsTemp);
+            
+            Response.Write(dsTemp.GetXml());
+        }
+        catch (Exception err)
+        { 
+            Response.Write("-1");
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host,Request.Cookies["Logon_UserName"].Value, 
+                    "Visit Ajax Form", "FetchVisitData function", err.ToString());
+        }
+        cmdSelect.Dispose();
+    }
+    #endregion
+
+    #region private void AddTempFields(ref DataSet dsTemp)
+    private void AddTempFields(ref DataSet dsTemp)
+    {
+        System.Collections.Generic.List<string> strFields = new System.Collections.Generic.List<string>();
+
+        strFields.Add("strHypertensionResolvedDate");
+        strFields.Add("strDiabetesResolvedDate");
+        strFields.Add("strLipidsResolvedDate");
+        strFields.Add("strAsthmaResolvedDate");
+        strFields.Add("strRefluxResolvedDate");
+        strFields.Add("strSleepResolvedDate");
+        strFields.Add("strFertilityResolvedDate");
+        strFields.Add("strIncontinenceResolvedDate");
+        strFields.Add("strBackResolvedDate");
+        strFields.Add("strArthritisResolvedDate");
+        strFields.Add("strCVDLevelResolvedDate");
+
+        foreach (string strField in strFields){
+            DataColumn dcTemp = new DataColumn();
+            dcTemp.DataType = Type.GetType("System.String");
+            dcTemp.ColumnName = strField;
+            dsTemp.Tables[0].Columns.Add(dcTemp);
+        }
+
+        foreach (DataRow dRow in dsTemp.Tables[0].Rows)
+        {
+            dRow["strHypertensionResolvedDate"] = Convert.ToDateTime(dRow["HypertensionResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["HypertensionResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strDiabetesResolvedDate"] = Convert.ToDateTime(dRow["DiabetesResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["DiabetesResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strLipidsResolvedDate"] = Convert.ToDateTime(dRow["LipidsResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["LipidsResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strAsthmaResolvedDate"] = Convert.ToDateTime(dRow["AsthmaResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["AsthmaResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strRefluxResolvedDate"] = Convert.ToDateTime(dRow["RefluxResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["RefluxResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strSleepResolvedDate"] = Convert.ToDateTime(dRow["SleepResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["SleepResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strFertilityResolvedDate"] = Convert.ToDateTime(dRow["FertilityResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["FertilityResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strIncontinenceResolvedDate"] = Convert.ToDateTime(dRow["IncontinenceResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["IncontinenceResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strBackResolvedDate"] = Convert.ToDateTime(dRow["BackResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["BackResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strArthritisResolvedDate"] = Convert.ToDateTime(dRow["ArthritisResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["ArthritisResolvedDate"].ToString()).ToShortDateString() : "";
+            dRow["strCVDLevelResolvedDate"] = Convert.ToDateTime(dRow["CVDLevelResolvedDate"].ToString()).ToShortDateString().IndexOf("1900") == -1 ? Convert.ToDateTime(dRow["CVDLevelResolvedDate"].ToString()).ToShortDateString() : "";
+        }
+        dsTemp.AcceptChanges();
+    }
+    #endregion
+}

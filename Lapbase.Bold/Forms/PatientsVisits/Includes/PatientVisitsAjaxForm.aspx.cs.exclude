@@ -1,0 +1,70 @@
+using System;
+using System.Data;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+
+public partial class Forms_PatientsVisits_Includes_PatientVisitsAjaxForm : System.Web.UI.Page
+{
+    GlobalClass gClass = new GlobalClass();
+    int intNumberPerSheet = 9, NumberOfPages = 0;
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+        Page.Culture = Context.Request.Cookies["CultureInfo"].Value;
+        gClass.LanguageCode = Context.Request.Cookies["LanguageCode"].Value;
+        gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+
+        CheckRequestQueryString();
+    }
+    #endregion 
+
+    #region private void CheckRequestQueryString()
+    private void CheckRequestQueryString()
+    {
+        if (Request.QueryString.Count > 0)
+            switch (Request.QueryString["QSN"].ToString().ToUpper()) //QSN
+            {
+                case "CHECKPID" :
+                    CheckPatientID();
+                    Response.End();
+                    break;
+            }
+        
+    }
+    #endregion
+
+    #region private void CheckPatientID()
+    private void CheckPatientID()
+    {
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand();
+        DataSet dsPatient;
+        Int64 ReturnedPID = 0;
+
+        try
+        {
+            gClass.MakeStoreProcedureName(ref cmdSelect, "sp_PatientData_LoadData", true);
+            cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+            cmdSelect.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+            cmdSelect.Parameters.Add("@PatientID", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+
+            dsPatient = gClass.FetchData(cmdSelect, "tblPatient");
+
+            if ((dsPatient.Tables.Count > 0) && (dsPatient.Tables[0].Rows.Count > 0))
+                ReturnedPID = Convert.ToInt64(Request.QueryString["PID"]);
+        }
+        catch { }
+        Response.Write(ReturnedPID);
+    }
+    #endregion
+}

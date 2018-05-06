@@ -1,0 +1,533 @@
+﻿// JScript File
+
+/****************************************************************************************************************
+This section contains all function about Comorbidity Page (in VISIT and OPERATION pages)
+****************************************************************************************************************/
+var BoldErrorMsg = "";
+//----------------------------------------------------------------------------------------------------------------
+function InitializePage(){
+    Complication_ClearFields();
+    LoadPatientComplicationHistoryData( );
+    FillBoldLists();
+    //FetchFieldsCaption(false,  document.getElementById("txtHCulture").value, document.frmComplication.name);
+    //iTimerID = window.setInterval("IsTitlesLoaded();", 1000,"javascript");
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function IsTitlesLoaded(){
+    if (document.getElementById("TitleLoaded").value == "1"){
+        window.clearInterval(iTimerID);
+        LoadPatientComplicationHistoryData( );
+    }
+    return;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------
+function btnSaveComplication_onclick( ){
+    SaveComplicationProc();
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function btnCancelComplication_onclick(btnCancel){
+    if (document.getElementById("btnSaveComplication").style.display == "none"){
+        ShowComplicationFormDiv(1); 
+        btnCancel.value = "Cancel";
+    }
+    else
+    {
+        Complication_ClearFields();        
+        document.forms[0].btnSaveComplication.disabled = false;
+    }
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function ShowComplicationFormDiv(ShowFlag){ 
+    document.getElementById("btnCancelComplication").value = (ShowFlag == 1) ? "Cancel" : "Add new Event"; 
+    document.getElementById("btnSaveComplication").style.display = (ShowFlag == 1) ? "block" : "none"; 
+    document.getElementById("div_ComplicationsData").style.display = (ShowFlag == 1) ? "block" : "none";
+    document.getElementById("btnDeleteComplication").style.display = (ShowFlag == 1 && document.forms[0].txtHComplicationID.value >0) ? "block" : "none";
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function SaveComplicationProc(){
+    document.getElementById("divErrorMessage").style.display = "none";
+    
+    MakeStringSelectedItems(document.forms[0].listSurgery_Selected);
+    if (Complication_CanToSave())
+    {
+        var tempComplication = document.getElementById("cmbComplication_com_SystemCodeList");
+        var tempReason = document.getElementById("cmbSuspectedReason_SystemCodeList");
+        var strActionURL = document.getElementById("txtHApplicationURL").value + "Forms/Adverse/ComplicationWebService.asmx";
+        var SurgeryFlag = document.forms[0].chkReOperation_com.checked;
+        var VisitFlag = document.forms[0].chkReAdmitted_com.checked;
+        
+        SetCursor("wait");
+        ShowDivMessage("Saving Comorbidity Info ...", false);
+                   
+        var strSOAP = 
+            '<?xml version="1.0" encoding="utf-8"?>'+
+            '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' + 
+                            'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' + 
+                            'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'+
+	            '<soap:Body>'+
+		            '<Complication_SaveProc xmlns="http://tempuri.org/">'+
+		                '<ComplicationCode>' + tempComplication.value + '</ComplicationCode>'+
+			            '<ComplicationDate>' + document.forms[0].txtDate_com_txtGlobal.value + '</ComplicationDate>'+
+			            '<TypeCode>' + document.forms[0].cmbType_com.value + '</TypeCode>'+
+			            '<Complication>' + tempComplication.options[tempComplication.selectedIndex].text + '</Complication>' + 
+			            '<Readmitted>' + (VisitFlag ? 1 : 0) + '</Readmitted>' + 
+			            '<ReOperation>' + (SurgeryFlag ? 1 : 0) + '</ReOperation>' + 
+			            '<Notes>' + document.forms[0].txtNotes_com_txtGlobal.value + '</Notes>' + 
+			            '<ComplicationID>' + document.forms[0].txtHComplicationID.value + '</ComplicationID>' +
+			            '<FacilityCode>' + (VisitFlag ? document.forms[0].cmbHospital_HospitalsList.value : "") + '</FacilityCode>' + 
+			            '<Facility_Other>' + (VisitFlag ? document.forms[0].txtOtherHospital_txtGlobal.value : "")+ '</Facility_Other>' + 
+			            '<AdverseSurgery>' + (SurgeryFlag ? document.forms[0].txtHSurgery_Selected.value : "")+ '</AdverseSurgery>' + 
+			            '<DoctorID>' + (SurgeryFlag ? document.forms[0].cmbDoctor_DoctorsList.value : "") + '</DoctorID>' + 
+			            '<DateCreated>' + document.forms[0].txtHCurrentDate.value + '</DateCreated>' + 
+			            '<AdmitDate>' + (VisitFlag ? document.forms[0].txtDateAdmit_com_txtGlobal.value : "") + '</AdmitDate>' + 
+			            '<DischargeDate>' + (VisitFlag ? document.forms[0].txtDateDischarge_com_txtGlobal.value : "") + '</DischargeDate>' + 
+			            '<PerformDate>' + (SurgeryFlag ? document.forms[0].txtDatePerform_com_txtGlobal.value : "") + '</PerformDate>' + 
+			            '<Reason>' + tempReason.value + '</Reason>' + 
+		            '</Complication_SaveProc>'+
+	            '</soap:Body>'+
+            '</soap:Envelope>';
+
+	    SubmitSOAPXmlHttp(strSOAP, btnSaveComplication_onclick_CallBack, strActionURL, "http://tempuri.org/Complication_SaveProc");
+    }
+    else{
+        document.getElementById("divErrorMessage").style.display = "block";
+        document.getElementById("pErrorMessage").innerHTML = "Please enter data for RED field(s)..."+ BoldErrorMsg;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function btnSaveComplication_onclick_CallBack(){
+    if (XmlHttp.readyState == 4)
+        if (XmlHttp.status == 200){
+            var intSaveResult = parseInt(XmlHttp.responseXML.documentElement.getElementsByTagName('ReturnValue')[0].firstChild.data);
+            if (intSaveResult == 0) { // if data is saved properly, all fields' data are clear
+                LoadPatientComplicationHistoryData( );
+                Complication_ClearFields();
+            }
+            else{
+                document.getElementById("divErrorMessage").style.display = "block";
+                SetInnerText(document.getElementById("pErrorMessage"), "Please enter the correct data for RED field(s)...");
+                document.getElementById("lblDate_Com").style.color = "RED";
+            }
+        }
+    
+    HideDivMessage();
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function Complication_CanToSave()
+{
+    var flag = true;
+    
+    document.getElementById("lblCode_Com").style.color = "";
+    document.getElementById("lblType_Com").style.color = "";
+    document.getElementById("lblDate_Com").style.color = "";
+    
+    if (document.getElementById("cmbComplication_com_SystemCodeList").selectedIndex == 0){
+        document.getElementById("lblCode_Com").style.color = "RED";
+        flag = false;
+    }
+
+    if (document.getElementById("txtDate_com_txtGlobal").value.length == 0){
+        document.getElementById("lblDate_Com").style.color = "RED";
+        flag = false;
+    }
+    
+    BoldErrorMsg = "";
+    //validation if bold   
+    if(GetCookie("SubmitData") != null) {
+        if(GetCookie("SubmitData").indexOf("submitbold") >-1){
+            //date cant larger than operation discharge date
+            
+            if(document.forms[0].txtHOperationDischargeDate.value.trim() == ""){
+                flag = false;
+                BoldErrorMsg += "<br />- The Event must occur after Operation and Operation discharge date can not be empty";
+            }        
+            
+            dateSeenArr = document.forms[0].txtDate_com_txtGlobal.value.split("/");  
+            if(GetCookie("CultureInfo") == "en-us"){
+                dateSeen = dateSeenArr[1];
+                monthSeen = dateSeenArr[0];
+            }
+            else
+            {
+                dateSeen = dateSeenArr[0];
+                monthSeen = dateSeenArr[1];
+            }
+            yearSeen = dateSeenArr[2];        
+            dateSeenComplete= yearSeen+"/"+monthSeen+"/"+dateSeen;
+            
+            
+            dateDischargeArr = document.forms[0].txtHOperationDischargeDate.value.split("/");           
+            if(GetCookie("CultureInfo") == "en-us"){
+                dateDischarge = dateDischargeArr[1];
+                monthDischarge = dateDischargeArr[0];
+            }
+            else{
+                dateDischarge = dateDischargeArr[0];
+                monthDischarge = dateDischargeArr[1];
+            }
+            yearDischarge = dateDischargeArr[2];        
+            dateDischargeComplete = yearDischarge+"/"+monthDischarge+"/"+dateDischarge;
+                       
+            
+            if ( new Date(dateSeenComplete) < new Date(dateDischargeComplete)){
+                flag = false;
+                BoldErrorMsg += "<br />- The Event Date can not occur before Operation discharge date";
+            }
+            if(document.getElementById("cmbComplication_com_SystemCodeList").value.indexOf("ADD") >-1){
+                flag = false;
+                BoldErrorMsg += "<br />- "+document.getElementById("cmbComplication_com_SystemCodeList").options[document.getElementById("cmbComplication_com_SystemCodeList").selectedIndex].text + " is not BOLD compliance";
+            }
+                    
+            if(document.forms[0].chkReAdmitted_com.checked)
+            {    
+                if(document.forms[0].cmbHospital_HospitalsList.value.trim() == ""){
+                    flag = false;
+                    BoldErrorMsg += "<br />- The Facility can not be empty";
+                }
+                
+                if(document.forms[0].txtHHospitalBoldList.value.indexOf(document.forms[0].cmbHospital_HospitalsList.value+"-") <0){
+                    flag = false;
+                    BoldErrorMsg += "<br />- Facility must not have BOLD ID. Please fill it in on Settings";
+                }
+            }
+            
+            if(document.forms[0].chkReOperation_com.checked)
+            {       
+                if(document.forms[0].cmbDoctor_DoctorsList.value.trim() == "0"){
+                    flag = false;
+                    BoldErrorMsg += "<br />- The Surgeon can not be empty";
+                }
+                
+                if(document.forms[0].txtHDoctorBoldList.value.indexOf(document.forms[0].cmbDoctor_DoctorsList.value+"-") <0){
+                    flag = false;
+                    BoldErrorMsg += "<br />- Surgeon must have BOLD ID. Please fill it in on Settings";
+                }
+                
+                if(document.forms[0].txtHSurgery_Selected.value.trim() == ""){
+                    flag = false;
+                    BoldErrorMsg += "<br />- The Operative Adverse Event can not be empty";
+                }
+                
+                if(document.forms[0].txtHSurgery_Selected.value.indexOf("ADD") >-1){
+                    flag = false;
+                    BoldErrorMsg += "<br />- The Operative Adverse Event is not BOLD compliance";
+                }
+            }
+        }
+    }
+    return (flag);
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function LoadPatientComplicationHistoryData(){
+    var requestURL = document.getElementById("txtHApplicationURL").value + "Forms/Adverse/AdverseForm.aspx?QSN=LOADCOMPLICATIONHISTORY";
+    document.getElementById("AppSchemaMenu_a_Complications").href = "#";
+    ShowDivMessage("Loading Patient's Complication History ...", false);
+    XmlHttpSubmit(requestURL,  LoadPatientComplicationHistoryData_CallBack);
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function LoadPatientComplicationHistoryData_CallBack(){
+    if (XmlHttp.readyState == 4){
+        if (XmlHttp.status == 200){
+            document.getElementById("div_ComplicationsList").innerHTML = XmlHttp.responseText;
+            HideDivMessage();
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+function ComplicationRow_onclick(strComplicationID){
+    //ShowComplicationDataFormDiv(true);
+    LoadComplicationData("tblComplicationRow_" + strComplicationID ,  strComplicationID );
+    ShowComplicationFormDiv(1);
+    return;
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+function LoadComplicationData(tblComplicationRow, strComplicationID) 
+{ 
+    var Rows = document.getElementById(tblComplicationRow).rows; 
+    
+    document.getElementById("txtHComplicationID").value = strComplicationID; 
+    document.getElementById("txtNotes_com_txtGlobal").value =  "";
+    
+    for (rowIdx = 0; rowIdx < Rows.length; rowIdx++) 
+    { 
+        var Cells = Rows[rowIdx].cells; 
+        for (cellIdx = 0; cellIdx < Cells.length; cellIdx++) 
+            if (rowIdx == 0) 
+                switch(cellIdx) 
+                { 
+                    case 1 :   // document.all means IE browser
+                        document.forms[0].cmbComplication_com_SystemCodeList.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break; 
+                    case 2 : 
+                        document.forms[0].cmbType_com.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break; 
+                    case 3 : 
+                        document.forms[0].txtDate_com_txtGlobal.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break; 
+                    case 4 : 
+                        document.forms[0].chkReAdmitted_com.checked = document.all ? (Cells[cellIdx].innerText == "true") : (Cells[cellIdx].textContent == "true");
+                        chkReOperation_com_OnClick(); 
+                        break; 
+                    case 5 : 
+                        document.forms[0].chkReOperation_com.checked = document.all ? (Cells[cellIdx].innerText == "true") : (Cells[cellIdx].textContent == "true"); 
+                        chkReOperation_com_OnClick(); 
+                        break; 
+                    case 6 :
+                        document.forms[0].cmbHospital_HospitalsList.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break;                        
+                    case 7 :
+                        document.forms[0].txtOtherHospital_txtGlobal.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break;
+                        
+                    case 8 :
+                        document.forms[0].txtHSurgery_Selected.value = (document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent);
+                        break;
+                        
+                    case 9 : 
+                        document.forms[0].cmbDoctor_DoctorsList.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break;
+                        
+                    case 10 : 
+                        document.forms[0].txtHDateCreated.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break;
+                        
+                    case 11 : 
+                        document.forms[0].txtDateAdmit_com_txtGlobal.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break; 
+                        
+                    case 12 : 
+                        document.forms[0].txtDateDischarge_com_txtGlobal.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break; 
+                        
+                    case 13 : 
+                        document.forms[0].txtDatePerform_com_txtGlobal.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break; 
+                        
+                    case 14 : 
+                        document.forms[0].cmbSuspectedReason_SystemCodeList.value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+                        break;                         
+                } 
+            else
+                if (cellIdx == 0) 
+                    document.getElementById("txtNotes_com_txtGlobal").value = document.all ? Cells[cellIdx].innerText : Cells[cellIdx].textContent; 
+    } 
+    
+    //if dataclamp is activated, permission lvl 2 or 3
+    //check for created date for this patient
+    if(document.getElementById("txtHDataClamp").value.toLowerCase() == "true" && (document.getElementById("txtHPermissionLevel").value == "2t" || document.getElementById("txtHPermissionLevel").value == "3f"))
+    {
+        var createdDate = document.forms[0].txtHDateCreated.value;        
+        
+        var currentTime = new Date();
+        var currentDate = document.forms[0].txtHCurrentDate.value;
+
+        
+        if(createdDate != "" && createdDate != currentDate)
+            document.forms[0].btnSaveComplication.disabled = true;            
+        else
+            document.forms[0].btnSaveComplication.disabled = false;
+    }
+    __doPostBack('linkBtnLoad','');
+    
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function Complication_ClearFields(){
+    ShowComplicationFormDiv(0); 
+    document.forms[0].txtHComplicationID.value = 0;
+    document.forms[0].cmbComplication_com_SystemCodeList.selectedIndex = 0;
+    document.forms[0].txtDate_com_txtGlobal.value = document.getElementById("txtHCurrentDate").value; 
+    document.forms[0].cmbType_com.selectedIndex = 0;
+    document.forms[0].chkReAdmitted_com.checked = false;
+    document.forms[0].chkReOperation_com.checked = false;
+    document.forms[0].txtNotes_com_txtGlobal.value = "";
+    
+    document.forms[0].cmbSuspectedReason_SystemCodeList.selectedIndex = 0;
+    document.forms[0].txtDateAdmit_com_txtGlobal.value = ""; 
+    document.forms[0].txtDateDischarge_com_txtGlobal.value = ""; 
+    document.forms[0].txtDatePerform_com_txtGlobal.value = ""; 
+    
+    document.forms[0].txtHDateCreated.value = 0;
+    document.forms[0].cmbHospital_HospitalsList.value = "";
+    document.forms[0].txtOtherHospital_txtGlobal.value = "";
+    
+    document.forms[0].cmbDoctor_DoctorsList.value = "";   
+    
+    for(var count = document.forms[0].listSurgery_Selected.options.length - 1; count >= 0; count--)
+    {
+        document.forms[0].listSurgery_Selected.options[count] = null;
+    }
+    
+    chkReOperation_com_OnClick();
+    return;
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+function aCalendar_onclick(obj,inputBoxID){
+    var strDateformat = $get("lblDateFormat");
+    languageCode = document.forms[0].txtHCulture.value.substr(0, 2);
+    
+    var strCmd = "displayCalendar(document.forms[0]."+inputBoxID+"_txtGlobal, document.all ? strDateformat.innerText : strDateformat.textContent, obj)";
+    eval(strCmd);
+} 
+
+//-----------------------------------------------------------------------------------------------------------------
+function chkReOperation_com_OnClick(){
+    document.getElementById("tblVisit").style.display = document.forms[0].chkReAdmitted_com.checked ? "block" : "none";  
+    document.getElementById("tblSurgery").style.display = document.forms[0].chkReOperation_com.checked ? "block" : "none"; 
+    document.getElementById("tblSurgeryList").style.display = document.forms[0].chkReOperation_com.checked ? "block" : "none"; 
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*this function is to add/remove the selected item in BOLD lists (Prev Bariatric, non-Bariatric lists and Adverse Event list)*/
+function BoldLists_dblclick( listSourceID, listDestID, strAction){
+    var listSource = document.getElementById(listSourceID), listDest = document.getElementById(listDestID);
+    
+    if ((listSource.options.length == 0) || (listSource.selectedIndex == -1)) return;
+    
+    if (strAction.toLowerCase() == "add"){ // it means we should add the selected item into dest list, when user double-clicks the source list
+        if (! IsItemExistsInDestList(listDest, listSource.options[listSource.selectedIndex].value))
+            AddItemIntoDestList(listDest, listSource.options[listSource.selectedIndex]);
+    }
+    else if (strAction.toLowerCase() == "remove")   listSource.options[listSource.selectedIndex] = null;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function BoldLButtonLinks_click(listSourceID, listDestID, strAction, LoadAll){
+    var listSource = document.getElementById(listSourceID), listDest = document.getElementById(listDestID);
+    var idx = 0;
+    
+    if (LoadAll){
+        if (strAction.toLowerCase() == "add"){
+            listDest.options.length = 0;
+            for (idx = 0; idx < listSource.options.length; idx++)
+                AddItemIntoDestList(listDest, listSource.options[idx]);
+        }
+        else if (strAction.toLowerCase() == "remove") listSource.options.length = 0;
+    }
+    else {
+        if (strAction.toLowerCase() == "add"){
+            for (idx = 0; idx < listSource.options.length; idx++)
+                if (listSource.options[idx].selected && (! IsItemExistsInDestList(listDest, listSource.options[idx].value)))
+                        AddItemIntoDestList(listDest, listSource.options[idx]);
+        }
+        else if (strAction.toLowerCase() == "remove") {
+                idx = 0;
+                while (idx < listSource.options.length)
+                    if (listSource.options[idx].selected ) {listSource.options[idx] = null; idx = 0;}
+                    else idx++;
+        }
+    }
+}
+
+
+//---------------------------------------------------------------------------------------------------------------
+/*this function and the next function "FillBoldList" are to fill Prev Bariatric, non-Bariatric and Adverse Events lists*/
+function FillBoldLists(){
+    FillBoldList(document.forms[0].cmbAdverseSurgery_SystemCodeList, document.forms[0].listSurgery);
+}
+
+function FillBoldList(listSource, listDest){
+    // The First Row (xh = 0) is "Select from...", we don't add this row to the Dest list
+    for(xh = 1; xh < listSource.options.length; xh++){
+        var option = document.createElement("OPTION");
+        
+        option.value = listSource.options[xh].value;
+        option.text = listSource.options[xh].text;
+        listDest.options.add(option);        
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function AddItemIntoDestList(listDest, sourceOption ){
+    var option = document.createElement("option");
+
+    option.value = sourceOption.value;
+    option.text = sourceOption.text;
+    listDest.options.add(option);
+    
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*this function is to check whether the value of Item exists in dest list or not*/
+function IsItemExistsInDestList(listDest, ItemValue){
+    var flag = false;
+    var xh = 0;
+    
+    for (xh = 0; !flag && (xh < listDest.options.length); xh++)
+        flag = (listDest.options[xh].value == ItemValue);
+        
+    return flag;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*this function is to make string of selected items in Select Destunation lists, we send these string to server and save them in database*/
+function MakeStringSelectedItems(listDest){
+    var txtObject, xh = 0;
+
+    switch(listDest.id){
+        case "listSurgery_Selected" :
+            txtObject = document.forms[0].txtHSurgery_Selected;
+            break;
+    }
+    txtObject.value = "";
+    for (; xh < listDest.options.length; xh++){
+        if (txtObject.value.length == 0)
+            txtObject.value = ";" + listDest.options[xh].value + ";";
+        else
+            if (txtObject.value.indexOf(";" + listDest.options[xh].value + ";") == -1)
+                txtObject.value += listDest.options[xh].value + ";";
+    }
+    if (txtObject.value.length > 0)
+        txtObject.value = txtObject.value.substr(1);
+        
+}
+
+function btnDelete_onclick(){
+    $get("txtHDelete").value=0; 
+    var answer = confirm ("It will permanently delete this event. Do you want to proceed?")
+    if (answer)
+        $get("txtHDelete").value = 1;
+    return;
+}
+
+function getCookieVal (offset) {
+    var endstr = document.cookie.indexOf (";", offset);
+    if (endstr == -1) { endstr = document.cookie.length; }
+    return unescape(document.cookie.substring(offset, endstr));
+}
+
+function GetCookie (name) {
+    var arg = name + "=";
+    var alen = arg.length;
+    var clen = document.cookie.length;
+    var i = 0;
+    while (i < clen) {
+        var j = i + alen;
+        if (document.cookie.substring(i, j) == arg) {
+            return getCookieVal (j);
+        }
+        i = document.cookie.indexOf(" ", i) + 1;
+        if (i == 0) break; 
+    }
+    return null;
+}

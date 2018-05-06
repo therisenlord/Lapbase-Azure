@@ -1,0 +1,48 @@
+﻿var NewWin = false;
+
+//----------------------------------------------------------------------------------------------------------------
+function InitializePage(){
+    /*
+    LoadFieldsCaption();
+    if (document.getElementById("cmbLanguage").style.display.toLowerCase() == "block")
+        FetchFieldsCaption(false, document.getElementById("cmbLanguage").value, document.frmLogon.name);
+    else{
+        var strCultureInfo = document.forms[0].lblCultureInfo.value;
+        FetchFieldsCaption(false, strCultureInfo, document.frmLogon.name);
+    }*/
+    iTimerID = window.setInterval("IsTitlesLoaded();", 1000,"javascript");
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function IsTitlesLoaded(){
+    if (document.getElementById("TitleLoaded").value == "1"){
+        window.clearInterval(iTimerID);
+        SetEvents();
+    }
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function SetEvents(){
+    document.getElementById("txtUserID_txtGlobal").onkeydown = function(e){
+        if (document.all) e = event;
+        if (e.keyCode == 13) __doPostBack('btnLinkLogin','');
+    }
+    
+    document.getElementById("txtUserPW_txtGlobal").onkeydown = function(e){
+        if (document.all) e = event;
+        if (e.keyCode == 13) __doPostBack('btnLinkLogin','');
+    }
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function cmbLanguage_onchange(){
+    LoadFieldsCaption();
+}
+
+//----------------------------------------------------------------------------------------------------------------
+function LoadFieldsCaption(){
+    var flag = document.getElementById("cmbLanguage").style.display.toLowerCase() == "block";
+    FetchFieldsCaption(false, flag ? document.forms[0].cmbLanguage.value : document.forms[0].lblCultureInfo.value, document.frmLogon.name);
+}

@@ -1,0 +1,749 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" Description="Operation Duration with LOS" Author="Lapbase data system">
+  <rd:ReportID>09c23f0e38154d31b6afa7f0c5fb8c99</rd:ReportID>
+  <Language>en-au</Language>
+  <Width>21.5cm</Width>
+  <TopMargin>0.5cm</TopMargin>
+  <LeftMargin>0.5cm</LeftMargin>
+  <RightMargin>0.5cm</RightMargin>
+  <BottomMargin>0.5cm</BottomMargin>
+  <PageWidth>22.5cm</PageWidth>
+  <PageHeight>29cm</PageHeight>
+  <rd:DrawGrid>true</rd:DrawGrid>
+  <rd:GridSpacing>0.1cm</rd:GridSpacing>
+  <rd:SnapToGrid>true</rd:SnapToGrid>
+  <DataTransform>GroupReport/OperationDurationWithLOS/OperationdurationwithLOSXSLTFile.xsl</DataTransform>
+  <DataSources>
+    <DataSource Name="tblOperations">
+      <ConnectionProperties>
+        <ConnectString />
+        <DataProvider>SQL</DataProvider>
+      </ConnectionProperties>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="tblOperations">
+      <Query>
+        <CommandText />
+        <DataSourceName>tblOperations</DataSourceName>
+      </Query>
+      <Fields>
+        <Field Name="PatiendId">
+          <rd:TypeName>System.Int32</rd:TypeName>
+          <DataField>PatiendId</DataField>
+        </Field>
+        <Field Name="LastOperationDate">
+          <rd:TypeName>System.DateTime</rd:TypeName>
+          <DataField>LastOperationDate</DataField>
+        </Field>
+        <Field Name="UserPracticeCode">
+          <rd:TypeName>System.Int32</rd:TypeName>
+          <DataField>UserPracticeCode</DataField>
+        </Field>
+        <Field Name="Duration">
+          <rd:TypeName>System.Int32</rd:TypeName>
+          <DataField>Duration</DataField>
+        </Field>
+        <Field Name="Stay">
+          <rd:TypeName>System.Int32</rd:TypeName>
+          <DataField>Stay</DataField>
+        </Field>
+        <Field Name="SurgeryType">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>SurgeryType</DataField>
+        </Field>
+        <Field Name="Approach">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>Approach</DataField>
+        </Field>
+        <Field Name="Category">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>Category</DataField>
+        </Field>
+        <Field Name="HospitalName">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>HospitalName</DataField>
+        </Field>
+        <Field Name="HospitalName_Title">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>HospitalName_Title</DataField>
+        </Field>
+        <Field Name="DoctorName">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>DoctorName</DataField>
+        </Field>
+        <Field Name="DoctorName_Title">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>DoctorName_Title</DataField>
+        </Field>
+        <Field Name="SurgeryType_Desc">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>SurgeryType_Desc</DataField>
+        </Field>
+        <Field Name="Category_Desc">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>Category_Desc</DataField>
+        </Field>
+        <Field Name="ReportDate">
+          <rd:TypeName>System.String</rd:TypeName>
+          <DataField>ReportDate</DataField>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <Body>
+    <Height>28cm</Height>
+    <ReportItems>
+      <Table Name="tblPageHeader">
+        <DataSetName>tblOperations</DataSetName>
+        <TableColumns>
+          <TableColumn>
+            <Width>1.5cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>0.5cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>10cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>1cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>1cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>1cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>3cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>2cm</Width>
+          </TableColumn>
+        </TableColumns>
+        <Header>
+          <RepeatOnNewPage>true</RepeatOnNewPage>
+          <TableRows>
+            <TableRow>
+              <Height>1cm</Height>
+              <TableCells>
+                <TableCell>
+                  <ColSpan>8</ColSpan>
+                  <ReportItems>
+                    <Table Name="rpt_tblHeader_Row1">
+                      <TableColumns>
+                        <TableColumn>
+                          <Width>3cm</Width>
+                        </TableColumn>
+                        <TableColumn>
+                          <Width>10cm</Width>
+                        </TableColumn>
+                        <TableColumn>
+                          <Width>7cm</Width>
+                        </TableColumn>
+                      </TableColumns>
+                      <Header>
+                        <TableRows>
+                          <TableRow>
+                            <Height>0.5cm</Height>
+                            <TableCells>
+                              <TableCell>
+                                <ColSpan>3</ColSpan>
+                                <ReportItems>
+                                  <Image Name="imgTitle">
+                                    <Value>http://192.168.214.129//img/print_header_bar.gif</Value>
+                                    <Source>External</Source>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Image>
+                                </ReportItems>
+                              </TableCell>
+                            </TableCells>
+                          </TableRow>
+                          <TableRow>
+                            <Height>0.5cm</Height>
+                            <TableCells>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtSurgeon">
+                                    <Value>Surgeon</Value>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtVSurgeon">
+                                    <Value>=Fields!DoctorName_Title.Value</Value>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtReportTitle">
+                                    <Value>Operation Duration with LOS</Value>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                            </TableCells>
+                          </TableRow>
+                          <TableRow>
+                            <Height>0.5cm</Height>
+                            <TableCells>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtHospital">
+                                    <Value>Hospital</Value>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                              <TableCell>
+                                <ColSpan>2</ColSpan>
+                                <ReportItems>
+                                  <Textbox Name="txtVHospital">
+                                    <Value>=Fields!HospitalName_Title.Value</Value>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                            </TableCells>
+                          </TableRow>
+                          <TableRow>
+                            <Height>0.5cm</Height>
+                            <TableCells>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtSurgery">
+                                    <Value>Surgery</Value>
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtVSurgery">
+                                    <Value />
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                              <TableCell>
+                                <ReportItems>
+                                  <Textbox Name="txtReportDate">
+                                    <Value>=Fields!ReportDate.Value</Value>
+                                    <Style>
+                                      <Color>Blue</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Textbox>
+                                </ReportItems>
+                              </TableCell>
+                            </TableCells>
+                          </TableRow>
+                          <TableRow>
+                            <Height>0.001cm</Height>
+                            <TableCells>
+                              <TableCell>
+                                <ColSpan>3</ColSpan>
+                                <ReportItems>
+                                  <Line Name="Line1">
+                                    <Style>
+                                      <Color>Black</Color>
+                                      <FontSize>8pt</FontSize>
+                                      <TextAlign>Left</TextAlign>
+                                      <BackgroundColor>White</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                    </Style>
+                                  </Line>
+                                </ReportItems>
+                              </TableCell>
+                            </TableCells>
+                          </TableRow>
+                        </TableRows>
+                      </Header>
+                    </Table>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+          </TableRows>
+        </Header>
+        <TableGroups>
+          <TableGroup>
+            <Grouping Name="rptSurgeryGroup">
+              <GroupExpressions>
+                <GroupExpression>=Fields!SurgeryType.Value</GroupExpression>
+              </GroupExpressions>
+            </Grouping>
+            <Header>
+              <TableRows>
+                <TableRow>
+                  <Height>0.7cm</Height>
+                  <TableCells>
+                    <TableCell>
+                      <ColSpan>6</ColSpan>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty1">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblDurationMins_Header">
+                          <Value>Duration (mins)</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>10pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblStayDays_Header">
+                          <Value>Stay (days)</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>10pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                  </TableCells>
+                </TableRow>
+                <TableRow>
+                  <Height>0.7cm</Height>
+                  <TableCells>
+                    <TableCell>
+                      <ColSpan>3</ColSpan>
+                      <ReportItems>
+                        <Textbox Name="lblSurgeryDesc">
+                          <Value>=Fields!SurgeryType_Desc.Value</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>10pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtSurgeryCount">
+                          <Value>=count(Fields!SurgeryType.Value)</Value>
+                          <Style>
+                            <Color>Red</Color>
+                            <FontSize>10pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ColSpan>2</ColSpan>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty2">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtDurationSurgerySum">
+                          <Value>=round(avg(Fields!Duration.Value))</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>10pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtStaySurgerySum">
+                          <Value>=round(avg(Fields!Stay.Value))</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>10pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>LightSkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                  </TableCells>
+                </TableRow>
+              </TableRows>
+            </Header>
+          </TableGroup>
+          <TableGroup>
+            <Grouping Name="rptApproachGroup">
+              <GroupExpressions>
+                <GroupExpression>=Fields!Approach.Value</GroupExpression>
+              </GroupExpressions>
+            </Grouping>
+            <Header>
+              <TableRows>
+                <TableRow>
+                  <Height>0.7cm</Height>
+                  <TableCells>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty21">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ColSpan>2</ColSpan>
+                      <ReportItems>
+                        <Textbox Name="lblApproach">
+                          <Value>=Fields!Approach.Value</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>9pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty22">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtApproachCount">
+                          <Value>=count(Fields!Approach.Value)</Value>
+                          <Style>
+                            <Color>Red</Color>
+                            <FontSize>9pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty23">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtDurationApproachSum">
+                          <Value>=round(avg(Fields!Duration.Value))</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>9pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtStayApproachSum">
+                          <Value>=round(avg(Fields!Stay.Value))</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>9pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                  </TableCells>
+                </TableRow>
+              </TableRows>
+            </Header>
+          </TableGroup>
+          <TableGroup>
+            <Grouping Name="rptCategoryGroup">
+              <GroupExpressions>
+                <GroupExpression>=Fields!Category_Desc.Value</GroupExpression>
+              </GroupExpressions>
+            </Grouping>
+            <Header>
+              <TableRows>
+                <TableRow>
+                  <Height>0.7cm</Height>
+                  <TableCells>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty31">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty32">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblCategory">
+                          <Value>=Fields!Category_Desc.Value</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty33">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="lblEmpty34">
+                          <Value />
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Left</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtCategoryCount">
+                          <Value>=count(Fields!Category.Value)</Value>
+                          <Style>
+                            <Color>Red</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtDurationCategorySum">
+                          <Value>=round(avg(Fields!Duration.Value))</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                    <TableCell>
+                      <ReportItems>
+                        <Textbox Name="txtStayCategorySum">
+                          <Value>=round(avg(Fields!Stay.Value))</Value>
+                          <Style>
+                            <Color>Black</Color>
+                            <FontSize>8pt</FontSize>
+                            <TextAlign>Center</TextAlign>
+                            <BackgroundColor>White</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                      </ReportItems>
+                    </TableCell>
+                  </TableCells>
+                </TableRow>
+              </TableRows>
+            </Header>
+          </TableGroup>
+        </TableGroups>
+        <Footer>
+          <RepeatOnNewPage>false</RepeatOnNewPage>
+          <TableRows>
+            <TableRow>
+              <Height>1cm</Height>
+              <TableCells>
+                <TableCell>
+                  <ColSpan>7</ColSpan>
+                  <ReportItems>
+                    <Textbox Name="lblEmptyFooter">
+                      <Value />
+                      <Style>
+                        <Color>Black</Color>
+                        <FontSize>8pt</FontSize>
+                        <TextAlign>Left</TextAlign>
+                        <BackgroundColor>White</BackgroundColor>
+                        <VerticalAlign>Middle</VerticalAlign>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Image Name="imgLogo">
+                      <Value>http://192.168.214.129//img/banner_sml.gif</Value>
+                      <Source>External</Source>
+                      <Style>
+                        <Color>Black</Color>
+                        <FontSize>8pt</FontSize>
+                        <TextAlign>Right</TextAlign>
+                        <BackgroundColor>White</BackgroundColor>
+                        <VerticalAlign>Middle</VerticalAlign>
+                      </Style>
+                    </Image>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+          </TableRows>
+        </Footer>
+      </Table>
+    </ReportItems>
+  </Body>
+</Report>

@@ -1,0 +1,20 @@
+MSH|^~\&|ULTRA_V3.1|DOREVITCH PATHOLOGY|ULTRA_V3.1|MDPIT|201201201025||ORU^R01|94619258|P|2.3|220400510||ER||AU
+PID||NA|NA^^^^UR~xxxxxxxxxx4^^^AUSHIC^MC||DOE^TRAVIS||19941213|M|||31 HAZE DR^^WARRAGUL^VIC^3820||^^^^^^12345678||||||xxxxxxxxxx
+PV1||O|GSP^GPS SPECIMEN RECEPTION|||||039974CL^Doctor^D|9999999F^ROGERS^JAMES
+ORC|RE||12-8765432-MBI-0||R
+OBR|1||12-8765432-MBI-0|MBI^GENERAL BIOCHEMISTRY||20111220|20120117|||GSP||||201201171038||039974CL^Doctor^D^ ^^DR|||||6JROD|201201201025||BI|F||^^^20111220|6GPS^WEBSTRO^^ ^^DR
+OBX|1|NM|22664-7^ Serum Urea :^LN||5.1|mmol/L|2.9-7.5||||F|||201201171941|CAM|CAM_CLK2
+OBX|2|NM|2951-2^ Serum Sodium :^LN||140|mmol/L|136-146||||F|||201201171941|CAM|CAM_CLK2
+OBX|3|NM|2823-3^ Serum Potassium :^LN||4.6|mmol/L|3.5-5.0||||F|||201201171941|CAM|CAM_CLK2
+OBX|4|NM|2075-0^ Serum Chloride :^LN||106|mmol/L|95-110||||F|||201201171941|CAM|CAM_CLK2
+OBX|5|NM|1963-8^ Serum Bicarbonate :^LN||29|mmol/L|22-31||||F|||201201171941|CAM|CAM_CLK2
+OBX|6|NM|14682-9^ Serum Creatinine :^LN||77|umol/L|60-110||||F|||201201171941|CAM|CAM_CLK2
+OBX|7|NM|14631-6^ Total Bilirubin :^LN||11|umol/L|< 20||||F|||201201171941|CAM|CAM_CLK2
+OBX|8|NM|2324-2^ Serum GGTP :^LN||20|U/L|< 30||||F|||201201171941|CAM|CAM_CLK2
+OBX|9|NM|1920-8^ Aspartate Aminotransferase :^LN||31|U/L|< 35||||F|||201201171941|CAM|CAM_CLK2
+OBX|10|NM|1742-6^ Alanine Aminotransferase :^LN||38|U/L|< 30|H|||F|||201201171941|CAM|CAM_CLK2
+OBX|11|NM|6768-6^ Serum Alkaline Phosphatase :^LN||80|U/L|50-175||||F|||201201171941|CAM|CAM_CLK2
+OBX|12|NM|2885-2^ Serum Total Protein :^LN||74|g/L|65-85||||F|||201201171941|CAM|CAM_CLK2
+OBX|13|NM|1751-7^ Serum Albumin :^LN||44|g/L|38-50||||F|||201201171941|CAM|CAM_CLK2
+OBX|14|NM|10834-0^ Serum Globulin :^LN||30|g/L|22-38||||F|||201201201025|CAM
+OBX|15|FT|^^PIT||100 Start Patient  :      DOE,TRAVIS\.br\101                       31 haze DR, WARRAGUL, VIC 3820\.br\104                       Birthdate: 13/12/1994    Age: Y17    Sex: M\.br\105                       Telephone: 12345678\.br\109 \.br\110 Your Reference :      \.br\111 Lab  Reference :      12-8765432\.br\112 Medicare Number:      xxxxxxxxxx\.br\115 Phone Enquiries:                                       \.br\119 \.br\121 Referred By... :      DR. D Doctor\.br\123 Addressee      :      JAMES ROGERS                      9999999F\.br\129 \.br\200 Start of Result:\.br\201 Specimen       :      \.br\203 Requested      :      20/12/2011\.br\204 Collection     :      17/01/2012  00:00\.br\205 Name of Test   :      MBI-0 (General Biochemistry)\.br\206 Reported       :      20/01/2012  10:25\.br\208 Test Category  :      R\.br\209 \.br\210 Normal Result  :      N\.br\211 Requested Tests:      FBE, FES, MBI, LIP, ESU\.br\212 RequestComplete:      Y\.br\299 \.br\301 Clinical Notes : fasting\.br\301 \.br\301                           SERUM BIOCHEMISTRY\.br\301                                                  Ref.Range\.br\301                       Sodium :      140 mmol/L    (136-146)\.br\301                    Potassium :      4.6 mmol/L    (3.5-5.0)\.br\301                     Chloride :      106 mmol/L    (95-110)\.br\301                  Bicarbonate :       29 mmol/L    (22-31)\.br\301                         Urea :      5.1 mmol/L    (2.9-7.5)\.br\301                   Creatinine :       77 umol/L    (60-110)\.br\301              Total Bilirubin :       11 umol/L    (< 20)\.br\301  Ala. Aminotransferase (ALT) :       \R\SBLD\R\\R\FG04\R\38\R\EBLD\R\\R\FG99\R\ U/L       (< 30)            *\.br\301  Asp. Aminotransferase (AST) :       31 U/L       (< 35)\.br\301   Alkaline Phosphatase (ALP) :       80 U/L       (50-175)\.br\301  Gamma Glutamyl Trans. (GGT) :       20 U/L       (< 30)\.br\301                Total Protein :       74 g/L       (65-85)\.br\301                      Albumin :       44 g/L       (38-50)\.br\301                     Globulin :       30 g/L       (22-38)\.br\301 \.br\301  Requested Tests : FBE, FES, MBI, LIP, ESU\.br\309 \.br\390 End of Report:\.br\|||A|||F

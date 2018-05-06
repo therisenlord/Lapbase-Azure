@@ -1,0 +1,80 @@
+﻿// JScript File
+var ImperialFlag = true;
+
+//---------------------------------------------------------------------------------------------------------------
+function ImperialRadio_onclick(flag){
+    document.getElementById('divImportStep1').style.display='block';
+    document.getElementById('chkLocalImperial').checked = flag;
+}
+
+//---------------------------------------------------------------------------------------------------------------
+function IsFileTypeValied(){
+    var flag = true, strErrorMessage = "";
+    var InputFile1 = document.getElementById("inputFile1") ? document.getElementById("inputFile1").value : "";
+    var InputFile2 = document.getElementById("inputFile2") ? document.getElementById("inputFile2").value : "";
+    
+    document.getElementById("divErrorMessage").style.display = "none";
+    document.getElementById("btnUploadMDB").disabled = true;
+    
+    if (InputFile1 == InputFile2)   document.getElementById("inputFile2").value = "";
+    if (InputFile1.length > 0){
+        flag = (InputFile1.length > 0 ) && (InputFile1.toUpperCase().lastIndexOf(".MDB") > 0) || ((InputFile1.toUpperCase().lastIndexOf(".MDE") > 0));
+        if (!flag){
+            document.getElementById("inputFile1").value = "";
+            strErrorMessage = "first";
+        }
+    }
+    
+    flag  = true;
+    if (InputFile2.length > 0){
+        flag =  (InputFile2.toUpperCase().lastIndexOf(".MDB") > 0) || ((InputFile2.toUpperCase().lastIndexOf(".MDE") > 0));
+        if (!flag){
+            document.getElementById("inputFile2").value = "";
+            strErrorMessage += (strErrorMessage.length > 0 ? " and " : "") + "second";
+        }
+    }
+    
+    if (strErrorMessage.length > 0){
+        document.getElementById("divErrorMessage").style.display = "block";
+        SetInnerText(document.getElementById("divErrorMessage"), "Please select a valid MS Access MDB file for " + strErrorMessage + " file(s)...");
+    }
+    //document.getElementById("btnUploadMDB").disabled = !((InputFile1.length > 0) || (InputFile2.length > 0));
+    return ((InputFile1.length > 0) || (InputFile2.length > 0));
+}
+
+//---------------------------------------------------------------------------------------------------------------
+function btnUploadMDB_onclick(btnUploadMDB){
+    if (IsFileTypeValied()){
+    document.getElementById("inputFile").disabled = true;
+    btnUploadMDB.disabled = true;
+    }
+    return;
+}
+
+//---------------------------------------------------------------------------------------------------------------
+function btnImport_onclick(){
+    document.getElementById("btnImport").disabled = true;
+    document.getElementById("div_importStep2A").style.display = "none";
+    document.getElementById("div_ImportStep2B").style.display = "block";
+    return;
+}
+
+////---------------------------------------------------------------------------------------------------------------
+//function btnImport_onclick_callback(){
+//    if (XmlHttp.readyState == 4)
+//        if (XmlHttp.status == 200)
+//            document.location.assign(document.getElementById("txtHApplicationURL").value + "forms/PatientsVisits/PatientsVisitsForm.aspx");
+//        else{
+//            document.getElementById("divErrorMessage").style.display = "block";
+//            SetInnerText(document.getElementById("divErrorMessage"), "Error is data importing...");
+//        }
+//}
+
+//---------------------------------------------------------------------------------------------------------------
+function btnExportData_onclick( ){
+    document.getElementById("btnImportData").disabled = true;
+    document.getElementById("btnExportData").style.display = "none";
+    SetInnerText(document.getElementById("linkLocalMDB"), "");
+    SetInnerText(document.getElementById("lblProgress"), "The export process is running in the background. It might take some time. You could leave this page and come back anytime. To check if the file is ready, please click the button above.");
+    //ShowDivMessage("Export data from Lapbase web edition to MS Access Lapbase ...", false);
+}

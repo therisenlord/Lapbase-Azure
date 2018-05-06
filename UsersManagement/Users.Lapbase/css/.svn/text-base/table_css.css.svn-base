@@ -1,0 +1,39 @@
+body {
+	margin: 0;
+	padding: 20px;
+	behavior: url(csshover.htc);
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 76%;
+	color: #636468;
+	}
+table.tblList {
+	margin: 0;
+	padding: 0;
+	border: 1px solid #fafafa;
+	font-size: 9px;
+	}
+table.tblList tr  {
+	}
+table.tblList tr td span { 
+	margin: 0;
+	padding: 0;
+	background-color: #c6c7c2;
+	display: block;
+	width: 70%;
+	}
+table.tblList tr td { 
+	margin: 0;
+	padding: 2px;
+	}
+table.tblList tr td:hover { 
+	background-color: #ccc;
+	}
+table.tblList tr td:hover span { 
+	background-color: #999;
+	}
+.row01 { 
+	background-color: #eee;
+	}
+row01op.table tr td:hover { 
+	background-color: #00ff00;
+}

@@ -1,0 +1,458 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Lapbase.Data;
+using System.Configuration;
+
+namespace Lapbase.Business
+{
+    public class BasePage : System.Web.UI.Page
+    {
+        UserApplicationData userApplicationData = new UserApplicationData();
+
+        #region properties
+        public String sessionID
+        {
+            get 
+            {
+                if (Session["SessionID"] == null)
+                    return String.Empty;
+                else
+                    return Session["SessionID"].ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the OrganizationCode for current domain
+        /// </summary>
+        public Int32 OrganizationCode
+        {
+            get
+            {
+                object obj = ViewState["OrganizationCode"];
+                if (obj == null)
+                    return 0;
+                else
+                    return ConvertToInt32(obj.ToString());
+            }
+            set
+            {
+                ViewState["OrganizationCode"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the user practice code for the logged in user.
+        /// </summary>
+        public Int32 UserPracticeCode
+        {
+            get
+            {
+                object obj = ViewState["UserPracticeCode"];
+                if (obj == null)
+                    return 0;
+                else
+                {
+                    return ConvertToInt32(obj.ToString());
+                }
+            }
+            set
+            {
+                ViewState["UserPracticeCode"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current domain url.
+        /// </summary>
+        public String DomainURL
+        {
+            get
+            {
+                object obj = ViewState["DomainURL"];
+                if (obj == null)
+                    return String.Empty;
+                else
+                    return obj.ToString();
+            }
+            set
+            {
+                ViewState["DomainURL"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current Culture Info.
+        /// </summary>
+        public String CultureInfo
+        {
+            get
+            {
+                object obj = ViewState["CultureInfo"];
+                if (obj == null)
+                    return String.Empty;
+                else
+                    return obj.ToString();
+            }
+            set { ViewState["CultureInfo"] = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the current Language Code.
+        /// </summary>
+        public String LanguageCode
+        {
+            get
+            {
+                object obj = ViewState["LanguageCode"];
+                if (obj == null)
+                    return String.Empty;
+                else
+                    return obj.ToString();
+            }
+            set { ViewState["LanguageCode"] = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the Page Direction based on selected language.
+        /// </summary>
+        public String Direction
+        {
+            get
+            {
+                object obj = ViewState["Direction"];
+                if (obj == null)
+                    return String.Empty;
+                else
+                    return obj.ToString();
+            }
+            set
+            {
+                ViewState["Direction"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the Patient's ID.
+        /// </summary>
+        public Int32 PatientID
+        {
+            get
+            {
+                object obj = ViewState["PatientID"];
+                if (obj == null)
+                    return 0;
+                else
+                    return ConvertToInt32(obj.ToString());
+            }
+            set
+            {
+                ViewState["PatientID"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current Consult ID(Visit).
+        /// </summary>
+        public Int32 ConsultID
+        {
+            get
+            {
+                object obj = ViewState["ConsultID"];
+                if (obj == null)
+                    return 0;
+                else
+                    return ConvertToInt32(obj.ToString());
+            }
+            set
+            {
+                ViewState["ConsultID"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default Imperial.
+        /// </summary>
+        public Boolean Imperial
+        {
+            get
+            {
+                object obj = ViewState["Imperial"];
+                if (obj == null)
+                    return false;
+                else
+                    return object.ReferenceEquals(obj.ToString(), Boolean.TrueString);
+            }
+            set
+            {
+                ViewState["Imperial"] = value.ToString();
+            }
+        }
+        
+        /// <summary>
+        /// Gets or sets the default Visit Flag and is used to calculate the Weight Loss.
+        /// If TRUE, the Weight Loss is calculated since the first visit.
+        /// </summary>
+        public String VisitWeeks
+        {
+            get
+            {
+                object obj = ViewState["VisitWeeks"];
+                if (obj == null)
+                    return String.Empty;
+                else
+                    return obj.ToString();
+            }
+            set
+            {
+                ViewState["VisitWeeks"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default SuperBill Function.
+        /// </summary>
+        public Boolean SuperBill
+        {
+            get
+            {
+                object obj = ViewState["SuperBill"];
+                if (obj == null)
+                    return false;
+                else
+                    return object.ReferenceEquals(obj.ToString(), Boolean.TrueString);
+            }
+            set
+            {
+                ViewState["SuperBill"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default EMR Function.
+        /// </summary>
+        public Boolean EMR
+        {
+            get
+            {
+                object obj = ViewState["EMR"];
+                if (obj == null)
+                    return false;
+                else
+                    return object.ReferenceEquals(obj.ToString(), Boolean.TrueString);
+            }
+            set
+            {
+                ViewState["EMR"] = value.ToString();
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the default Export Function.
+        /// </summary>
+        public Boolean Export
+        {
+            get
+            {
+                object obj = ViewState["Export"];
+                if (obj == null)
+                    return false;
+                else
+                    return object.ReferenceEquals(obj.ToString(), Boolean.TrueString);
+            }
+            set
+            {
+                ViewState["Export"] = value.ToString();
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the default BSRExport Function.
+        /// </summary>
+        public Boolean BSRExport
+        {
+            get
+            {
+                object obj = ViewState["BSRExport"];
+                if (obj == null)
+                    return false;
+                else
+                    return object.ReferenceEquals(obj.ToString(), Boolean.TrueString);
+            }
+            set
+            {
+                ViewState["BSRExport"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default PermissionLevel.
+        /// </summary>
+        public String PermissionLevel
+        {
+            get
+            {
+                object obj = ViewState["PermissionLevel"];
+                if (obj == null)
+                    return string.Empty;
+                else
+                    return obj.ToString();
+            }
+            set
+            {
+                ViewState["PermissionLevel"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the surgeonid
+        /// </summary>
+        public Int32 SurgeonID
+        {
+            get
+            {
+                object obj = ViewState["SurgeonID"];
+                if (obj == null)
+                    return 0;
+                else
+                {
+                    return ConvertToInt32(obj.ToString());
+                }
+            }
+            set
+            {
+                ViewState["SurgeonID"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default DataClamp Function.
+        /// </summary>
+        public Boolean DataClamp
+        {
+            get
+            {
+                object obj = ViewState["DataClamp"];
+                if (obj == null)
+                    return false;
+                else
+                    return object.ReferenceEquals(obj.ToString(), Boolean.TrueString);
+            }
+            set
+            {
+                ViewState["DataClamp"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default DefaultSort.
+        /// </summary>
+        public String DefaultSort
+        {
+            get
+            {
+                object obj = ViewState["DefaultSort"];
+                if (obj == null)
+                    return string.Empty;
+                else
+                    return obj.ToString();
+            }
+            set
+            {
+                ViewState["DefaultSort"] = value.ToString();
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the practiceboldcode.
+        /// </summary>
+        public String PracticeBoldCode
+        {
+            get
+            {
+                object obj = ViewState["PracticeBoldCode"];
+                if (obj == null)
+                    return string.Empty;
+                else
+                    return obj.ToString();
+            }
+            set
+            {
+                ViewState["PracticeBoldCode"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets the Number format.
+        /// </summary>
+        public String NumberFormat
+        {
+            get { return System.Configuration.ConfigurationManager.AppSettings["NumberFormat"].ToString();}
+        }
+        #endregion
+
+        #region Methods
+        /// <summary>
+        /// Converts the input string into Int32 number
+        /// </summary>
+        /// <param name="strNumber"></param>
+        /// <returns></returns>
+        private Int32 ConvertToInt32(String strNumber)
+        {
+            Int32 intTemp = 0;
+
+            Int32.TryParse(strNumber, out intTemp);
+            return intTemp;
+        }   
+
+        /// <summary>
+        /// Loads current user's data
+        /// </summary>
+        private void LoadUserApplicationData()
+        {
+            userApplicationData.Load(this.sessionID);
+            this.OrganizationCode = userApplicationData.OrganizationCode.HasValue ? (int)userApplicationData.OrganizationCode.Value : 0;
+            this.UserPracticeCode = userApplicationData.UserPracticeCode.HasValue ? (int)userApplicationData.UserPracticeCode.Value : 0;
+            this.CultureInfo = userApplicationData.CultureInfo;
+            Page.Culture = userApplicationData.CultureInfo;
+            this.LanguageCode = userApplicationData.LanguageCode;
+            this.PatientID = userApplicationData.PatientID.HasValue ? (int)userApplicationData.PatientID.Value : 0;
+            this.ConsultID = userApplicationData.CunsultID.HasValue ? (int)userApplicationData.CunsultID.Value : 0;
+        }
+
+        /// <summary>
+        /// Update current's user data
+        /// </summary>
+        /// <param name="e"></param>
+        public void UpdateUserApplicationData()
+        {
+            userApplicationData.OrganizationCode = (int?)this.OrganizationCode;
+            userApplicationData.UserPracticeCode = (int?)this.UserPracticeCode;
+            userApplicationData.PatientID = (int?)this.PatientID;
+        }
+        #endregion 
+
+        #region events
+        protected override void OnPreLoad(EventArgs e)
+        {
+            this.DomainURL = Request.Url.Host;
+
+            Lapbase.Data.Domain domain = new Lapbase.Data.Domain();
+            if (object.ReferenceEquals(this.sessionID, String.Empty) || !domain.CheckDomainURL(this.DomainURL, this.UserPracticeCode))
+            {
+                this.Response.Redirect(String.Format("http://{0}/", this.DomainURL),false);
+                return;
+            }
+
+            LoadUserApplicationData();
+            Response.CacheControl = "no-cache";
+            Response.AddHeader("Pragma", "no-cache");
+            Response.Expires = -1;
+            return;
+        }
+        #endregion 
+    }
+}

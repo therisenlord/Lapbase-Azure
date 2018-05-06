@@ -1,0 +1,183 @@
+using System;
+using System.Data;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class UserControl_DoctorsListWUCtrl : System.Web.UI.UserControl
+{
+    GlobalClass gClass = new GlobalClass();
+    Nullable<Boolean> blnIsSurgeon = null;
+    Nullable<Boolean> blnIsHide = null;
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        try
+        {
+            gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+            if (gClass.IsUserLogoned(Session.SessionID, Request.Cookies["UserPracticeCode"].Value, Request.Url.Host))
+                if (!IsPostBack)
+                    FetchDoctorList();
+        }
+        catch (Exception err)
+        {
+            string strLanguageCode;
+            try
+            {
+                strLanguageCode = Request.Cookies["LanguageCode"].Value;
+                gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Doctor User Control", "", err.ToString());
+            }
+            catch { strLanguageCode = "en-US"; }
+            gClass.ReturnToLoginPage(Request.Url.Host, strLanguageCode, Response);
+        }
+    }
+    #endregion
+
+    #region public void FetchDoctorList()
+    public void FetchDoctorList()
+    {
+        DataSet dsDoctor;
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand();
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Doctors_LoadData", false);
+        cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+        if (this.blnIsSurgeon.HasValue)
+            cmdSelect.Parameters.Add("@vblnIsSurgeon", System.Data.SqlDbType.Bit).Value = this.blnIsSurgeon.Value;
+
+        if (this.blnIsHide.HasValue)
+            cmdSelect.Parameters.Add("@vblnIsHide", System.Data.SqlDbType.Bit).Value = this.blnIsHide.Value;
+        dsDoctor = gClass.FetchData(cmdSelect, "tblSurgon");
+
+        for (int Xh = 0; Xh < dsDoctor.Tables["tblSurgon"].Rows.Count; Xh++)
+            dsDoctor.Tables["tblSurgon"].Rows[Xh]["Doctor_Name"] = dsDoctor.Tables["tblSurgon"].Rows[Xh]["Doctor_Name"].ToString().Replace("`", "'");
+        dsDoctor.AcceptChanges();
+
+        DoctorsList.DataSource = dsDoctor;
+        DoctorsList.DataMember = "tblSurgon";
+        DoctorsList.DataValueField = "DoctorID";
+        DoctorsList.DataTextField = "Doctor_Name";
+        try { DoctorsList.DataBind(); }catch { }
+        DoctorsList.Items.Insert(0, new ListItem("Select ...", "0"));
+        return;
+    }
+    #endregion
+
+    #region Properties
+    public int Width
+    {
+        set { DoctorsList.Width = Unit.Percentage(value); }
+    }
+
+    public string CssClass
+    {
+        set { DoctorsList.CssClass = value; }
+    }
+
+    public string SelectedValue
+    {
+        set { try { DoctorsList.SelectedValue = value; } catch { } }
+        get { return DoctorsList.SelectedValue; }
+    }
+
+    public int ItemsCount
+    {
+        get { return DoctorsList.Items.Count; }
+    }
+
+    public string SelectedText
+    {
+        get { return DoctorsList.Items[DoctorsList.SelectedIndex].Text; }
+    }
+
+    public int SelectedIndex
+    {
+        set { try { DoctorsList.SelectedIndex = value; } catch { } }
+        get { return DoctorsList.SelectedIndex; }
+    }
+
+    public bool autoPostBack
+    {
+        set { DoctorsList.AutoPostBack = value; }
+    }
+
+    public EventHandler selectedIndexChanged
+    {
+        set { DoctorsList.SelectedIndexChanged += value; }
+    }
+
+    public short SetTabIndex
+    {
+        set { DoctorsList.TabIndex = value; }
+    }
+
+    public ListItemCollection Items
+    {
+        get { return DoctorsList.Items; }
+    }
+
+    public DataSet dsDataSource
+    {
+        set { DoctorsList.DataSource = value; }
+    }
+
+    public string strDataMember
+    {
+        set { DoctorsList.DataMember = value; }
+    }
+
+    public string strDataValueField
+    {
+        set { DoctorsList.DataValueField = value; }
+    }
+
+    public string strDataTextField
+    {
+        set { DoctorsList.DataTextField = value; }
+    }
+
+    /// <summary>
+    /// This is to filter all Surgeon in Doctors list and used in Advers and operation forms.
+    /// value should "True" and "False"
+    /// </summary>
+    public String IsSurgeon
+    {
+        set 
+        { 
+            if (value != null && value != String.Empty)
+                this.blnIsSurgeon = value.Equals(Boolean.TrueString); 
+        }
+    }
+
+    /// <summary>
+    /// This is to filter all Surgeon in Doctors list and used visit list
+    /// value should "True" and "False"
+    /// </summary>
+    public String IsHide
+    {
+        set
+        {
+            if (value != null && value != String.Empty)
+            {
+                if(value == "False")
+                    this.blnIsHide = value.Equals(Boolean.TrueString);
+            }
+        }
+    }
+
+    /// <summary>
+    /// This is to disable the list
+    /// value should "True" and "False"
+    /// </summary>
+    public String Enabled
+    {
+        set
+        {
+            if (value == "False")
+            {
+                DoctorsList.Enabled = value.Equals(Boolean.TrueString);
+            }
+        }
+    }
+    #endregion
+}

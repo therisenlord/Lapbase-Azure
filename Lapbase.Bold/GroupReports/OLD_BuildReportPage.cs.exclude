@@ -1,0 +1,2944 @@
+using System;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.HtmlControls;
+using dotnetCHARTING;
+using Microsoft.Reporting.WebForms;
+using System.Collections.Generic;
+
+public partial class Reports_BuildReportPage : System.Web.UI.Page
+{
+    private string  strXSLTFileName = "";
+    private string strLapbaseDataSourceName = "dsLapbase";
+
+    private int intUserPracticeCode = 0, intPatientID = 0, intOrganizationCode;
+    GlobalClass gClass = new GlobalClass();
+
+    #region protected void Page_Load
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+        
+        gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+        intUserPracticeCode = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        intOrganizationCode = Convert.ToInt32(gClass.OrganizationCode);
+        intPatientID = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+
+        if (!IsPostBack)
+        {
+            bodyReport.Attributes.Add("onload", "javascript:body_onload();");
+            ChooseReports();
+        }
+        else { bodyReport.Attributes.Remove("onload"); }
+    }
+    #endregion 
+
+    #region private void ChooseReports
+    private void ChooseReports()
+    {
+        txtReportCode.Value = Request.QueryString["RP"].ToUpper();
+
+        switch (Request.QueryString["RP"].ToUpper())
+        {
+            case "FUA": //Follow Up Assessment
+                txtReportName.Value = "Follow Up Assessment Report";
+                break;
+
+            case "RDL": //Ref. Doctor Letter
+                txtReportName.Value = "Ref. Doctor Letter";
+                break;
+
+            case "COMPSUM" : // Complication Summary 1
+                txtReportName.Value = "Complication Report";
+                break;
+
+            case "COMPSUMBYPATIENT": // Complication Summary 2
+                txtReportName.Value = "Complication  by Patient";
+                break;
+
+            case "OPERATIONLOS":
+                txtReportName.Value = "Operation duration and LOS";
+                break;
+
+            case "PATIENTLIST":
+                txtReportName.Value = "Patient List with Last Visit Date";
+                break;
+
+            case "COEREPORT" :
+                txtReportName.Value = "Patient list with complications";
+                break;
+
+            case "SUMMARYBYQUARTER" :
+                txtReportName.Value = "Summary By Quarter";
+                break;
+
+            case "SUMMARYONLY" :
+                txtReportName.Value = "Summary Only";
+                break;
+
+            case "BMIEWLGRAPH" :
+                txtReportName.Value = "BMI and %EWL Graph";
+                break;
+
+            case "BLC":
+                txtReportName.Value = "Baseline Comorbidities";
+                break;
+
+            case "CMCP":
+                txtReportName.Value = "Comorbidities and Complications";
+                break;
+
+            case "EWLG" :
+                Response.Redirect("EWLGraph/EWLGraphPage.aspx?PID=" + Request.QueryString["PID"]);
+                break;
+
+            case "WLG":
+                Response.Redirect("WLGraph/WLGraphPage.aspx?PID=" + Request.QueryString["PID"]);
+                break;
+
+            case "INVG" :
+                Response.Redirect("InvGraph/InvGraphFullPage.aspx?PID=" + Request.QueryString["PID"]);
+                break;
+
+            case "GCOM":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(),// Request.Cookies["UserPracticeCode"].Value, 
+                                        Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host,
+                                        "Group Comorbidities Report", 3, "Browse", "PatientCode",
+                                        intPatientID.ToString());// Request.Cookies["PatientID"].Value);
+                txtReportName.Value = "Group Comorbidities";
+                strXSLTFileName = @"GroupComorbidity/en_MenuComorbidityXSLTFile.xsl";
+                GroupComorbidity_BuildReport(gClass);
+                break;
+
+            case "OD" : // Operation Details
+                txtReportName.Value = "Operation Details Report";
+                break;
+        }
+        return;
+    }
+    #endregion 
+
+    #region protected void btnBuildReport_OnClick(object sender, EventArgs e)
+    protected void btnBuildReport_OnClick(object sender, EventArgs e)
+    {
+        switch (txtReportCode.Value.ToUpper())
+        {
+            case "FUA": //Follow Up Assessment
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host, "Followup Assessment Report", 3, "Browse", "PatientCode", intPatientID.ToString());
+                try { FollowUpAssessment_BuildReport(Request.QueryString["Param"].ToUpper()); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Visit Form", "Visit Reports - Follow Up ", err.ToString());
+                }
+                break;
+
+            case "RDL": //Ref. Doctor Letter
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Ref. Doctor Letter Report", 3, "Browse", "PatientCode", intPatientID.ToString());
+                try { RefDoctorLetter_BuildReport(Request.QueryString["Param"].ToUpper()); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Visit Form", "Visit Reports - Letter to Doctors", err.ToString());
+                }
+                break;
+
+            case "COMPSUM": // Complication Summary 1
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host, "Group Report - Complication Summary 1", 3, "Browse", "", "");
+                try { ComplicationSummary_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Complication Summary - ComplicationSummary_BuildReport() function", err.ToString());
+                }
+                break;
+
+            case "COMPSUMBYPATIENT": // Complication Summary 2
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Group Report - Complication  by Patient", 3, "Browse", "", "");
+                try { ComplicationSummaryByPatient_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Complication  by Patient - ComplicationSummaryByPatient_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "OPERATIONLOS":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Group Report - Operation duration and LOS", 3, "Browse", "", "");
+                try { OperationDurationLOS_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Operation duration and LOS - OperationDurationLOS_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "PATIENTLIST":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Group Report - Patient List with Last Visit Date", 3, "Browse", "", "");
+                try { PatientList_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Patient List with Last Visit Date - PatientList_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "COEREPORT":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Group Report - Patient list with complications", 3, "Browse", "", "");
+                try { PatientListWithComplications_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Patient list with complications - PatientListWithComplications_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "SUMMARYBYQUARTER":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Group Report - Summary By Quarter", 3, "Browse", "", "");
+                try { SummaryByQuarter_BuildReport(); }
+                catch (Exception err)
+                {
+
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Summary By Quarter - SummaryByQuarter_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "SUMMARYONLY":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host, "Group Report - Summary Only", 3, "Browse", "", "");
+                try { SummaryByQuarter_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "Summary Only - SummaryByQuarter_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "BMIEWLGRAPH":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, Request.Url.Host,
+                                        "Group Report - BMI and %EWL Graph", 3, "Browse", "", "");
+                try { BMIEWLGraph_BuildReport(); }
+                catch (Exception err)
+                {
+                    gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value,
+                                        "Group Reports", "BMI and %EWL Graph - BMIEWLGraph_BuildReport function", err.ToString());
+                }
+                break;
+
+            case "BLC":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host, "Baseline Comorbidities Report", 3, "Browse", "PatientCode", intPatientID.ToString());
+                strXSLTFileName = @"BaseLineComorbidities/en_BaseLineComorbiditiesXSLTFile.xsl";
+                BaseLineComorbidities_BuildReport(gClass);
+                break;
+
+            case "CMCP":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(), // Request.Cookies["UserPracticeCode"].Value,
+                                        Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host,
+                                        "Comorbidities and Complications Report", 3, "Browse", "PatientCode",
+                                        intPatientID.ToString()); //Request.Cookies["PatientID"].Value);
+                strXSLTFileName = @"ComorbidityFUAssessment/en_ComorbidityFUAssessmentXSLTFile.xsl";
+                ComorbidityFUAssessment_BuildReport(gClass);
+                break;
+
+            case "EWLG":
+                Response.Redirect("EWLGraph/EWLGraphPage.aspx?PID=" + Request.QueryString["PID"]);
+                break;
+
+            case "WLG":
+                Response.Write("Build Reports ewl<br/>");
+                Response.Redirect("WLGraph/WLGraphPage.aspx?PID=" + Request.QueryString["PID"]);
+                break;
+
+            case "INVG":
+                Response.Redirect("InvGraph/InvGraphFullPage.aspx?PID=" + Request.QueryString["PID"]);
+                break;
+
+            case "GCOM":
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(),// Request.Cookies["UserPracticeCode"].Value, 
+                                        Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host,
+                                        "Group Comorbidities Report", 3, "Browse", "PatientCode",
+                                        intPatientID.ToString());// Request.Cookies["PatientID"].Value);
+                strXSLTFileName = @"GroupComorbidity/en_MenuComorbidityXSLTFile.xsl";
+                GroupComorbidity_BuildReport(gClass);
+                break;
+
+            case "OD": // Operation Details
+                gClass.SaveUserLogFile(intUserPracticeCode.ToString(),// Request.Cookies["UserPracticeCode"].Value,
+                                        Request.Cookies["Logon_UserName"].Value,
+                                        Request.Url.Host,
+                                        "Operation Details Report", 3, "Browse", "PatientCode",
+                                        intPatientID.ToString());// Request.Cookies["PatientID"].Value);
+                OperationDetails_BuildReport(gClass, Request.QueryString["Param"].ToUpper());
+                break;
+        }
+        //Response.End();
+        return;
+    }
+    #endregion 
+
+    #region private void FollowUpAssessment_BuildReport
+    private void FollowUpAssessment_BuildReport(string strParam)
+    {
+        DataSet         dsReport;
+        DataColumn      dcTemp;
+        SqlCommand      cmdSelectPatientData = new SqlCommand(),
+                        cmdSelectPatientVisit = new SqlCommand();
+
+        strXSLTFileName = @"FollowUpAssessment/en_FollowUpAssessmentXSLTFile.xsl";
+
+        gClass.MakeStoreProcedureName(ref cmdSelectPatientData, "sp_Rep_FollowUpAssessment", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectPatientVisit, "sp_ConsultFU1_ProgressNotes_LoadData", true);
+
+        cmdSelectPatientData.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = intOrganizationCode;
+        cmdSelectPatientData.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSelectPatientData.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelectPatientData.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+
+        cmdSelectPatientVisit.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = intOrganizationCode;
+        cmdSelectPatientVisit.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSelectPatientVisit.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelectPatientVisit.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        cmdSelectPatientVisit.Parameters.Add("@ComorbidityFlag", SqlDbType.Bit).Value = false;
+        cmdSelectPatientVisit.Parameters.Add("@VisitWeeksFlag", SqlDbType.Bit).Value = Request.Cookies["VisitWeeksFlag"].Value.Equals(Boolean.TrueString);
+        dsReport = gClass.FetchData(cmdSelectPatientData, "tblPatientData");
+        dsReport.Tables.Add(gClass.FetchData(cmdSelectPatientVisit, "tblPatientVisit").Tables[0].Copy());
+        gClass.CalculateWeightData(ref dsReport, "tblPatientVisit", Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString));
+        // Add Param to Tables: 1)Patient Photo and Patient Note into tblPatientData 2)Progress Note into PatientVisit
+        dcTemp = new DataColumn();
+        dcTemp.Caption = "IncludePhoto";
+        dcTemp.ColumnName = "IncludePhoto";
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = strParam[0];
+        dsReport.Tables["tblPatientData"].Columns.Add(dcTemp);
+
+        dcTemp = new DataColumn();
+        dcTemp.Caption = "IncludePatientNote";
+        dcTemp.ColumnName = "IncludePatientNote";
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = strParam[2];
+        dsReport.Tables["tblPatientData"].Columns.Add(dcTemp);
+
+        dcTemp = new DataColumn();
+        dcTemp.Caption = "IncludeProgressNote";
+        dcTemp.ColumnName = "IncludeProgressNote";
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = strParam[1];
+        dsReport.Tables["tblPatientVisit"].Columns.Add(dcTemp);
+
+        dsReport.Tables.Add(gClass.FetchCaptions("en_FollowUpAssessmentXSLTFile", Request.Cookies["CultureInfo"].Value).Tables[0].Copy());
+        dsReport.AcceptChanges();
+        try
+        {
+            if (dsReport.Tables.Count > 0)
+                tcXML.InnerHtml = gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        }
+        catch (Exception err) { Response.Write(err.ToString()); }
+        return;
+    }
+    #endregion 
+
+    #region private void RefDoctorLetter_BuildReport(string strParam)
+    private void RefDoctorLetter_BuildReport(string strParam)
+    {
+        SqlCommand    cmdSelect = new SqlCommand(), 
+                        cmdSelectPatientVisit = new SqlCommand(),
+                        cmdSelectRefDoctor = new SqlCommand();
+        DataSet         dsReport = new DataSet("dsSchema");
+        DataColumn dcDate = new DataColumn("CurrentDate", Type.GetType("System.String")), dcTemp;
+        string strFields = "", strReport = "";
+        string[] strRefDrId = {"", "", ""};
+        List<DataTable> dtList = new List<DataTable>();
+        
+
+        if (strParam.IndexOf(";") > -1)
+        {
+            int Xh = -1;
+            strFields = strParam.Substring(0, strParam.IndexOf(";"));
+            strParam = strParam.Substring(strParam.IndexOf(";") + 1);
+
+            while (strParam.IndexOf(";") > -1)
+            {
+                strRefDrId[++Xh] = strParam.Substring(0, strParam.IndexOf(";"));
+                strParam = strParam.Substring(strParam.IndexOf(";") + 1);
+            }
+            if (strParam.Length > 0) strRefDrId[++Xh] = strParam;
+        }
+        else
+            strFields = strParam;
+
+        dcDate.DefaultValue = DateTime.Now.ToLongDateString();
+        strXSLTFileName = @"RefDoctorLetter/en_RefDoctorLetterXSLTFile.xsl";
+        
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Rep_RefDoctorLetter", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectPatientVisit, "sp_ConsultFU1_ProgressNotes_LoadData", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectRefDoctor, "sp_RefDoctors_SelectRefDoctorByRefDoctorID", true);
+        
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = intOrganizationCode; 
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblReport").Tables[0].Copy());
+        
+        cmdSelectPatientVisit.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = intOrganizationCode; 
+        cmdSelectPatientVisit.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = intUserPracticeCode; 
+        cmdSelectPatientVisit.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelectPatientVisit.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        cmdSelectPatientVisit.Parameters.Add("@ComorbidityFlag", SqlDbType.Bit).Value = false;
+        cmdSelectPatientVisit.Parameters.Add("@VisitWeeksFlag", SqlDbType.Bit).Value = Request.Cookies["VisitWeeksFlag"].Value.Equals(Boolean.TrueString);
+        
+        dsReport.Tables.Add(gClass.FetchData(cmdSelectPatientVisit, "tblPatientVisit").Tables[0].Copy());
+
+        // Add current date to tblReport
+        dsReport.Tables[0].Columns.Add(dcDate);
+        
+        // Add Param to Tables: 1)Patient Photo and Patient Note into tblPatientData 2)Progress Note into PatientVisit
+        dcTemp = new DataColumn();
+        dcTemp.Caption = "CurrentVisitOnly";
+        dcTemp.ColumnName = "CurrentVisitOnly";
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = strFields[0];
+        dsReport.Tables["tblReport"].Columns.Add(dcTemp);
+
+        dcTemp = new DataColumn();
+        dcTemp.Caption = "IncludeProgressNote";
+        dcTemp.ColumnName = "IncludeProgressNote";
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = strFields[1];
+        dsReport.Tables["tblPatientVisit"].Columns.Add(dcTemp);
+
+        dcTemp = new DataColumn();
+        dcTemp.Caption = "IncludePatientNote";
+        dcTemp.ColumnName = "IncludePatientNote";
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = strFields[2];
+        dsReport.Tables["tblReport"].Columns.Add(dcTemp);
+
+        dsReport.Tables.Add(gClass.FetchCaptions("en_RefDoctorLetterXSLTFile", Request.Cookies["CultureInfo"].Value).Tables[0].Copy());
+        gClass.CalculateWeightData(ref dsReport, "tblPatientVisit", Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString));
+
+        cmdSelectRefDoctor.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = intOrganizationCode;
+        cmdSelectRefDoctor.Parameters.Add("@RefDrId", SqlDbType.VarChar, 10);
+        cmdSelectRefDoctor.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = intUserPracticeCode;
+        dsReport.AcceptChanges();
+        
+        for (int Xh = 0; Xh < dsReport.Tables.Count; Xh++)
+            dtList.Add(dsReport.Tables[Xh].Copy());
+        dsReport.Dispose();
+
+        for (int Xh = 0; (Xh < strRefDrId.Length) && (strRefDrId[Xh] != ""); Xh++)
+        {
+            DataSet dsTemp = new DataSet("dsSchema");
+            DataTable dtTemp;
+
+            foreach (DataTable dt in dtList) dsTemp.Tables.Add(dt.Copy());
+
+            cmdSelectRefDoctor.Parameters["@RefDrId"].Value = strRefDrId[Xh];
+            dtTemp = gClass.FetchData(cmdSelectRefDoctor, "RefDoctor").Tables[0].Copy();
+
+            if (dsTemp.Tables.Contains("RefDoctor"))
+                foreach (DataRow drRow in dtTemp.Rows)
+                    dsTemp.Tables["RefDoctor"].ImportRow(drRow);
+            else
+                dsTemp.Tables.Add(dtTemp);
+
+            strReport += gClass.ShowSchema(dsTemp, Server.MapPath(strXSLTFileName));
+            dsReport.Dispose();
+        }
+        //tcXML.Text = strReport;
+        tcXML.InnerHtml = strReport;
+        return;
+    }
+    #endregion RefDoctorLetter_BuildReport
+
+    #region private void InitializeReportCommand(ref SqlCommand cmdSelect, string strCommandText)
+    private void InitializeReportCommand(ref SqlCommand cmdSelect, string strCommandText)
+    {
+        gClass.MakeStoreProcedureName(ref cmdSelect, strCommandText, true);
+
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+        cmdSelect.Parameters.Add("@SurgeonId", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["Surgeon"]);
+        cmdSelect.Parameters.Add("@HospitalCode", SqlDbType.VarChar, 6).Value = (Request.QueryString["Hospital"].Equals("0") || (Request.QueryString["Hospital"].Length == 0)) ? string.Empty : Request.QueryString["Hospital"];
+        cmdSelect.Parameters.Add("@FDate", SqlDbType.DateTime);
+        cmdSelect.Parameters.Add("@TDate", SqlDbType.DateTime);
+
+        try { cmdSelect.Parameters["@FDate"].Value = Convert.ToDateTime(Request.QueryString["FDate"]); }
+        catch { cmdSelect.Parameters["@FDate"].Value = /*DBNull.Value*/ Convert.ToDateTime("01/01/1900"); }
+        try { cmdSelect.Parameters["@TDate"].Value = Convert.ToDateTime(Request.QueryString["TDate"]); }
+        catch { cmdSelect.Parameters["@TDate"].Value = /*DBNull.Value*/ DateTime.Now; }
+    }
+    #endregion 
+
+    #region Complication Summary with RDL Builder
+    #region private void ComplicationSummary_BuildReport(int intReportCode)
+    private void ComplicationSummary_BuildReport( )
+    {
+        DataSet     dsReport;
+        DataTable   dtTemp;
+        SqlCommand  cmdSelect = new SqlCommand();
+        strXSLTFileName = "GroupReport/Complications/ComplicationSummaryXSLTFile.xsl";
+        Int16       xh = 0;
+
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_Complications");
+        dsReport = gClass.FetchData(cmdSelect, "tblComplicationSummary");
+        dtTemp = dsReport.Tables["tblComplicationSummary"];
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", DateTime.Now.ToLongDateString() + "  " + DateTime.Now.ToShortTimeString());
+
+        dtTemp = new DataTable("tblComplication");
+        gClass.AddColumn(ref dtTemp, "CompType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "Complication", "System.String", "");
+        dtTemp.Constraints.Add(new UniqueConstraint(dtTemp.Columns[0]));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+            drTemp["CompType"] = dr["CompType"].ToString();
+            drTemp["Complication"] = dr["Complication"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+
+        dtTemp = new DataTable("tblSurgery");
+        gClass.AddColumn(ref dtTemp, "CompType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "ComplicationCode", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType_Desc", "System.String", "");
+        DataColumn[] _Columns = new DataColumn[dtTemp.Columns.Count];
+        xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+        dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+
+            drTemp["CompType"] = dr["CompType"].ToString();
+            drTemp["ComplicationCode"] = dr["ComplicationCode"].ToString();
+            drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+            drTemp["SurgeryType_Desc"] = dr["SurgeryType_Desc"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+
+        xh = 0;
+        dtTemp = new DataTable("tblSurgery_Comp");
+        gClass.AddColumn(ref dtTemp, "ComplicationCode", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "Complication", "System.String", "");
+        _Columns = new DataColumn[dtTemp.Columns.Count];
+        xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+        dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+            drTemp["ComplicationCode"] = dr["ComplicationCode"].ToString();
+            drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+            drTemp["Complication"] = dr["Complication"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+        dsReport.AcceptChanges();
+
+        //tcXML.InnerHtml += gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        CreateOutputFile("COMPSUM", dsReport);
+    }
+    #endregion 
+
+    #region private void ComplicationSummary_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    private void ComplicationSummary_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        writer.WriteStartElement("Report");     //<Report>
+        AddReportConfiguration(ref writer, "Complication Summary", strLanguage, (Decimal)22.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)29, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+        #region body
+        writer.WriteStartElement("Body");   //<Body>
+        writer.WriteElementString("Height", "28cm"); //Report.height - (TopMargin + bottomMargin) == 28 - (0.5+0.5)
+        writer.WriteStartElement("ReportItems");//<ReportItems>
+        writer.WriteStartElement("Table");          //<Table>
+        writer.WriteAttributeString("Name", "tblPageHeader");
+        writer.WriteElementString("DataSetName", "tblComplicationSummary");
+
+        #region TableColumns
+        writer.WriteStartElement("TableColumns");   //<TableColumns>
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "7cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "2cm");
+        writer.WriteEndElement();                   //<TableColumns>
+        #endregion 
+
+        #region Header
+        writer.WriteStartElement("Header");             //<Header>
+        writer.WriteElementString("RepeatOnNewPage", "true");
+        #region TableRows
+        writer.WriteStartElement("TableRows");  //<TableRows>
+        #region Page Header
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+        writer.WriteStartElement("TableCell");
+        writer.WriteElementString("ColSpan", "7");
+        writer.WriteStartElement("ReportItems");
+
+        #region Row1_Table
+        writer.WriteStartElement("Table");  //<Table>
+        writer.WriteAttributeString("Name", "rpt_tblHeader_Row1");
+        #region Row1_Table_TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "10cm");
+        AddColumn(ref writer, "7cm");
+        writer.WriteEndElement();
+        #endregion
+        #region Row1_Table_Header
+        writer.WriteStartElement("Header");     //<Header>
+        writer.WriteStartElement("TableRows");  //  <TableRows>
+        #region Row0
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Image", "imgTitle", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/print_header_bar.gif", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "lblSurgeon", "Surgeon", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgeon", "=Fields!DoctorName_Title.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblReportTitle", "- COMPLICATIONS", DetailCellStyle("", "12pt", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row2
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "lblHospital", "Hospital", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVHospital", "=Fields!HospitalName_Title.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblReportSubTitle", "- READMISSIONS", DetailCellStyle("", "12pt", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row3
+        writer.WriteStartElement("TableRow");       //<TableRow>
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");     //  <TableCells>
+        AddCell(ref writer, "Textbox", "txtSurgery", "Surgery", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgery", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportDate", "=Fields!ReportDate.Value", DetailCellStyle("Blue", "", "", ""), "");
+        writer.WriteEndElement();                   //  </TableCells>
+        writer.WriteEndElement();                   //</TableRow>
+        #endregion
+        #region Row4
+        writer.WriteStartElement("TableRow");           //<TableRow>
+        writer.WriteElementString("Height", "0.001cm");
+        writer.WriteStartElement("TableCells");         //  <TableCells>
+        AddCell(ref writer, "Line", "Line1", "", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();                       //  </TableCells>
+        writer.WriteEndElement();                       //</TableRow>
+        #endregion
+        writer.WriteEndElement();               //  </TableRows>
+        writer.WriteEndElement();               //</Header>
+        #endregion
+        writer.WriteEndElement();           //</Table>
+        #endregion
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        writer.WriteEndElement();               //</TableRows>
+        #endregion
+        writer.WriteEndElement();                       //</Header>
+        #endregion 
+
+        #region <TableGroups>
+        writer.WriteStartElement("TableGroups");    //<TableGroups>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Complication Type
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptComplicationTypeGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!CompType.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblCompType", "=Fields!CompType.value", DetailCellStyle("", "11pt", "", "LightSkyBlue"), "2");
+        AddCell(ref writer, "Textbox", "lblEmpty2", "", DetailCellStyle("", "", "", "LightSkyBlue"), "5");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Surgery Type
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptSurgeryTypeGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!SurgeryType_Desc.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblSurgery", "=Fields!SurgeryType_Desc.Value", DetailCellStyle("", "10pt", "", ""), "2");
+        AddCell(ref writer, "Textbox", "lblEmpty22", "", DetailCellStyle("", "", "", ""), "5");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Complication
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptComplicationGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!Complication.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty31", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtComplication", "=Fields!Complication.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblNumber", "Number", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtNumber", "=count(Fields!Complication.Value)", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblAvgWeeksPostOp", "Avg weeks post Op.", DetailCellStyle("Red", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtAvgWeeks", "=round(avg(Fields!Weeks.Value))", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty32", "", DetailCellStyle("", "", "", ""), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty41", "", DetailCellStyle("", "", "", ""), "4");
+        AddCell(ref writer, "Textbox", "lblReadmissions", "Readmissions", DetailCellStyle("Red", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtSumReadMitted", "=sum(iif(Fields!Readmitted.Value, 1, 0))", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty42", "", DetailCellStyle("", "", "", ""), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+        writer.WriteEndElement();                   //</TableGroups>
+        #endregion 
+
+        #region <Footer>
+        writer.WriteStartElement("Footer");         //<Footer>
+        writer.WriteElementString("RepeatOnNewPage", "false");
+        writer.WriteStartElement("TableRows");      //  <TableRows>
+        writer.WriteStartElement("TableRow");       //      <TableRow>
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");     //          <TableCells>
+        AddCell(ref writer, "Textbox", "lblEmptyFooter", "", DetailCellStyle("", "", "", ""), "6");
+        AddCell(ref writer, "Image", "imgLogo", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/banner_sml.gif", DetailCellStyle("", "", "", ""), "");
+        writer.WriteEndElement();     //                       </TableCells>
+        writer.WriteEndElement();     //                    </TableRow>
+        writer.WriteEndElement();     //                </TableRows>
+        writer.WriteEndElement();                  //</Footer>
+        #endregion 
+        
+        writer.WriteEndElement();                   //<Table>
+        writer.WriteEndElement();           //ReportItems
+        writer.WriteEndElement();       //</Body>
+        #endregion
+        writer.WriteEndElement();               //</Report>
+        writer.Flush();
+        stream.Close();
+    }
+    #endregion
+    #endregion
+
+    #region Complication Summary By Patient with RDL Builder
+    #region private void ComplicationSummaryByPatient_BuildReport( )
+    private void ComplicationSummaryByPatient_BuildReport()
+    {
+        DataSet     dsReport;
+        DataTable   dtTemp;
+        SqlCommand  cmdSelect = new SqlCommand();
+        Int16       xh = 0;
+
+        strXSLTFileName = "GroupReport/Complications/ComplicationSummaryByPatientXSLTFile.xsl";
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_Complications_ByPatient");
+        dsReport = gClass.FetchData(cmdSelect, "tblComplicationSummary");
+        dtTemp = dsReport.Tables["tblComplicationSummary"];
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", DateTime.Now.ToLongDateString() + "  " + DateTime.Now.ToShortTimeString());
+
+        dtTemp = new DataTable("tblComplication");
+        gClass.AddColumn(ref dtTemp, "CompType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "Complication", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", "");
+        dtTemp.Constraints.Add(new UniqueConstraint(dtTemp.Columns[0]));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+            drTemp["CompType"] = dr["CompType"].ToString();
+            drTemp["Complication"] = dr["Complication"].ToString();
+            drTemp["ReportDate"] = dr["ReportDate"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+
+
+        dtTemp = new DataTable("tblDoctors");
+        gClass.AddColumn(ref dtTemp, "CompType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeonId", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "DoctorName", "System.String", "");
+        DataColumn[] _Columns = new DataColumn[dtTemp.Columns.Count];
+        xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+        dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+
+            drTemp["CompType"] = dr["CompType"].ToString();
+            drTemp["SurgeonId"] = dr["SurgeonId"].ToString();
+            drTemp["DoctorName"] = dr["DoctorName"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+
+        dtTemp = new DataTable("tblSurgery");
+        gClass.AddColumn(ref dtTemp, "CompType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeonId", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType_Desc", "System.String", "");
+        _Columns = new DataColumn[dtTemp.Columns.Count];
+        xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+        dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+
+            drTemp["CompType"] = dr["CompType"].ToString();
+            drTemp["SurgeonId"] = dr["SurgeonId"].ToString();
+            drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+            drTemp["SurgeryType_Desc"] = dr["SurgeryType_Desc"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+
+
+        dtTemp = new DataTable("tblComplication_Details");
+        gClass.AddColumn(ref dtTemp, "CompType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeonId", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "ComplicationCode", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "Complication", "System.String", "");
+        _Columns = new DataColumn[dtTemp.Columns.Count];
+        xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+        dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+        foreach (DataRow dr in dsReport.Tables["tblComplicationSummary"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+
+            drTemp["CompType"] = dr["CompType"].ToString();
+            drTemp["SurgeonId"] = dr["SurgeonId"].ToString();
+            drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+            drTemp["ComplicationCode"] = dr["ComplicationCode"].ToString();
+            drTemp["Complication"] = dr["Complication"].ToString();
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+
+        //tcXML.InnerHtml += gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        CreateOutputFile("COMPSUMBYPATIENT", dsReport);
+    }
+    #endregion 
+
+    private void ComplicationSummaryByPatient_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        writer.WriteStartElement("Report");     //<Report>
+        AddReportConfiguration(ref writer, "Operation Duration with LOS", strLanguage, (Decimal)22.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)29, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+        
+        #region body
+        writer.WriteStartElement("Body");   //<Body>
+        writer.WriteElementString("Height", "28cm"); //Report.height - (TopMargin + bottomMargin) == 28 - (0.5+0.5)
+        writer.WriteStartElement("ReportItems");//<ReportItems>
+        writer.WriteStartElement("Table");          //<Table>
+        writer.WriteAttributeString("Name", "tblPageHeader");
+        writer.WriteElementString("DataSetName", "tblComplicationSummary");
+
+        #region TableColumns
+        writer.WriteStartElement("TableColumns");   //<TableColumns>
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "4cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "2cm");
+        writer.WriteEndElement();                   //<TableColumns>
+        #endregion 
+
+        #region Header
+        writer.WriteStartElement("Header");             //<Header>
+        writer.WriteElementString("RepeatOnNewPage", "true");
+        #region TableRows
+        writer.WriteStartElement("TableRows");  //<TableRows>
+        #region Page Header
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+        writer.WriteStartElement("TableCell");
+        writer.WriteElementString("ColSpan", "13");
+        writer.WriteStartElement("ReportItems");
+
+        #region Row1_Table
+        writer.WriteStartElement("Table");  //<Table>
+        writer.WriteAttributeString("Name", "rpt_tblHeader_Row1");
+        #region Row1_Table_TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "10cm");
+        AddColumn(ref writer, "7cm");
+        writer.WriteEndElement();
+        #endregion
+        #region Row1_Table_Header
+        writer.WriteStartElement("Header");     //<Header>
+        writer.WriteStartElement("TableRows");  //  <TableRows>
+        #region Row0
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Image", "imgTitle", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/print_header_bar.gif", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtSurgeon", "Surgeon", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgeon", "=Fields!DoctorName_Title.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportTitle", "Complication", DetailCellStyle("", "12pt", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row2
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtHospital", "Hospital", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVHospital", "=Fields!HospitalName_Title.Value", DetailCellStyle("", "", "", ""), "2");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row3
+        writer.WriteStartElement("TableRow");       //<TableRow>
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");     //  <TableCells>
+        AddCell(ref writer, "Textbox", "txtSurgery", "Surgery", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgery", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportDate", "=Fields!ReportDate.Value", DetailCellStyle("Blue", "", "", ""), "");
+        writer.WriteEndElement();                   //  </TableCells>
+        writer.WriteEndElement();                   //</TableRow>
+        #endregion
+        #region Row4
+        writer.WriteStartElement("TableRow");           //<TableRow>
+        writer.WriteElementString("Height", "0.001cm");
+        writer.WriteStartElement("TableCells");         //  <TableCells>
+        AddCell(ref writer, "Line", "Line1", "", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();                       //  </TableCells>
+        writer.WriteEndElement();                       //</TableRow>
+        #endregion
+        writer.WriteEndElement();               //  </TableRows>
+        writer.WriteEndElement();               //</Header>
+        #endregion
+        writer.WriteEndElement();           //</Table>
+        #endregion
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        writer.WriteEndElement();               //</TableRows>
+        #endregion
+        writer.WriteEndElement();                       //</Header>
+        #endregion 
+
+        #region <TableGroups>
+        writer.WriteStartElement("TableGroups");    //<TableGroups>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Complication Type
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptComplicationTypeGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!CompType.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        //writer.WriteStartElement("Header");                 //<Header>
+        //writer.WriteStartElement("TableRows");                  //<TableRows>
+        //writer.WriteStartElement("TableRow");                       //<TableRow>
+        //writer.WriteElementString("Height", "0.7cm");
+        //writer.WriteStartElement("TableCells");                         //<TableCells>
+        //AddCell(ref writer, "Textbox", "lblEmpty1", "", DetailCellStyle("", "", "", "LightSkyBlue"), "13");
+        //writer.WriteEndElement();                                       //</TableCells>
+        //writer.WriteEndElement();                                   //</TableRow>
+        //writer.WriteEndElement();                               //</TableRows>
+        //writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Doctor Name
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptDoctorNameGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!DoctorName.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "txtDoctorName", "=Fields!DoctorName.value", DetailCellStyle("", "12pt", "", "LightSkyBlue"), "13");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Surgery Type
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptSurgeryTypeGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!SurgeryType_Desc.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblSurgery", "=Fields!SurgeryType_Desc.Value", DetailCellStyle("", "11pt", "", "LightSkyBlue"), "13");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Complication
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptComplicationGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!Complication.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "txtComplication", "=Fields!Complication.Value", DetailCellStyle("", "10pt", "", "LightGrey"), "4");
+        AddCell(ref writer, "Textbox", "lblNumber", "Number", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtNumber", "=count(Fields!Complication.Value)", DetailCellStyle("", "", "", "LightGrey"), "8");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  PatientID
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptPatientIDGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!PatientId.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "txtPatientName", "=Fields!PatientName.Value", DetailCellStyle("", "", "", ""), "6"); //6
+        AddCell(ref writer, "Textbox", "lblSex", "Sex : ", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtSex", "=Fields!Sex.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblAge", "Age : ", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtAge", "=Fields!Age.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblSurgeryDate", "Surgery Date :", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtSurgeryDate", "=Fields!OperationDate.Value", DetailCellStyle("", "", "", ""), "2");
+        
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TablrRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteEndElement();                   //</TableGroups>
+        #endregion 
+
+        #region <Footer>
+        writer.WriteStartElement("Footer");         //<Footer>
+        writer.WriteElementString("RepeatOnNewPage", "false");
+        writer.WriteStartElement("TableRows");      //  <TableRows>
+        writer.WriteStartElement("TableRow");       //      <TableRow>
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");     //          <TableCells>
+        AddCell(ref writer, "Textbox", "lblEmptyFooter", "", DetailCellStyle("", "", "", ""), "12");
+        AddCell(ref writer, "Image", "imgLogo", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/banner_sml.gif", DetailCellStyle("", "", "Right", ""), "");
+        writer.WriteEndElement();     //                       </TableCells>
+        writer.WriteEndElement();     //                    </TableRow>
+        writer.WriteEndElement();     //                </TableRows>
+        writer.WriteEndElement();                  //</Footer>
+        #endregion 
+
+        #region Deatails
+        writer.WriteStartElement("Details");        //<Details>
+        writer.WriteStartElement("TableRows");      //  <TableRows>
+        writer.WriteStartElement("TableRow");       //      <TableRow>
+        writer.WriteElementString("Height", "0.75cm");
+        writer.WriteStartElement("TableCells");     //          <TableCells>
+
+        AddCell(ref writer, "Textbox", "lblDate", "Date : ", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtComplicationDate", "=Fields!ComplicationDate.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtWeeks", "=Fields!Weeks.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblWeeks", "weeks", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtNote", "=Fields!ComplicationNotes.Value", DetailCellStyle("", "", "", ""), "8");
+        AddCell(ref writer, "Textbox", "lblEmpty5", "", DetailCellStyle("", "", "", ""), "");
+
+        writer.WriteEndElement();                   //          </TableCells>
+        writer.WriteEndElement();                   //      </TableRow>
+        writer.WriteEndElement();                   //  </TableRows>
+        writer.WriteEndElement();                   //</Details>
+        #endregion
+
+        writer.WriteEndElement();                   //<Table>
+        writer.WriteEndElement();           //ReportItems
+        writer.WriteEndElement();       //</Body>
+        #endregion
+
+        writer.WriteEndElement();   //</Report>
+        writer.Flush();
+        stream.Close();
+    }
+    #endregion
+
+    #region Operaiton Duration with LOS with RDL Builder
+    #region private void OperationDurationLOS_BuildReport()
+    private void OperationDurationLOS_BuildReport()
+    {
+        DataSet dsReport = new DataSet();
+        strXSLTFileName = "GroupReport/OperationDurationWithLOS/OperationdurationwithLOSXSLTFile.xsl";
+
+        FetchOperationSummary(ref dsReport);
+        CreateOutputFile("OPERATIONLOS", dsReport);
+        //tcXML.InnerHtml += gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+    }
+    #endregion 
+
+    #region private void FetchOperationSummary(ref DataSet dsReport)
+    private void FetchOperationSummary(ref DataSet dsReport)
+    {
+        DataTable dtTemp;
+        SqlCommand cmdSelect = new SqlCommand();
+        Int16 xh = 0;
+        
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_OperationDurationWithLOS");
+        dsReport = gClass.FetchData(cmdSelect, "tblOperations");
+        dtTemp = dsReport.Tables["tblOperations"];
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", DateTime.Now.ToLongDateString() + "  " + DateTime.Now.ToShortTimeString());
+
+        if (Request.QueryString["Format"].Equals("1")) // HTML Format
+        {
+            dtTemp = new DataTable("tblSurgery");
+            gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+            gClass.AddColumn(ref dtTemp, "SurgeryType_Desc", "System.String", "");
+            dtTemp.Constraints.Add(new UniqueConstraint(dtTemp.Columns[0]));
+
+            foreach (DataRow dr in dsReport.Tables["tblOperations"].Rows)
+            {
+                DataRow drTemp = dtTemp.NewRow();
+                drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+                drTemp["SurgeryType_Desc"] = dr["SurgeryType_Desc"].ToString();
+                try { dtTemp.Rows.Add(drTemp); }
+                catch { }
+            }
+            dsReport.Tables.Add(dtTemp);
+
+            dtTemp = new DataTable("tblApproach");
+            gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+            gClass.AddColumn(ref dtTemp, "Approach", "System.String", "");
+            DataColumn[] _Columns = new DataColumn[dtTemp.Columns.Count];
+            xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+            dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+            foreach (DataRow dr in dsReport.Tables["tblOperations"].Rows)
+            {
+                DataRow drTemp = dtTemp.NewRow();
+
+                drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+                drTemp["Approach"] = dr["Approach"].ToString();
+                try { dtTemp.Rows.Add(drTemp); }
+                catch { }
+            }
+            dsReport.Tables.Add(dtTemp);
+
+            dtTemp = new DataTable("tblCategory");
+            gClass.AddColumn(ref dtTemp, "SurgeryType", "System.String", "");
+            gClass.AddColumn(ref dtTemp, "Approach", "System.String", "");
+            gClass.AddColumn(ref dtTemp, "Category", "System.String", "");
+            gClass.AddColumn(ref dtTemp, "Category_Desc", "System.String", "");
+            _Columns = new DataColumn[dtTemp.Columns.Count];
+            xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+            dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+            foreach (DataRow dr in dsReport.Tables["tblOperations"].Rows)
+            {
+                DataRow drTemp = dtTemp.NewRow();
+
+                drTemp["SurgeryType"] = dr["SurgeryType"].ToString();
+                drTemp["Approach"] = dr["Approach"].ToString();
+                drTemp["Category"] = dr["Category"].ToString();
+                drTemp["Category_Desc"] = dr["Category_Desc"].ToString();
+                try { dtTemp.Rows.Add(drTemp); }
+                catch { }
+            }
+            dsReport.Tables.Add(dtTemp);
+        }
+        dsReport.AcceptChanges();
+    }
+    #endregion
+
+    #region private void OperationDurationWithLOS_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    private void OperationDurationWithLOS_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        writer.WriteStartElement("Report");     //<Report>
+        AddReportConfiguration(ref writer, "Operation Duration with LOS", strLanguage, (Decimal)22.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)29, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+        #region Body
+        writer.WriteStartElement("Body");   //<Body>
+        writer.WriteElementString("Height", "28cm"); //Report.height - (TopMargin + bottomMargin) == 28 - (0.5+0.5)
+        writer.WriteStartElement("ReportItems");//<ReportItems>
+        writer.WriteStartElement("Table");          //<Table>
+        writer.WriteAttributeString("Name", "tblPageHeader");
+        writer.WriteElementString("DataSetName", "tblOperations");
+        #region TableColumns
+        writer.WriteStartElement("TableColumns");   //<TableColumns>
+        AddColumn(ref writer, "1.5cm");   
+        AddColumn(ref writer, "0.5cm");   
+        AddColumn(ref writer, "10cm");   
+        AddColumn(ref writer, "1cm");   
+        AddColumn(ref writer, "1cm");   
+        AddColumn(ref writer, "1cm");   
+        AddColumn(ref writer, "3cm");   
+        AddColumn(ref writer, "2cm");   
+        writer.WriteEndElement();                   //<TableColumns>
+        #endregion 
+        
+        #region Header
+        writer.WriteStartElement("Header");             //<Header>
+        writer.WriteElementString("RepeatOnNewPage", "true");
+        #region TableRows
+        writer.WriteStartElement("TableRows");  //<TableRows>
+        #region Page Header
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+        writer.WriteStartElement("TableCell");
+        writer.WriteElementString("ColSpan", "8");
+        writer.WriteStartElement("ReportItems");
+
+        #region Row1_Table
+        writer.WriteStartElement("Table");  //<Table>
+        writer.WriteAttributeString("Name", "rpt_tblHeader_Row1");
+        #region Row1_Table_TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "10cm");
+        AddColumn(ref writer, "7cm");
+        writer.WriteEndElement();
+        #endregion
+        #region Row1_Table_Header
+        writer.WriteStartElement("Header");     //<Header>
+        writer.WriteStartElement("TableRows");  //  <TableRows>
+        #region Row0
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Image", "imgTitle", "http://"+ Request.Url.Host + Request.ApplicationPath + "/img/print_header_bar.gif", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtSurgeon", "Surgeon", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgeon", "=Fields!DoctorName_Title.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportTitle", "Operation Duration with LOS", DetailCellStyle("", "", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row2
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtHospital", "Hospital", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVHospital", "=Fields!HospitalName_Title.Value", DetailCellStyle("", "", "", ""), "2");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        #region Row3
+        writer.WriteStartElement("TableRow");       //<TableRow>
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");     //  <TableCells>
+        AddCell(ref writer, "Textbox", "txtSurgery", "Surgery", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgery", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportDate", "=Fields!ReportDate.Value", DetailCellStyle("Blue", "", "", ""), "");
+        writer.WriteEndElement();                   //  </TableCells>
+        writer.WriteEndElement();                   //</TableRow>
+        #endregion
+        #region Row4
+        writer.WriteStartElement("TableRow");           //<TableRow>
+        writer.WriteElementString("Height", "0.001cm");
+        writer.WriteStartElement("TableCells");         //  <TableCells>
+        AddCell(ref writer, "Line", "Line1", "", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();                       //  </TableCells>
+        writer.WriteEndElement();                       //</TableRow>
+        #endregion
+        writer.WriteEndElement();               //  </TableRows>
+        writer.WriteEndElement();               //</Header>
+        #endregion
+        writer.WriteEndElement();           //</Table>
+        #endregion
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        writer.WriteEndElement();               //</TableRows>
+        #endregion
+        writer.WriteEndElement();                       //</Header>
+        #endregion 
+
+        #region <TableGroups>
+        writer.WriteStartElement("TableGroups");    //<TableGroups>
+        
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Surgury
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptSurgeryGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!SurgeryType.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");                    
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty1", "", DetailCellStyle("", "", "", "LightSkyBlue"), "6");
+        AddCell(ref writer, "Textbox", "lblDurationMins_Header", "Duration (mins)", DetailCellStyle("", "10pt", "Center", "LightSkyBlue"), "");
+        AddCell(ref writer, "Textbox", "lblStayDays_Header", "Stay (days)", DetailCellStyle("", "10pt", "Center", "LightSkyBlue"), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblSurgeryDesc", "=Fields!SurgeryType_Desc.Value", DetailCellStyle("", "10pt", "", "LightSkyBlue"), "3");
+        AddCell(ref writer, "Textbox", "txtSurgeryCount", "=count(Fields!SurgeryType.Value)", DetailCellStyle("Red", "10pt", "Center", "LightSkyBlue"), "");
+        AddCell(ref writer, "Textbox", "lblEmpty2", "", DetailCellStyle("", "", "", "LightSkyBlue"), "2");
+        AddCell(ref writer, "Textbox", "txtDurationSurgerySum", "=round(avg(Fields!Duration.Value))", DetailCellStyle("", "10pt", "Center", "LightSkyBlue"), "");
+        AddCell(ref writer, "Textbox", "txtStaySurgerySum", "=round(avg(Fields!Stay.Value))", DetailCellStyle("", "10pt", "Center", "LightSkyBlue"), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Approach
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptApproachGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!Approach.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty21", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblApproach", "=Fields!Approach.Value", DetailCellStyle("", "9pt", "", ""), "2");
+        AddCell(ref writer, "Textbox", "lblEmpty22", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtApproachCount", "=count(Fields!Approach.Value)", DetailCellStyle("Red", "9pt", "Center", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty23", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtDurationApproachSum", "=round(avg(Fields!Duration.Value))", DetailCellStyle("", "9pt", "Center", ""), "");
+        AddCell(ref writer, "Textbox", "txtStayApproachSum", "=round(avg(Fields!Stay.Value))", DetailCellStyle("", "9pt", "Center", ""), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Category
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptCategoryGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!Category_Desc.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty31", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty32", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblCategory", "=Fields!Category_Desc.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty33", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty34", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtCategoryCount", "=count(Fields!Category.Value)", DetailCellStyle("Red", "", "Center", ""), "");
+        AddCell(ref writer, "Textbox", "txtDurationCategorySum", "=round(avg(Fields!Duration.Value))", DetailCellStyle("", "", "Center", ""), "");
+        AddCell(ref writer, "Textbox", "txtStayCategorySum", "=round(avg(Fields!Stay.Value))", DetailCellStyle("", "", "Center", ""), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+        writer.WriteEndElement();                   //</TableGroups>
+        #endregion 
+
+        #region <Footer>
+        writer.WriteStartElement("Footer");         //<Footer>
+        writer.WriteElementString("RepeatOnNewPage", "false");
+        writer.WriteStartElement("TableRows");      //  <TableRows>
+        writer.WriteStartElement("TableRow");       //      <TableRow>
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");     //          <TableCells>
+        AddCell(ref writer, "Textbox", "lblEmptyFooter", "", DetailCellStyle("", "", "", ""), "7");
+        AddCell(ref writer, "Image", "imgLogo", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/banner_sml.gif", DetailCellStyle("", "", "Right", ""), "");
+        writer.WriteEndElement( );     //                       </TableCells>
+        writer.WriteEndElement();     //                    </TableRow>
+        writer.WriteEndElement();     //                </TableRows>
+        writer.WriteEndElement( );                  //</Footer>
+        #endregion 
+        writer.WriteEndElement();                   //<Table>
+        writer.WriteEndElement();           //ReportItems
+        writer.WriteEndElement();       //</Body>
+        #endregion
+        writer.WriteEndElement();   //</Report>
+        writer.Flush();
+        stream.Close();
+    }
+	#endregion
+    #endregion
+
+    #region Patient List Report with RDL Builder
+    #region private void PatientList_BuildReport()
+    private void PatientList_BuildReport()
+    {
+        DataSet dsReport;
+        DataTable dtTemp;
+        SqlCommand cmdSelect = new SqlCommand();
+        strXSLTFileName = "GroupReport/PatientList/PatientListXSLTFile.xsl";
+
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_PatientList");
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        dsReport = gClass.FetchData(cmdSelect, "tblPatientList");
+        dtTemp = dsReport.Tables["tblPatientList"];
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", DateTime.Now.ToLongDateString() + "  " + DateTime.Now.ToShortTimeString());
+
+        CreateOutputFile("PATIENTLIST", dsReport);
+    }
+    #endregion 
+
+    #region private void PatientList_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    private void PatientList_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        #region Report
+        writer.WriteStartElement("Report");
+
+        AddReportConfiguration(ref writer, "Patient List", strLanguage, (Decimal)29, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)21, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+
+        #region Body
+        writer.WriteStartElement("Body");
+        writer.WriteElementString("Height", "20cm"); //Report.height - (TopMargin + bottomMargin) == 29.7 - (0.5+0.5)
+        writer.WriteStartElement("ReportItems");
+
+        #region Table
+        writer.WriteStartElement("Table");
+        writer.WriteAttributeString("Name", "rptPatientList");
+        
+        #region TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "2.5cm");
+        AddColumn(ref writer, "4cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "2cm");
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Header
+        writer.WriteStartElement("Header");
+        writer.WriteElementString("RepeatOnNewPage", "true");
+        #region TableRows
+        writer.WriteStartElement("TableRows");
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+        writer.WriteStartElement("TableCell");
+        writer.WriteElementString("ColSpan", "16");
+        writer.WriteStartElement("ReportItems");
+
+        #region Row1_Table
+        writer.WriteStartElement("Table");
+        writer.WriteAttributeString("Name", "rpt_tblHeader_Row1");
+
+        #region Row1_Table_TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "10cm");
+        AddColumn(ref writer, "7cm");
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Row1_Table_Header
+        writer.WriteStartElement("Header");
+        writer.WriteStartElement("TableRows");
+
+        #region Row0
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Image", "imgTitle", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/print_header_bar.gif", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtSurgeon", "Surgeon", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgeon", "=Fields!DoctorName_Title.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportTitle", "Patient Details", DetailCellStyle("", "12pt", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Row2
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtHospital", "Hospital", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVHospital", "=Fields!HospitalName_Title.Value", DetailCellStyle("", "", "", ""), "2");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Row3
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtSurgery", "Surgeon", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgery", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportDate", "=Fields!ReportDate.Value", DetailCellStyle("Blue", "", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion 
+
+        writer.WriteEndElement();
+        writer.WriteEndElement( );
+        #endregion 
+        writer.WriteEndElement();
+        #endregion 
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement(); 
+        #endregion 
+
+        #region Row2
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtPatientData_hr", "", DetailCellStyle("", "", "", "LightGrey"), "5");
+        AddCell(ref writer, "Textbox", "txtSurgeryData_hr", "Surgery", DetailCellStyle("Blue", "", "", "LightGrey"), "3");
+        AddCell(ref writer, "Textbox", "txtWeightData_hr", "", DetailCellStyle("", "", "", "LightGrey"), "6");
+        AddCell(ref writer, "Textbox", "txtVisitData_hr", "Last Visit", DetailCellStyle("Red", "", "", "LightGrey"), "2");
+        writer.WriteEndElement( );
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Row3
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+
+        AddCell(ref writer, "Textbox", "txtPatientName_hr", "Patient Name", DetailCellStyle("", "", "", "LightGrey"), "2");
+        AddCell(ref writer, "Textbox", "txtAddress_hr", "Address", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtAge_hr", "Age", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtSex_hr", "Sex", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtSurgeryDate_hr", "Date", DetailCellStyle("Blue", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtSurgeryMonths_hr", "Months", DetailCellStyle("Blue", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtSurgery_hr", "", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtLost2FU_hr", "Lost to FU", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtInitBMI_hr", "Inital BMI", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtIdealWeight_hr", "Ideal Weight", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtTargetWeight_hr", "Target Weight", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtCurrentWeight_hr", "Current Weight", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtCurrentBMI_hr", "Current BMI", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtVisitMonths_hr", "Visit Months", DetailCellStyle("Red", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtVisitDate_hr", "Visit Date", DetailCellStyle("Red", "", "", "LightGrey"), "");
+
+        writer.WriteEndElement( );
+        writer.WriteEndElement();
+        #endregion 
+
+        writer.WriteEndElement();
+        #endregion 
+        writer.WriteEndElement();
+        #endregion 
+
+        #region Deatails
+        writer.WriteStartElement("Details");
+        writer.WriteStartElement("TableRows");
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.75cm");
+        writer.WriteStartElement("TableCells");
+
+        AddCell(ref writer, "Textbox", "txtPatientID", "=Fields!PatientID.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtPatientName", "=Fields!PatientName.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtAddress", "=Fields!Address.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtAge", "=Fields!AGE.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtSex", "=Fields!Sex.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtOperationDate", "=Fields!OperationDate.Value", DetailCellStyle("BLue", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtMthsSinceOperation", "=Fields!MthsSinceOperation.Value", DetailCellStyle("BLue", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtSurgeryType_Desc", "=Fields!SurgeryType_Desc.Value", DetailCellStyle("BLue", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtLostToFU", "?", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtInitBMI", "=round(Fields!InitBMI.Value)", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtIdealWeight", "=round(Fields!IdealWeight.Value)", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtTargetWeight", "=round(Fields!TargetWeight.Value)", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtCurrentWeight", "=round(Fields!CurrentWeight.Value)", DetailCellStyle("", "", "", ""), "");
+        //AddCell(ref writer, "Textbox", "txtCurrentBMI", "=round(Fields!BMI.Value)", DetailCellStyle(""), "");
+        AddCell(ref writer, "Textbox", "txtCurrentBMI", "=round(Fields!CurrentBMI.Value)", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtMthsSinceVisit", "=Fields!MthsSinceVisit.Value", DetailCellStyle("Red", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtDateSeen", "=Fields!DateSeen.Value", DetailCellStyle("Red", "", "", ""), "");
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion 
+        
+        writer.WriteEndElement();
+        #endregion 
+        
+        writer.WriteEndElement(); 
+        writer.WriteEndElement(); 
+        #endregion 
+
+        writer.WriteEndElement();
+        #endregion 
+        writer.Flush();
+        stream.Close();
+    }
+    #endregion 
+    #endregion 
+
+    #region Patient list with complication with RDL Builder
+    #region private void PatientListWithComplications_BuildReport()
+    private void PatientListWithComplications_BuildReport()
+    {
+        DataSet dsReport;
+        SqlCommand cmdSelect = new SqlCommand();
+        strXSLTFileName = "GroupReport/PatientListWithComplications/PatientsListWithComplicationsXSLTFile.xsl";
+
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_PatientListWithComplications");
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        dsReport = gClass.FetchData(cmdSelect, "tblPatientList");
+        DataTable dtTemp = dsReport.Tables["tblPatientList"];
+
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", String.Format("{0}  {1}", DateTime.Now.ToLongDateString(), DateTime.Now.ToShortTimeString()) );
+        dtTemp = new DataTable("tblPatient");
+        gClass.AddColumn(ref dtTemp, "PatientId", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "OperationDate", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "Approach", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "SurgeryType_Desc", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "WeightMeasurment", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "WeightLoss", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "EWL", "System.String", "");
+        gClass.AddColumn(ref dtTemp, "BMI", "System.String", "");
+        DataColumn[] _Columns = new DataColumn[dtTemp.Columns.Count];
+        Int16 xh = 0; foreach (DataColumn dc in dtTemp.Columns) _Columns[xh++] = dc;
+        dtTemp.Constraints.Add(new UniqueConstraint(_Columns));
+        foreach (DataRow dr in dsReport.Tables["tblPatientList"].Rows)
+        {
+            DataRow drTemp = dtTemp.NewRow();
+
+            drTemp["PatientId"] = dr["PatientId"].ToString();
+            drTemp["OperationDate"] = dr["OperationDate"].ToString();
+            drTemp["Approach"] = dr["Approach"].ToString();
+            drTemp["SurgeryType_Desc"] = dr["SurgeryType_Desc"].ToString();
+            drTemp["WeightMeasurment"] = dr["WeightMeasurment"].ToString();
+            drTemp["WeightLoss"] = dr["WeightLoss"].ToString();
+            drTemp["EWL"] = dr["EWL"].ToString();
+            drTemp["BMI"] = dr["BMI"].ToString();
+
+            try { dtTemp.Rows.Add(drTemp); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtTemp);
+        CreateOutputFile("COEREPORT", dsReport);
+    }
+    #endregion 
+
+    #region private void PatientListWithComplications_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    private void PatientListWithComplications_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        writer.WriteStartElement("Report");
+        AddReportConfiguration(ref writer, "Patient List", strLanguage, (Decimal)22.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)29, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+
+        #region body
+        writer.WriteStartElement("Body");
+        writer.WriteElementString("Height", "28cm"); //Report.height - (TopMargin + bottomMargin) == 28 - (0.5+0.5)
+        writer.WriteStartElement("ReportItems");
+
+        #region Table
+        writer.WriteStartElement("Table");
+        writer.WriteAttributeString("Name", "rptPatientList");
+        writer.WriteElementString("DataSetName", "tblPatientList");
+
+        writer.WriteStartElement("TableGroups");    //<TableGroups>
+        writer.WriteStartElement("TableGroup");         //<TableGroup>
+
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height","0.5cm");                    //</Height>
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "txtOperationDate1", "=Fields!OperationDate.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtPatientId1", "=Fields!PatientId.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtSurgeryType1", "=Fields!SurgeryType_Desc.Value", DetailCellStyle("Red", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtApproach1", "=Fields!Approach.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtBMI1", "=Fields!BMI.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtWeightLoss1", "=round(Fields!WeightLoss.Value)", DetailCellStyle("Red", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtEWL1", "=Fields!EWL.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtBlank", "", DetailCellStyle("", "", "", ""), "2");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+
+        writer.WriteStartElement("Sorting");                //<Sorting>
+        writer.WriteStartElement("SortBy");                     //<SortBy>
+        writer.WriteElementString("SortExpression", "=Fields!OperationDate.Value");
+        writer.WriteElementString("Direction", "Ascending");
+        writer.WriteEndElement();                               //</SortBy>
+        writer.WriteStartElement("SortBy");                     //<SortBy>
+        writer.WriteElementString("SortExpression", "=Fields!PatientId.Value");
+        writer.WriteElementString("Direction", "Ascending");
+        writer.WriteEndElement();                               //</SortBy>
+        writer.WriteEndElement();                           //</Sorting>
+
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptPatientList_Group1");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!OperationDate.Value");
+        writer.WriteElementString("GroupExpression", "=Fields!PatientId.Value");
+        
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteEndElement();                       //</TableGroup>
+        writer.WriteEndElement();                   //</TableGroups>
+
+        #region TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "4cm");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "1.5cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "1cm");
+        AddColumn(ref writer, "2cm");
+        AddColumn(ref writer, "3cm");
+        writer.WriteEndElement();
+        #endregion
+
+        #region Header
+        writer.WriteStartElement("Header");
+        writer.WriteElementString("RepeatOnNewPage", "true");
+        #region TableRows
+        writer.WriteStartElement("TableRows");
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+        writer.WriteStartElement("TableCell");
+        writer.WriteElementString("ColSpan", "9");
+        writer.WriteStartElement("ReportItems");
+
+        #region Row1_Table
+        writer.WriteStartElement("Table");
+        writer.WriteAttributeString("Name", "rpt_tblHeader_Row1");
+
+        #region Row1_Table_TableColumns
+        writer.WriteStartElement("TableColumns");
+        AddColumn(ref writer, "3cm");
+        AddColumn(ref writer, "5cm");
+        AddColumn(ref writer, "5cm");
+        writer.WriteEndElement();
+        #endregion
+
+        #region Row1_Table_Header
+        writer.WriteStartElement("Header");
+        writer.WriteStartElement("TableRows");
+        #region Row0
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Image", "imgTitle", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/print_header_bar.gif", DetailCellStyle("", "", "", ""), "3");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+
+        #region Row1
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtSurgeon", "Surgeon", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgeon", "=Fields!DoctorName_Title.value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportTitle", "Patient List includinf Operation, Weight loss and Complications", DetailCellStyle("", "12pt", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+
+        #region Row2
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtHospital", "Hospital", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVHospital", "=Fields!HospitalName_Title.value", DetailCellStyle("", "", "", ""), "2");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+
+        #region Row3
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.5cm");
+        writer.WriteStartElement("TableCells");
+        AddCell(ref writer, "Textbox", "txtSurgery", "Surgery", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtVSurgery", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtReportDate", "=Fields!ReportDate.Value", DetailCellStyle("Blue", "", "", ""), "");
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+        writer.WriteEndElement();
+        #endregion
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+
+        #region Row3
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");
+
+        AddCell(ref writer, "Textbox", "txtOperationDate_hr", "Operation Date", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtPatient_hr", "Patient", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtSurgery_hr", "Surgery", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtApproach_hr", "Approach", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtInitialBMI_hr", "Init BMI", DetailCellStyle("Blue", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtWeightLoss_hr", "Weight Loss (lbs)", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtEWL_hr", "%EWL", DetailCellStyle("", "", "", "LightGrey"), "");
+        AddCell(ref writer, "Textbox", "txtComplication_hr", "Complications / Events", DetailCellStyle("", "", "", "LightGrey"), "2");
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+
+        writer.WriteEndElement();
+        #endregion
+        writer.WriteEndElement();
+        #endregion
+
+        #region Deatails
+        writer.WriteStartElement("Details");
+        writer.WriteStartElement("TableRows");
+        writer.WriteStartElement("TableRow");
+        writer.WriteElementString("Height", "0.75cm");
+        writer.WriteStartElement("TableCells");
+
+        AddCell(ref writer, "Textbox", "txtBlankRow", "", DetailCellStyle("", "", "", ""), "7");
+        AddCell(ref writer, "Textbox", "txtComplicationDate", "=Fields!ComplicationDate.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtComplication", "=Fields!Complication.Value", DetailCellStyle("", "", "", ""), "");
+
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion
+
+        writer.WriteEndElement();
+        #endregion 
+        
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        #endregion 
+
+        writer.WriteEndElement(); //"Report"
+        writer.Flush();
+        stream.Close();
+    }
+    #endregion 
+    #endregion
+
+    #region Summary By Quarter with RDL Builder
+    #region private void SummaryByQuarter_BuildReport()
+    private void SummaryByQuarter_BuildReport()
+    {
+        DataSet dsReport;
+        SqlCommand cmdSelect = new SqlCommand();
+        strXSLTFileName = "GroupReport/SummaryByQuarter/SummaryByQuarterXSLTFile.xsl";
+
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_SummaryByQuarter");
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        cmdSelect.Parameters.Add("@ReportType", SqlDbType.Int).Value = 1;
+        dsReport = gClass.FetchData(cmdSelect, "tblPatientList");
+
+        DataTable dtTemp = dsReport.Tables["tblPatientList"];
+        gClass.AddColumn(ref dtTemp, "ReportName", "System.String", "SummaryByQuarter");
+        gClass.AddColumn(ref dtTemp, "ReportDate", "System.String", DateTime.Now.ToLongDateString() + "  " + DateTime.Now.ToShortTimeString());
+        gClass.AddColumn(ref dtTemp, "PatientDetailFlag", "System.String", Request.QueryString["PD"]);
+        gClass.AddColumn(ref dtTemp, "EWLFlag", "System.String", Request.QueryString["EWL"]);
+
+        dtTemp.Columns["EWLGroup025"].Expression = "iif(EWLL < 25, 1, 0)";
+        dtTemp.Columns["EWLGroup2550"].Expression = "iif(EWLL >= 25 and EWLL < 50, 1, 0)";
+        dtTemp.Columns["EWLGroup5075"].Expression = "iif(EWLL >= 50 and EWLL < 75, 1, 0)";
+        dtTemp.Columns["EWLGroup75100"].Expression = "iif(EWLL >= 75, 1, 0)";
+
+        DataTable dtMonths = new DataTable("tblMonths");
+        gClass.AddColumn(ref dtMonths, "MonthNo", "System.String", "0");
+        dtMonths.Constraints.Add(new UniqueConstraint(dtMonths.Columns[0]));
+        foreach (DataRow dr in dsReport.Tables["tblPatientList"].Rows)
+        {
+            DataRow drMonths = dtMonths.NewRow();
+
+            drMonths["MonthNo"] = dr["VisitMonthsSinceOperation"].ToString();
+            try { dtMonths.Rows.Add(drMonths); }
+            catch { }
+        }
+        dsReport.Tables.Add(dtMonths);
+        //// should be comment
+        //gClass.AddColumn(ref dtTemp, "WeightLoss", "System.Int16", "0");
+        //gClass.AddColumn(ref dtTemp, "BMIChange", "System.Int16", "0");
+        //dtTemp.Columns["WeightLoss"].Expression = "StartWeight - Weight";
+        //dtTemp.Columns["BMIChange"].Expression = "InitBMI - BMI";
+
+        //// should be comment
+        //cmdSelect.Parameters["@ReportType"].Value = 2;
+        //dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblMonth").Tables[0].Copy());
+        //DataRelation drMonth = new DataRelation("drMonth", dsReport.Tables["tblMonth"].Columns["VisitMonthsSinceOperation"], dsReport.Tables["tblPatientList"].Columns["VisitMonthsSinceOperation"]);
+        //dsReport.Relations.Add(drMonth);
+        //dsReport.Tables["tblMonth"].Columns["AgeSTDev"].Expression = "StDev(Child(drMonth).Age)";
+        //dsReport.Tables["tblMonth"].Columns["StartWeightSTDev"].Expression = "StDev(Child(drMonth).StartWeight)";
+        //dsReport.Tables["tblMonth"].Columns["WeightSTDev"].Expression = "StDev(Child(drMonth).Weight)";
+        //dsReport.Tables["tblMonth"].Columns["WeightLossSTDev"].Expression = "StDev(Child(drMonth).WeightLoss)";
+        //dsReport.Tables["tblMonth"].Columns["InitBMISTDev"].Expression = "StDev(Child(drMonth).InitBMI)";
+        //dsReport.Tables["tblMonth"].Columns["BMISTDev"].Expression = "StDev(Child(drMonth).BMI)";
+        //dsReport.Tables["tblMonth"].Columns["BMIChangeSTDev"].Expression = "StDev(Child(drMonth).BMIChange)";
+        //dsReport.Tables["tblMonth"].Columns["EWLLSTDev"].Expression = "StDev(Child(drMonth).EWLL)";
+
+        cmdSelect.Parameters["@ReportType"].Value = 3;
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblPatientID").Tables[0].Copy());
+
+        //// should be in comment
+        //cmdSelect.Parameters["@ReportType"].Value = 4;
+        //dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblMonth_PatientID").Tables[0].Copy());
+        
+        cmdSelect.Parameters.Clear();
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_SummaryByQuarter_FollowupData");
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblPWDList").Tables[0].Copy());
+
+        // fetch operation summary
+        DataSet dsOperationSummary = new DataSet();
+        FetchOperationSummary(ref dsOperationSummary);
+        for (int Xh = 0; Xh < dsOperationSummary.Tables.Count; Xh++)
+            dsReport.Tables.Add(dsOperationSummary.Tables[Xh].Copy());
+
+        dsReport.AcceptChanges();
+        CreateOutputFile("SUMMARYBYQUARTER", dsReport);
+    }
+    #endregion 
+    #endregion 
+
+    #region private void SummaryByQuarter_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    private void SummaryByQuarter_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        writer.WriteStartElement("Report");
+        AddReportConfiguration(ref writer, "Summart by quarter", strLanguage, (Decimal)22.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)29, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+
+        #region Report - PageHeader
+        writer.WriteStartElement("PageHeader");
+            writer.WriteStartElement("ReportItems");
+
+                #region Row1_Table
+                writer.WriteStartElement("Table");
+                writer.WriteAttributeString("Name", "rpt_tblHeader_Row1");
+
+                #region Row1_Table_TableColumns
+                writer.WriteStartElement("TableColumns");
+                AddColumn(ref writer, "3cm");
+                AddColumn(ref writer, "10cm");
+                AddColumn(ref writer, "7cm");
+                writer.WriteEndElement();
+                #endregion
+
+                #region Row1_Table_Header
+                writer.WriteStartElement("Header");
+                writer.WriteStartElement("TableRows");
+                #region Row0
+                writer.WriteStartElement("TableRow");
+                writer.WriteElementString("Height", "0.5cm");
+                writer.WriteStartElement("TableCells");
+                AddCell(ref writer, "Image", "imgTitle", "http://" + Request.Url.Host + Request.ApplicationPath + "/img/print_header_bar.gif", DetailCellStyle("", "", "", ""), "3");
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+
+                #region Row1
+                writer.WriteStartElement("TableRow");
+                writer.WriteElementString("Height", "0.5cm");
+                writer.WriteStartElement("TableCells");
+                AddCell(ref writer, "Textbox", "txtSurgeon", "Surgeon", DetailCellStyle("", "", "", ""), "");
+                AddCell(ref writer, "Textbox", "txtVSurgeon", "=Fields!DoctorName_Title.Value", DetailCellStyle("", "", "", ""), "");
+                AddCell(ref writer, "Textbox", "txtReportTitle", "Summary Statistics", DetailCellStyle("", "", "", ""), "");
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+
+                #region Row2
+                writer.WriteStartElement("TableRow");
+                writer.WriteElementString("Height", "0.5cm");
+                writer.WriteStartElement("TableCells");
+                AddCell(ref writer, "Textbox", "txtHospital", "Hospital", DetailCellStyle("", "", "", ""), "");
+                AddCell(ref writer, "Textbox", "txtVHospital", "=Fields!HospitalName_Title.Value", DetailCellStyle("", "", "", ""), "2");
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+
+                #region Row3
+                writer.WriteStartElement("TableRow");
+                writer.WriteElementString("Height", "0.5cm");
+                writer.WriteStartElement("TableCells");
+                AddCell(ref writer, "Textbox", "txtSurgery", "Surgery", DetailCellStyle("", "", "", ""), "");
+                AddCell(ref writer, "Textbox", "txtVSurgery", "", DetailCellStyle("", "", "", ""), "");
+                AddCell(ref writer, "Textbox", "txtReportDate", "=Fields!ReportDate.Value", DetailCellStyle("Blue", "", "", ""), "");
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+
+                #region Row4
+                writer.WriteStartElement("TableRow");
+                writer.WriteElementString("Height", "0.001cm");
+                writer.WriteStartElement("TableCells");
+                AddCell(ref writer, "Line", "Line1", "", DetailCellStyle("", "", "", ""), "3");
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+
+                #region Row - Number of Patients
+                writer.WriteStartElement("TableRow");
+                writer.WriteElementString("Height", "1cm");
+                writer.WriteStartElement("TableCells");
+                AddCell(ref writer, "Textbox", "lblPatientNumber", "Number of Patients : ", DetailCellStyle("", "9pt", "", ""), "");
+                AddCell(ref writer, "Textbox", "txtPatientNumber", "=CountDistinct(Fields!PatientID.value)", DetailCellStyle("", "9pt", "", ""), "2");
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                #endregion
+                writer.WriteEndElement();
+                #endregion
+
+            writer.WriteEndElement( );
+        writer.WriteEndElement( );
+        #endregion
+        // delete from here
+
+        writer.WriteEndElement(); //"Report"
+        writer.Flush();
+        stream.Close();
+    }
+    #endregion 
+
+    #region void LoadFollowpData(ref System.Xml.XmlTextWriter writer, DataSet dsReport, string strTop, int intMinValue, int intMaxValue, List<string> strCaptions)
+    private void LoadFollowpData(ref System.Xml.XmlTextWriter writer, DataSet dsReport, string strTop, int intMinValue, int intMaxValue, List<string> strCaptions)
+    {
+        string      strFilter = String.Empty;
+        DataView    dvFollowup = dsReport.Tables["tblPatientID"].DefaultView,
+                    dvOperated = dsReport.Tables["tblPWDList"].DefaultView;
+
+        if ((intMaxValue != -1) || (intMinValue != -1))
+        {
+            dvFollowup.RowStateFilter = DataViewRowState.OriginalRows;
+            dvOperated.RowStateFilter = DataViewRowState.OriginalRows;
+
+            if (intMaxValue != -1)
+                strFilter = "(FollowupDays > " + intMinValue.ToString() + ") and (FollowupDays <= " + intMaxValue.ToString() + ")";
+            else strFilter = "FollowupDays > " + intMinValue.ToString();
+            dvFollowup.RowFilter = dvOperated.RowFilter = strFilter;
+        }
+
+        AddReportItem(ref writer, "Textbox", strCaptions[0], strCaptions[1], ElementChilds("2cm", "0.5cm", "", "1", strTop, "0.1cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", strCaptions[2], dvFollowup.Count.ToString(), ElementChilds("1cm", "0.5cm", "", "1", strTop, "3cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", strCaptions[3], dvOperated.Count.ToString(), ElementChilds("1cm", "0.5cm", "", "1", strTop, "6cm"), DetailCellStyle("", "9pt", "Left", ""));
+    }
+    #endregion
+
+    #region void LoadDemographicData(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    private void LoadDemographicData(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    {
+        DataView dvView = dsReport.Tables["tblPatientID"].DefaultView;
+        int         FemaleCnt = 0, MaleCnt = 0, OtherCnt = 0;
+
+        dvView.RowStateFilter = DataViewRowState.OriginalRows;
+        dvView.RowFilter = "Sex = 'F'";
+        FemaleCnt = dvView.Count;
+        dvView.RowFilter = "Sex = 'M'";
+        MaleCnt = dvView.Count;
+        dvView.RowFilter = "(Sex <> 'M') and (Sex <> 'F')";
+        OtherCnt = dvView.Count;
+
+        AddReportItem(ref writer, "Textbox", "lblDemographicData_RepFooter", "Demographic data", ElementChilds("10cm", "0.8cm", "", "1", "0.1cm", "0.1cm"), DetailCellStyle("", "12pt", "Left", "LightGrey"));
+        AddReportItem(ref writer, "Textbox", "lblAverageAGE_RepFooter", "Average Age", ElementChilds("3cm", "0.8cm", "", "1", "0.8cm", "0.5cm"), DetailCellStyle("", "10pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblSex_RepFooter", "Sex", ElementChilds("1cm", "0.5cm", "", "1", "1.7cm", "0.5cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblFemales_RepFooter", "Females", ElementChilds("1.5cm", "0.5cm", "", "1", "1.7cm", "2cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblFemales1_RepFooter", FemaleCnt.ToString(), ElementChilds("1cm", "0.5cm", "", "1", "1.7cm", "3.5cm"), DetailCellStyle("", "9pt", "Left", ""));
+
+        if ((FemaleCnt + MaleCnt + OtherCnt) == 0)
+            AddReportItem(ref writer, "Textbox", "lblFemales2_RepFooter", "", ElementChilds("1.5cm", "0.5cm", "", "1", "1.7cm", "4.5cm"), DetailCellStyle("", "9pt", "Left", ""));
+        else 
+            AddReportItem(ref writer, "Textbox", "lblFemales2_RepFooter", "%" + Math.Round((decimal)(FemaleCnt * 100 / (FemaleCnt+MaleCnt+OtherCnt))).ToString(), ElementChilds("1.5cm", "0.5cm", "", "1", "1.7cm", "4.5cm"), DetailCellStyle("", "9pt", "Left", ""));
+        
+        AddReportItem(ref writer, "Textbox", "lblMales_RepFooter", "Males", ElementChilds("1cm", "0.5cm", "", "1", "1.7cm", "6cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblMales1_RepFooter", MaleCnt.ToString(), ElementChilds("1cm", "0.5cm", "", "1", "1.7cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblOthers_RepFooter", "Others", ElementChilds("1.25cm", "0.5cm", "", "1", "1.7cm", "8cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblOthers1_RepFooter", OtherCnt.ToString(), ElementChilds("1cm", "0.5cm", "", "1", "1.7cm", "9.25cm"), DetailCellStyle("", "9pt", "Left", ""));
+    }
+    #endregion
+
+    #region private void LoadBMIDistribution(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    private void LoadBMIDistribution(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    {
+        int BMI35, BMI39, BMI49, BMI59, BMI69, BMI70, BMITotal;
+        DataView dvView = dsReport.Tables["tblPatientList"].DefaultView;
+
+        BMITotal = dvView.Count;
+        BMI35 = BMI39 = BMI49 = BMI59 = BMI69 = BMI70 = 0;
+        dvView.RowStateFilter = DataViewRowState.OriginalRows;
+
+        AddReportItem(ref writer, "Textbox", "lblBMIDistribution_RepFooter", "BMI Distribution", ElementChilds("10cm", "0.8cm", "", "1", "0.1cm", "0.1cm"), DetailCellStyle("", "12pt", "Left", "LightGrey"));
+        AddReportItem(ref writer, "Textbox", "lblMinBMI_RepFooter", "Min.", ElementChilds("1cm", "0.8cm", "", "1", "1cm", "1cm"), DetailCellStyle("Red", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtMinBMI_RepFooter", "=round(min(Fields!InitBMI.value))", ElementChilds("1cm", "0.8cm", "", "1", "1cm", "2cm"), DetailCellStyle("Red", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblMeanBMI_RepFooter", "Mean", ElementChilds("1cm", "0.8cm", "", "1", "1cm", "4cm"), DetailCellStyle("Red", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtMeanBMI_RepFooter", "=round(avg(Fields!InitBMI.value))", ElementChilds("1cm", "0.8cm", "", "1", "1cm", "5cm"), DetailCellStyle("Red", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblMaxBMI_RepFooter", "Max", ElementChilds("1cm", "0.8cm", "", "1", "1cm", "7cm"), DetailCellStyle("Red", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtMaxBMI_RepFooter", "=round(Max(Fields!InitBMI.value))", ElementChilds("1cm", "0.8cm", "", "1", "1cm", "8cm"), DetailCellStyle("Red", "9pt", "Left", ""));
+
+        dvView.RowFilter = "InitBMI < 35"; BMI35 = dvView.Count;
+        dvView.RowFilter = "InitBMI >= 35 and InitBMI < 40"; BMI39 = dvView.Count;
+        dvView.RowFilter = "InitBMI >= 40 and InitBMI < 50"; BMI49 = dvView.Count;
+        dvView.RowFilter = "InitBMI >= 50 and InitBMI < 60"; BMI59 = dvView.Count;
+        dvView.RowFilter = "InitBMI >= 60 and InitBMI < 70"; BMI69 = dvView.Count;
+        dvView.RowFilter = "InitBMI > 70"; BMI70 = dvView.Count;
+
+        AddReportItem(ref writer, "Textbox", "lblBMI35_RepFooter", "BMI < 35", ElementChilds("2cm", "0.8cm", "", "1", "2cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblBMI39_RepFooter", "BMI 35~39", ElementChilds("2cm", "0.8cm", "", "1", "2cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblBMI49_RepFooter", "BMI 40~49", ElementChilds("2cm", "0.8cm", "", "1", "2cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+
+        AddReportItem(ref writer, "Textbox", "txtBMI35_RepFooter", BMI35.ToString(), ElementChilds("2cm", "0.8cm", "", "1", "2.7cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtBMI39_RepFooter", BMI39.ToString(), ElementChilds("2cm", "0.8cm", "", "1", "2.7cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtBMI49_RepFooter", BMI49.ToString(), ElementChilds("2cm", "0.8cm", "", "1", "2.7cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+
+        if (BMITotal != 0)
+        {
+            AddReportItem(ref writer, "Textbox", "txtBMI35_Percent_RepFooter", "%" + Math.Round((decimal)BMI35 * 100 / (decimal)BMITotal, 1).ToString(), ElementChilds("2cm", "0.8cm", "", "1", "3.3cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI39_Percent_RepFooter", "%" + Math.Round((decimal)BMI39 * 100 / (decimal)BMITotal, 1).ToString(), ElementChilds("2cm", "0.8cm", "", "1", "3.3cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI49_Percent_RepFooter", "%" + Math.Round((decimal)BMI49 * 100 / (decimal)BMITotal, 1).ToString(), ElementChilds("2cm", "0.8cm", "", "1", "3.3cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+        }
+        else
+        {
+            AddReportItem(ref writer, "Textbox", "txtBMI35_Percent_RepFooter", "", ElementChilds("2cm", "0.8cm", "", "1", "3.3cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI39_Percent_RepFooter", "", ElementChilds("2cm", "0.8cm", "", "1", "3.3cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI49_Percent_RepFooter", "", ElementChilds("2cm", "0.8cm", "", "1", "3.3cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+        }
+
+        AddReportItem(ref writer, "Textbox", "lblBMI59_RepFooter", "BMI 50~59", ElementChilds("2cm", "0.8cm", "", "1", "4cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblBMI69_RepFooter", "BMI 60~69", ElementChilds("2cm", "0.8cm", "", "1", "4cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "lblBMI70_RepFooter", "BMI > 70", ElementChilds("2cm", "0.8cm", "", "1", "4cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+
+        AddReportItem(ref writer, "Textbox", "txtBMI59_RepFooter", BMI59.ToString(), ElementChilds("2cm", "0.8cm", "", "1", "4.7cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtBMI69_RepFooter", BMI69.ToString(), ElementChilds("2cm", "0.8cm", "", "1", "4.7cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+        AddReportItem(ref writer, "Textbox", "txtBMI70_RepFooter", BMI70.ToString(), ElementChilds("2cm", "0.8cm", "", "1", "4.7cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+
+        if (BMITotal != 0)
+        {
+            AddReportItem(ref writer, "Textbox", "txtBMI59_Percent_RepFooter", "%" + Math.Round((decimal)BMI59 * 100 / (decimal)BMITotal, 1).ToString(), ElementChilds("2cm", "0.8cm", "", "1", "5.3cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI69_Percent_RepFooter", "%" + Math.Round((decimal)BMI69 * 100 / (decimal)BMITotal, 1).ToString(), ElementChilds("2cm", "0.8cm", "", "1", "5.3cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI70_Percent_RepFooter", "%" + Math.Round((decimal)BMI70 * 100 / (decimal)BMITotal, 1).ToString(), ElementChilds("2cm", "0.8cm", "", "1", "5.3cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+        }
+        else
+        {
+            AddReportItem(ref writer, "Textbox", "txtBMI59_Percent_RepFooter", "" , ElementChilds("2cm", "0.8cm", "", "1", "5.3cm", "1cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI69_Percent_RepFooter", "" , ElementChilds("2cm", "0.8cm", "", "1", "5.3cm", "4cm"), DetailCellStyle("", "9pt", "Left", ""));
+            AddReportItem(ref writer, "Textbox", "txtBMI70_Percent_RepFooter", "" , ElementChilds("2cm", "0.8cm", "", "1", "5.3cm", "7cm"), DetailCellStyle("", "9pt", "Left", ""));
+        }
+
+    }
+    #endregion
+
+    #region private void OperationSubReport_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    private void OperationSubReport_RDL(DataSet dsReport, string strRDLFilename, string strLanguage)
+    {
+        System.IO.FileStream stream = System.IO.File.OpenWrite(strRDLFilename);
+        System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(stream, System.Text.Encoding.UTF8);
+
+        writer.Formatting = System.Xml.Formatting.Indented;
+        writer.WriteProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
+        writer.WriteStartElement("Report");     //<Report>
+        AddReportConfiguration(ref writer, "Operation Duration with LOS", strLanguage, (Decimal)22.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)0.5, (Decimal)29, "cm");
+        AddDataSource(ref writer, dsReport);
+        AddDataSets(ref writer, dsReport);
+        #region Body
+        writer.WriteStartElement("Body");   //<Body>
+        writer.WriteElementString("Height", "28cm"); //Report.height - (TopMargin + bottomMargin) == 28 - (0.5+0.5)
+        writer.WriteStartElement("ReportItems");//<ReportItems>
+
+        writer.WriteStartElement("Table");          //<Table>
+        writer.WriteAttributeString("Name", "tblOperation");
+        writer.WriteElementString("DataSetName", "tblOperations");
+        #region TableColumns
+        writer.WriteStartElement("TableColumns");   //<TableColumns>
+        AddColumn(ref writer, "0.5cm");
+        AddColumn(ref writer, "0.5cm");
+        AddColumn(ref writer, "6cm");
+        AddColumn(ref writer, "1cm");
+        writer.WriteEndElement();                   //<TableColumns>
+        #endregion
+
+        #region Header
+        writer.WriteStartElement("Header");         //<Header>
+        writer.WriteElementString("RepeatOnNewPage", "true");
+        writer.WriteStartElement("TableRows");          //<TableRows>
+        writer.WriteStartElement("TableRow");           //  <TableRow>
+        writer.WriteElementString("Height", "1cm");
+        writer.WriteStartElement("TableCells");         //      <TableCells>
+        AddCell(ref writer, "Textbox", "txtSurgeonName", "=Fields!DoctorName_Title.Value", DetailCellStyle("", "", "", ""), "4");
+        writer.WriteEndElement();                       //      </TableCells>
+        writer.WriteEndElement();                       //  </TableRow>
+        writer.WriteEndElement();                       //</TableRows>
+        writer.WriteEndElement();                   //</Header>
+        #endregion
+
+        #region <TableGroups>
+        writer.WriteStartElement("TableGroups");    //<TableGroups>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Surgury
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptSurgeryGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!SurgeryType.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblSurgeryDesc", "=Fields!SurgeryType_Desc.Value", DetailCellStyle("", "10pt", "", "LightSkyBlue"), "3");
+        AddCell(ref writer, "Textbox", "txtSurgeryCount", "=count(Fields!SurgeryType.Value)", DetailCellStyle("Red", "10pt", "Center", "LightSkyBlue"), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Approach
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptApproachGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!Approach.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty21", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblApproach", "=Fields!Approach.Value", DetailCellStyle("", "9pt", "", ""), "2");
+        AddCell(ref writer, "Textbox", "txtApproachCount", "=count(Fields!Approach.Value)", DetailCellStyle("Red", "9pt", "Center", ""), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+
+        writer.WriteStartElement("TableGroup");         //<TableGroup>  --  Category
+        writer.WriteStartElement("Grouping");               //<Grouping>
+        writer.WriteAttributeString("Name", "rptCategoryGroup");
+        writer.WriteStartElement("GroupExpressions");           //<GroupExpressions>
+        writer.WriteElementString("GroupExpression", "=Fields!Category_Desc.Value");
+        writer.WriteEndElement();                               //</GroupExpressions>
+        writer.WriteEndElement();                           //</Grouping>
+        writer.WriteStartElement("Header");                 //<Header>
+        writer.WriteStartElement("TableRows");                  //<TableRows>
+        writer.WriteStartElement("TableRow");                       //<TableRow>
+        writer.WriteElementString("Height", "0.7cm");
+        writer.WriteStartElement("TableCells");                         //<TableCells>
+        AddCell(ref writer, "Textbox", "lblEmpty31", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblEmpty32", "", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "lblCategory", "=Fields!Category_Desc.Value", DetailCellStyle("", "", "", ""), "");
+        AddCell(ref writer, "Textbox", "txtCategoryCount", "=count(Fields!Category.Value)", DetailCellStyle("Red", "", "Center", ""), "");
+        writer.WriteEndElement();                                       //</TableCells>
+        writer.WriteEndElement();                                   //</TableRow>
+        writer.WriteEndElement();                               //</TableRows>
+        writer.WriteEndElement();                           //</Header>
+        writer.WriteEndElement();                       //</TableGroup>
+        writer.WriteEndElement();                   //</TableGroups>
+        #endregion
+        writer.WriteEndElement();                   //</Table>
+
+        
+        writer.WriteEndElement();           //ReportItems
+        writer.WriteEndElement();       //</Body>
+        #endregion
+        writer.WriteEndElement();   //</Report>
+        writer.Flush();
+        stream.Close();
+    }
+    #endregion
+
+    #region private void BMIEWLGraph_BuildReport()
+    private void BMIEWLGraph_BuildReport()
+    {
+        DataSet dsReport;
+        SqlCommand cmdSelect = new SqlCommand();
+
+        chartEWL.Visible = true;
+        chartBMI.Visible = true;
+        InitializeReportCommand(ref cmdSelect, "sp_Rep_SummaryByQuarter");
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+        cmdSelect.Parameters.Add("@ReportType", SqlDbType.Int).Value = 5;
+        
+        dsReport = gClass.FetchData(cmdSelect, "tblEWLGraph");
+        SetChartConfig(chartEWL, dsReport, "% Excess Weight Loss", "Quarter since operations", "% EWL", "VisitMonthsSinceOperation", "avgEWL");
+
+        cmdSelect.Parameters["@ReportType"].Value = 6;
+        dsReport = gClass.FetchData(cmdSelect, "tblBMIGraph");
+        SetChartConfig(chartBMI, dsReport, "Change in BMI per Quarter", "Quarter since operations", "BMI", "VisitMonthsSinceOperation", "avgBMI");
+    }
+    #endregion
+
+    #region private void SetChartConfig(DataSet dsReport, string strChartTitle, string strXAxis , string strYAxis)
+    private void SetChartConfig(Chart tChart, DataSet dsReport, string strChartTitle, string strXAxis , string strYAxis, string strXFieldName, string strYFieldName)
+    {
+        tChart.TempDirectory = "~/temp";
+        tChart.Mentor = false;
+        tChart.Use3D = false;
+        tChart.Width = 800;
+        tChart.Height = 450;
+        tChart.Debug = true;
+        tChart.LegendBox.Visible = false;
+
+        tChart.Title = strChartTitle;
+        tChart.DefaultSeries.Type = SeriesType.Bar;
+        tChart.XAxis.Label.Text = strXAxis;//"Quarter since operations";
+        tChart.YAxis.Label.Text = strYAxis;//"% EWL";
+        SeriesCollection mySC = getEWLData(dsReport, strXFieldName, strYFieldName);
+        tChart.SeriesCollection.Add(mySC);
+        return;
+    }
+    #endregion 
+
+    #region private SeriesCollection getEWLData(DataSet dsReport)
+    private SeriesCollection getEWLData(DataSet dsReport, string strXFieldName, string strYFieldName)
+    {
+        SeriesCollection SC = new SeriesCollection();
+        Series s = new Series();
+        s.Name = "%EWL Series";
+
+        for (int xh = 0; xh < dsReport.Tables[0].Rows.Count; xh++)
+        {
+            try
+            {
+                Element e = new Element();
+                e.ShowValue = true;
+                e.Name = dsReport.Tables[0].Rows[xh]["VisitMonthsSinceOperation"].ToString();
+                e.XValue = Convert.ToInt32(dsReport.Tables[0].Rows[xh][strXFieldName].ToString());
+                e.YValue = Convert.ToDouble(dsReport.Tables[0].Rows[xh][strYFieldName].ToString());
+                //e.ShowValue = true;
+                s.Elements.Add(e);
+            }
+            catch { /*Response.Write(err.ToString());*/ }
+        }
+        SC.Add(s);
+        SC[0].PaletteName = Palette.Two;
+        return SC;
+    }
+    #endregion 
+
+    #region private void BaseLineComorbidities_BuildReport
+    private void BaseLineComorbidities_BuildReport(GlobalClass gClass)
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        DataSet dsReport = new DataSet("dsSchema");
+        DataColumn dcRootURL = new DataColumn("RootURL", Type.GetType("System.String"));
+
+        dcRootURL.DefaultValue = "http://" + Request.Url.Host  + "/";
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Rep_BaselineComorbidities", true);
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value); 
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblReport").Tables[0].Copy());
+        dsReport.Tables[0].Columns.Add(dcRootURL);
+        dsReport.AcceptChanges();
+        tcXML.InnerHtml = gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        return;
+    }
+    #endregion 
+
+    #region private void ComorbidityFUAssessment_BuildReport
+    private void ComorbidityFUAssessment_BuildReport(GlobalClass gClass)
+    {
+        SqlCommand      cmdSelect = new SqlCommand(), cmdSelectComplication = new SqlCommand(), cmdSysConfig = new SqlCommand();
+        DataSet         dsReport = new DataSet("dsSchema");
+        DataColumn      dcRootURL = new DataColumn("RootURL", Type.GetType("System.String"));
+
+        dcRootURL.DefaultValue = "http://" + Request.Url.Host + "/";
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Rep_ComorbidityFUAssessment", true);
+        gClass.MakeStoreProcedureName(ref cmdSysConfig, "sp_SystemConfig", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectComplication, "sp_Rep_ComplicationEventPerPatient", true);
+
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblReport").Tables[0].Copy());
+        dsReport.Tables[0].Columns.Add(dcRootURL);
+        dsReport.AcceptChanges();
+        dsReport.Tables.Add(gClass.FetchData(cmdSysConfig, "tblSysConfig").Tables[0].Copy());
+
+        cmdSelectComplication.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+        cmdSelectComplication.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelectComplication.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+        cmdSelectComplication.Parameters.Add("@TypeCode", SqlDbType.VarChar).Value = 'c';
+
+        dsReport.Tables.Add(gClass.FetchData(cmdSelectComplication, "tblComplication").Tables[0].Copy());
+
+        cmdSelectComplication.Parameters["@TypeCode"].Value = 'e';
+        dsReport.Tables.Add(gClass.FetchData(cmdSelectComplication, "tblEvent").Tables[0].Copy());
+
+        tcXML.InnerHtml = gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        return;
+    }
+    #endregion
+
+    #region private void GroupComorbidity_BuildReport
+    private void GroupComorbidity_BuildReport(GlobalClass gClass)
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        DataSet dsReport = new DataSet("dsSchema");
+        string[] Fields = new string[]{"SurgonFlag", "HospitalFlag", "SurgeryTypeFlag", "ApproachFlag", "CategoryFlag", "GroupFlag"};
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Rep_GroupComorbidity", true);
+
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblReport").Tables[0].Copy());
+        for (int Xh = 0; Xh < 6; Xh++)
+        {
+            DataColumn myDC = new DataColumn(Fields[Xh], Type.GetType("System.Char"));
+            myDC.DefaultValue = Request.Cookies["GroupComParam"].Value[Xh];
+            dsReport.Tables[0].Columns.Add(myDC);
+        }
+        dsReport.Tables[0].AcceptChanges();
+        //tcXML.Text = gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        tcXML.InnerHtml = gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        return;
+    }
+    #endregion 
+
+    #region private void OperationDetails_BuildReport
+    private void OperationDetails_BuildReport(GlobalClass gClass, string strParam)
+    {
+        DataSet         dsReport;
+        SqlCommand      cmdSelectOperationData = new SqlCommand(),
+                        cmdSelectPatientData = new SqlCommand(),
+                        cmdSelectPatientComplication = new SqlCommand();
+
+        strXSLTFileName = @"OperationDetails/en_OperationDetailsXSLTFile.xsl";
+
+        gClass.MakeStoreProcedureName(ref cmdSelectPatientData, "sp_Rep_FollowUpAssessment", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectOperationData , "sp_Operation_SelectPatientOperationsList", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectPatientComplication, "sp_ConsultFU1_Complications_LoadData", true);
+
+        cmdSelectPatientData.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = intOrganizationCode;
+        cmdSelectPatientData.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSelectPatientData.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelectPatientData.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals(Boolean.TrueString);
+
+        cmdSelectOperationData.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+        cmdSelectOperationData.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelectOperationData.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+
+        cmdSelectPatientComplication.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+        cmdSelectPatientComplication.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelectPatientComplication.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+
+        dsReport = gClass.FetchData(cmdSelectPatientData, "tblPatientData");
+        dsReport.Tables.Add(gClass.FetchData(cmdSelectOperationData, "tblPatientOperation").Tables[0].Copy());
+
+        tcXML.InnerHtml = gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+        return;
+    }
+    #endregion 
+
+    /** /
+    #region private void AddColumn(ref DataTable dtTable, string strColumnName, string strType, string strValue)
+    private void AddColumn(ref DataTable dtTable, string strColumnName, string strType, string strValue)
+    {
+        string strDataType = strType.Substring(strType.IndexOf(".") + 1);
+        DataColumn dcTemp = new DataColumn();
+        dcTemp.Caption = strColumnName;
+        dcTemp.ColumnName = strColumnName;
+        dcTemp.DataType = Type.GetType(strType);
+        switch (strDataType.ToUpper())
+        {
+            case "STRING":
+                dcTemp.DefaultValue = strValue;
+                break;
+            case "INT":
+            case "INT16":
+            case "INT32":
+                dcTemp.DefaultValue = Convert.ToInt32(strValue);
+                break;
+            default:
+                dcTemp.DefaultValue = strValue;
+                break;
+        }
+        dtTable.Columns.Add(dcTemp);
+    }
+    #endregion 
+    /**/
+
+    #region private void CreateOutputFile(DataSet dsReport)
+    private void CreateOutputFile(string strReportName, DataSet dsReport)
+    {
+        ReportViewer rptViewer = new ReportViewer();
+        string strOutFileName = "", strRender = "", mimeType, encoding, fileNameExtension;
+        string[] streams;
+        Microsoft.Reporting.WebForms.Warning[] warnings;
+        string strFileName = @"\RDLFiles\" + CheckRDLFilesDirectory();
+
+        switch (Request.QueryString["Format"])
+        {
+            case "1": //HTML
+                tcXML.InnerHtml += gClass.ShowSchema(dsReport, Server.MapPath(strXSLTFileName));
+                return;
+            case "2": //EXCEL
+                strRender = "excel";
+                strOutFileName = Server.MapPath(".") + strFileName + ".xls";
+                break;
+            case "3": //PDF
+                strRender = "pdf";
+                strOutFileName = Server.MapPath(".") + strFileName + ".pdf";
+                break;
+        }
+
+        rptViewer.LocalReport.DataSources.Clear();
+        switch (strReportName)
+        {
+            case "COMPSUM":
+                strReportName = "Complication Summary";
+                ComplicationSummary_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+
+            case "COMPSUMBYPATIENT":
+                strReportName = "Complication summary by patient";
+                ComplicationSummaryByPatient_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+
+            case "PATIENTLIST" :
+                strReportName = "Patient List with last visit date";
+                PatientList_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+
+            case "COEREPORT" :
+                strReportName = "Patient List with complication";
+                PatientListWithComplications_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+
+            case "SUMMARYBYQUARTER" :
+                strReportName = "Summary by quarter";
+                SummaryByQuarter_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+
+            case "SUMMARYONLY":
+                strReportName = "Summary Only";
+                SummaryByQuarter_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+
+            case "OPERATIONLOS" :
+                strReportName = "Operation duration with LOS";
+                OperationDurationWithLOS_RDL(dsReport, Server.MapPath(".") + strFileName + ".rdlc", Request.Cookies["CultureInfo"].Value);
+                break;
+        }
+        foreach (DataTable dt in dsReport.Tables)
+            rptViewer.LocalReport.DataSources.Add(new ReportDataSource(dt.TableName, dt));
+
+        rptViewer.LocalReport.ReportPath = Server.MapPath(".") + strFileName + ".rdlc";
+        rptViewer.LocalReport.EnableExternalImages = true;
+        rptViewer.ProcessingMode = ProcessingMode.Local;
+        rptViewer.LocalReport.Refresh();
+
+        byte[] fileContent = rptViewer.LocalReport.Render(strRender, null, out mimeType, out encoding, out fileNameExtension, out streams, out warnings);
+        switch (Request.QueryString["Format"])
+        {
+            case "2": //EXCEL
+                Response.ContentType = "Application/x-msexcel";
+                break;
+            case "3": //PDF
+                Response.ContentType = "Application/pdf";
+                Response.AppendHeader("Content-Disposition", "inline;filename=" + "http://" + Request.Url.Host + "/Reports" + strFileName + ".pdf");
+                break;
+        }
+
+        System.IO.File.WriteAllBytes(strOutFileName, fileContent);
+        Response.BinaryWrite(fileContent);
+        Response.End();
+    }
+    #endregion 
+
+    #region private string CheckRDLFilesDirectory()
+    private string CheckRDLFilesDirectory()
+    {
+        bool flag = true;
+        string strFilename = "";
+
+        System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(Server.MapPath(".") + @"\RDLFiles");
+        if (di.Exists == false) di.Create();
+        else
+        {
+            string[] strFileNames = System.IO.Directory.GetFiles(Server.MapPath(".") + @"\RDLFiles");
+
+            for (int idx = 0; idx < strFileNames.Length; idx++)
+                try { System.IO.File.Delete(strFileNames[idx]); }
+                catch { }
+        }
+        Random numRandom = new Random();
+
+        while (flag)
+        {
+            strFilename = Server.MapPath(".") + @"\RDLFiles\" + numRandom.Next(Int16.MaxValue).ToString();
+            flag = System.IO.File.Exists(strFilename + ".*");
+        }
+        return strFilename.Replace(Server.MapPath(".") + @"\RDLFiles\", "");
+    }
+    #endregion
+
+    #region public void AddReportConfiguration( ref System.Xml.XmlTextWriter writer, string strReportDescription, string strLanguage, string strPageWidth, string strLeftMargin, string strTopMargin, string strBottomMargin, string strRightMarghin, string strHeight, string strMeasurment)
+    private void AddReportConfiguration(ref System.Xml.XmlTextWriter writer, string strReportDescription,string strLanguage,
+                                        Decimal PageWidth, Decimal LeftMargin, Decimal TopMargin,
+                                        Decimal BottomMargin, Decimal RightMarghin, Decimal Height, string strMeasurment)
+    {
+        Decimal ReportWidth = PageWidth - (LeftMargin + RightMarghin);
+
+        writer.WriteAttributeString("xmlns", null, "http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition");
+        writer.WriteAttributeString("xmlns:rd", null, "http://schemas.microsoft.com/SQLServer/reporting/reportdesigner");
+        writer.WriteAttributeString("Description", null, strReportDescription);
+        writer.WriteAttributeString("Author", null, "Lapbase data system");
+        writer.WriteElementString("rd:ReportID", Guid.NewGuid().ToString().Replace("-", ""));
+        //writer.WriteElementString("Language", strLanguage);
+        writer.WriteElementString("Width", ReportWidth.ToString() + strMeasurment); // 28
+        writer.WriteElementString("TopMargin", TopMargin + strMeasurment); // 2.5
+        writer.WriteElementString("LeftMargin", LeftMargin + strMeasurment); //2.5
+        writer.WriteElementString("RightMargin", RightMarghin + strMeasurment);//2.5
+        writer.WriteElementString("BottomMargin", BottomMargin + strMeasurment);//2.5
+        writer.WriteElementString("PageWidth", PageWidth.ToString() + strMeasurment);//29 615pt
+        writer.WriteElementString("PageHeight", Height + strMeasurment); //25 1008pt
+        writer.WriteElementString("rd:DrawGrid", "true");
+        writer.WriteElementString("rd:GridSpacing", "0.1cm");//0.25
+        writer.WriteElementString("rd:SnapToGrid", "true");
+        writer.WriteElementString("DataTransform", strXSLTFileName);
+    }
+    #endregion
+
+    #region public void AddDataSource(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    public void AddDataSource(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    {
+        writer.WriteStartElement("DataSources");
+        writer.WriteStartElement("DataSource");
+        writer.WriteAttributeString("Name", null, strLapbaseDataSourceName);
+
+        writer.WriteStartElement("ConnectionProperties");
+        writer.WriteElementString("ConnectString", GlobalClass.strSqlCnnString);
+        writer.WriteElementString("DataProvider", "SQL");
+        writer.WriteEndElement();
+
+        writer.WriteEndElement();
+
+        //foreach (DataTable dt in dsReport.Tables)
+        //{
+        //    writer.WriteStartElement("DataSource");
+        //    writer.WriteAttributeString("Name", null, dt.TableName);
+
+        //    writer.WriteStartElement("ConnectionProperties");
+        //    //writer.WriteStartElement("ConnectString"); 
+        //    //writer.WriteEndElement();
+        //    writer.WriteElementString("ConnectString", GlobalClass.strSqlCnnString);
+        //    writer.WriteElementString("DataProvider", "SQL");
+        //    writer.WriteEndElement();
+        //    writer.WriteEndElement();
+        //}
+        writer.WriteEndElement();
+    }
+    #endregion
+
+    #region private void AddDataSets(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    private void AddDataSets(ref System.Xml.XmlTextWriter writer, DataSet dsReport)
+    {
+        writer.WriteStartElement("DataSets");
+        foreach (DataTable dt in dsReport.Tables)
+        {
+            writer.WriteStartElement("DataSet");
+            writer.WriteAttributeString("Name", null, dt.TableName);
+            writer.WriteStartElement("Query");
+            writer.WriteStartElement("CommandText");
+            writer.WriteEndElement();
+            writer.WriteElementString("DataSourceName", strLapbaseDataSourceName);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("Fields");
+            foreach (DataColumn dc in dt.Columns)
+            {
+                writer.WriteStartElement("Field");
+                writer.WriteAttributeString("Name", null, dc.ColumnName);
+                writer.WriteElementString("rd:TypeName", dc.DataType.ToString());
+                writer.WriteElementString("DataField", dc.ColumnName);
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement(); // Fields
+
+            writer.WriteEndElement(); // DataSet
+        }
+        writer.WriteEndElement(); // DataSets
+    }
+    #endregion 
+
+    #region private void AddColumn(ref System.Xml.XmlTextWriter writer, string strWidth)
+    private void AddColumn(ref System.Xml.XmlTextWriter writer, string strWidth)
+    {
+        writer.WriteStartElement("TableColumn");
+        writer.WriteElementString("Width", strWidth);
+        writer.WriteEndElement();
+    }
+    #endregion
+
+    #region private List<string[,]> DetailCellStyle(string strColor)
+    private List<string[,]> DetailCellStyle(string strColor, string strFontSize, string strTextAlign, string strBackgroundColor)
+    {
+        List<string[,]> strStyles = new List<string[,]>();
+
+        strStyles.Add(new string[,] { { "Color", strColor.Equals("") ? "Black" : strColor } });
+        strStyles.Add(new string[,] { { "FontSize", strFontSize.Equals("") ? "8pt" : strFontSize } });
+        strStyles.Add(new string[,] { { "TextAlign", strTextAlign.Equals("") ? "Left" : strTextAlign } });
+        strStyles.Add(new string[,] { { "BackgroundColor", strBackgroundColor.Equals("") ? "White" : strBackgroundColor } });
+        strStyles.Add(new string[,] { { "VerticalAlign", "Middle"} });
+        
+        return (strStyles);
+    }
+    #endregion
+
+    #region private List<string[,]> ElementChilds(string strWidth, string strHeight, string strCanGrow, string strZIndex, string strTop, string strLeft)
+    private List<string[,]> ElementChilds(string strWidth, string strHeight, string strCanGrow, string strZIndex, string strTop, string strLeft)
+    {
+        List<string[,]> strChilds = new List<string[,]>();
+
+        if (!strWidth.Equals(String.Empty))     strChilds.Add(new string[,] { { "Width", strWidth } });
+        if (!strHeight.Equals(String.Empty))    strChilds.Add(new string[,] { { "Height", strHeight } });
+        if (!strCanGrow.Equals(String.Empty))   strChilds.Add(new string[,] { { "CanGrow", strCanGrow } });
+        if (!strZIndex.Equals(String.Empty))    strChilds.Add(new string[,] { { "ZIndex", strZIndex } });
+        if (!strTop.Equals(String.Empty))       strChilds.Add(new string[,] { { "Top", strTop } });
+        if (!strLeft.Equals(String.Empty))      strChilds.Add(new string[,] { { "Left", strLeft } });
+
+        return (strChilds);
+    }
+    #endregion
+
+    #region private void AddCell(ref System.Xml.XmlTextWriter writer, string strReportItem, string strReportItemName, string strReportItemValue, List<string[,]> strStyles, , string strColSpan)
+    private void AddCell(ref System.Xml.XmlTextWriter writer, string strReportItem, string strReportItemName, string strReportItemValue, List<string[,]> strStyles, string strColSpan)
+    {
+        writer.WriteStartElement("TableCell");
+        if (!(strColSpan.Equals("") || strColSpan.Equals("0"))) writer.WriteElementString("ColSpan", strColSpan);
+        writer.WriteStartElement("ReportItems");
+        writer.WriteStartElement(strReportItem);
+        writer.WriteAttributeString("Name", strReportItemName);
+
+        switch (strReportItem.ToUpper())
+        {
+            case "TEXTBOX":
+                writer.WriteElementString("Value", strReportItemValue);
+                break;
+            case "IMAGE":
+                writer.WriteElementString("Value", strReportItemValue);
+                writer.WriteElementString("Source", "External");
+                break;
+        }
+
+        if (strStyles.Count > 0)
+        {
+            writer.WriteStartElement("Style");
+            foreach (string[,] strStyle in strStyles)
+            {
+                writer.WriteElementString(strStyle[0, 0], strStyle[0, 1]);
+            }
+            writer.WriteEndElement();
+        }
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+    }
+    #endregion 
+
+    #region private void AddReportItem(ref System.Xml.XmlTextWriter writer, string strReportItem, string strReportItemName, string strReportItemValue, List<string[,]> strChildElements)
+    private void AddReportItem(ref System.Xml.XmlTextWriter writer, string strReportItem, string strReportItemName, string strReportItemValue, List<string[,]> strChildElements, List<string[,]> strStyles)
+    {
+        writer.WriteStartElement(strReportItem);
+        writer.WriteAttributeString("Name", strReportItemName);
+
+        switch (strReportItem.ToUpper())
+        {
+            case "TEXTBOX":
+                writer.WriteElementString("Value", strReportItemValue);
+                break;
+            case "IMAGE":
+                writer.WriteElementString("Value", strReportItemValue);
+                writer.WriteElementString("Source", "External");
+                break;
+        }
+
+        if (strChildElements.Count > 0)
+            foreach (string[,] strChildElement in strChildElements)
+                writer.WriteElementString(strChildElement[0, 0], strChildElement[0, 1]);
+
+        if (strStyles.Count > 0)
+        {
+            writer.WriteStartElement("Style");
+            foreach (string[,] strStyle in strStyles)
+            {
+                writer.WriteElementString(strStyle[0, 0], strStyle[0, 1]);
+            }
+            writer.WriteEndElement();
+        }
+        writer.WriteEndElement();
+    }
+    #endregion
+}

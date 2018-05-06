@@ -1,0 +1,216 @@
+using System;
+using System.Web;
+using System.Web.Services;
+using System.Web.Services.Protocols;
+using System.Xml;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+
+[WebService(Namespace = "http://tempuri.org/")]
+[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+public class MenuSetupWebService : System.Web.Services.WebService {
+
+    GlobalClass gClass = new GlobalClass();
+
+    #region public MenuSetupWebService () 
+    public MenuSetupWebService () {
+    }
+    #endregion
+
+    //#region [WebMethod] public XmlDocument SaveUserFieldsProc()
+    //[WebMethod]
+    //public XmlDocument SaveUserFieldsProc(int intSystemID , string strUserField1Name, string strUserField2Name, 
+    //                                    string strUserField3Name, string strUserField4Name, string strUserField5Name, 
+    //                                    string strUserMemoField1Name, string strUserMemoField2Name,
+    //                                    bool chkShowRace, bool chkPatCOM, bool chkPatInv, bool chkFUCom, bool chkFUPNotes, 
+    //                                    bool chkFUinv, string strTargetBMI, string strReferenceBMI, bool chkIdealonBMI, 
+    //                                    bool chkImperial, bool chkVisitWeeksFlag)
+    //{
+    //    SqlCommand cmdSave = new SqlCommand();
+    //    string strResult = "";
+
+
+    //    gClass.MakeStoreProcedureName(ref cmdSave, "sp_SystemDetails_SaveData", true);
+    //    cmdSave.Parameters.Add("@SystemID", SqlDbType.Int).Value = intSystemID;
+    //    cmdSave.Parameters.Add("@UserField1Name", SqlDbType.VarChar, 50).Value = strUserField1Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UserField2Name", SqlDbType.VarChar, 50).Value = strUserField2Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UserField3Name", SqlDbType.VarChar, 50).Value = strUserField3Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UserField4Name", SqlDbType.VarChar, 50).Value = strUserField4Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UserField5Name", SqlDbType.VarChar, 50).Value = strUserField5Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UserMemoField1Name", SqlDbType.VarChar, 50).Value = strUserMemoField1Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UserMemoField2Name", SqlDbType.VarChar, 50).Value = strUserMemoField2Name.Trim().Replace("'", "`");
+    //    cmdSave.Parameters.Add("@UseRace", SqlDbType.SmallInt).Value = chkShowRace ? 0 : 1;
+    //    cmdSave.Parameters.Add("@PatCOM", SqlDbType.Bit).Value = chkPatCOM;
+    //    cmdSave.Parameters.Add("@PatInv", SqlDbType.Bit).Value = chkPatInv;
+    //    cmdSave.Parameters.Add("@FUCom", SqlDbType.Bit).Value = chkFUCom;
+    //    cmdSave.Parameters.Add("@FUPNotes", SqlDbType.Bit).Value = chkFUPNotes;
+    //    cmdSave.Parameters.Add("@FUinv", SqlDbType.Bit).Value = chkFUinv;
+        
+    //    cmdSave.Parameters.Add("@TargetBMI", SqlDbType.Decimal);
+    //    try { cmdSave.Parameters["@TargetBMI"].Value = Convert.ToDecimal(strTargetBMI); }
+    //    catch { cmdSave.Parameters["@TargetBMI"].Value = 0; }
+
+    //    cmdSave.Parameters.Add("@ReferenceBMI", SqlDbType.Decimal);
+    //    try{cmdSave.Parameters["@ReferenceBMI"].Value = Convert.ToDecimal(strReferenceBMI);}
+    //    catch { cmdSave.Parameters["@ReferenceBMI"].Value = 0; }
+        
+    //    cmdSave.Parameters.Add("@IdealonBMI", SqlDbType.Bit).Value = chkIdealonBMI;
+    //    cmdSave.Parameters.Add("@Imperial", SqlDbType.Bit).Value = chkImperial;
+    //    cmdSave.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+    //    cmdSave.Parameters.Add("@VisitWeeksFlag", SqlDbType.Bit).Value = chkVisitWeeksFlag;
+
+    //    try
+    //    {
+    //        strResult = gClass.SaveSystemDetails(cmdSave, Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value), (intSystemID == 0));
+    //        Context.Response.Cookies.Set(new HttpCookie("Imperial", chkImperial ? "True" : "False"));
+    //        Context.Response.Cookies.Set(new HttpCookie("VisitWeeksFlag", chkVisitWeeksFlag ? "True" : "False"));
+
+    //        gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value,
+    //            Context.Request.Cookies["Logon_UserName"].Value,
+    //            Context.Request.Url.Host, "MenuSetup Form", 2, "Save Users fields data", "", "");
+    //    }
+    //    catch (Exception err) { 
+    //        strResult = err.ToString();
+
+    //        gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+    //                Context.Request.Cookies["Logon_UserName"].Value, "MenuSetup Form", "Save Users fields data - SaveUserFieldsProc function", err.ToString());
+    //    }
+    //    return gClass.GetXmlDocument(Guid.NewGuid(), strResult);
+    //}
+    //#endregion
+
+    #region [WebMethod] public XmlDocument SaveHospitalProc()
+    [WebMethod]
+    public XmlDocument SaveHospitalProc(string strHospitalID_OldValue, string strHospitalID, string strHospitalName, string strHospitalBoldCode, string strRegionId)
+    {
+        string strResult = "";
+        SqlCommand cmdSave = new SqlCommand();
+
+        gClass.MakeStoreProcedureName(ref cmdSave, "sp_Hospitals_SaveData", true);
+        cmdSave.Parameters.Add("@HospitalId_OldValue", SqlDbType.VarChar, 6).Value = strHospitalID_OldValue;
+        cmdSave.Parameters.Add("@HospitalId", SqlDbType.VarChar, 6).Value = strHospitalID;
+        cmdSave.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+        cmdSave.Parameters.Add("@HospitalName", SqlDbType.VarChar, 50).Value = strHospitalName.Replace("'", "`");
+        cmdSave.Parameters.Add("@HospitalBoldCode", SqlDbType.VarChar, 20).Value = strHospitalBoldCode.Replace("'", "`");
+        cmdSave.Parameters.Add("@RegionId", SqlDbType.VarChar, 6).Value = strRegionId;
+        cmdSave.Parameters.Add("@Street", SqlDbType.VarChar, 30).Value = "";
+        cmdSave.Parameters.Add("@Suburb", SqlDbType.VarChar, 20).Value = "";
+        cmdSave.Parameters.Add("@PostCode", SqlDbType.VarChar, 4).Value = "";
+        cmdSave.Parameters.Add("@Phone", SqlDbType.VarChar, 12).Value = "";
+        cmdSave.Parameters.Add("@Fax", SqlDbType.VarChar, 12).Value = "";
+        cmdSave.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["OrganizationCode"].Value);
+
+        try
+        {
+            gClass.ExecuteDMLCommand(cmdSave);
+            gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                Context.Request.Url.Host, "MenuSetup Form", 2, "Save Hospital data - " + (strHospitalID.Equals(String.Empty) ? "Insert" : "Update"), 
+                "Hospital ID and Name", strHospitalID + ", " + strHospitalName);
+            strResult = "0";
+        }
+        catch (Exception err)
+        {
+            strResult = err.ToString();
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                    Context.Request.Cookies["Logon_UserName"].Value, "MenuSetup Form", "Save Hospital data - SaveHospitalProc function", err.ToString());
+        }
+
+        return gClass.GetXmlDocument(Guid.NewGuid(), strResult);
+    }
+    #endregion
+
+    #region [WebMethod] public XmlDocument SaveGroupProc
+    [WebMethod]
+    public XmlDocument SaveGroupProc(string strOldCode, string strCode, string strDescription)
+    {
+        SqlCommand cmdSave = new SqlCommand();
+        String strResult = String.Empty;
+
+        gClass.MakeStoreProcedureName(ref cmdSave, "sp_Codes_SaveData", true);
+        cmdSave.Parameters.Add("@OldCode", SqlDbType.VarChar, 6).Value = strOldCode;
+        cmdSave.Parameters.Add("@CategoryCode", SqlDbType.VarChar, 4).Value = "GRO";
+        cmdSave.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+        cmdSave.Parameters.Add("@Code", SqlDbType.VarChar, 6).Value = strCode;
+        cmdSave.Parameters.Add("@Description", SqlDbType.VarChar, 100).Value = strDescription;
+        try
+        {
+            gClass.ExecuteDMLCommand(cmdSave);
+            strResult = "0";
+            gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                Context.Request.Url.Host, "MenuSetup Form", 2, "Save Group data - " + (strOldCode.Equals(String.Empty) ? "Insert" : "Update") , "Group ID and Name", strCode + ", " + strDescription);
+
+        }
+        catch (Exception err) { 
+            strResult = err.ToString();
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                Context.Request.Cookies["Logon_UserName"].Value, "MenuSetup Form", "Save Group data - SaveGroupProc function", err.ToString());
+        }
+        return gClass.GetXmlDocument(Guid.NewGuid(), strResult);
+    }
+    #endregion
+
+    #region [WebMethod] public XmlDocument SaveCategoryProc
+    [WebMethod]
+    public XmlDocument SaveCategoryProc(string strOldCode, string strCode, string strDescription)
+    {
+        SqlCommand cmdSave = new SqlCommand();
+        String strResult = String.Empty;
+
+        gClass.MakeStoreProcedureName(ref cmdSave, "sp_Codes_SaveData", true);
+        cmdSave.Parameters.Add("@OldCode", SqlDbType.VarChar, 6).Value = strOldCode;
+        cmdSave.Parameters.Add("@CategoryCode", SqlDbType.VarChar, 4).Value = "PC";
+        cmdSave.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+        cmdSave.Parameters.Add("@Code", SqlDbType.VarChar, 6).Value = strCode;
+        cmdSave.Parameters.Add("@Description", SqlDbType.VarChar, 100).Value = strDescription;
+        try
+        {
+            gClass.ExecuteDMLCommand(cmdSave);
+            strResult = "0";
+            gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                Context.Request.Url.Host, "MenuSetup Form", 2, "Save Category data - " + (strOldCode.Equals(String.Empty) ? "Insert" : "Update"), "Category ID and Name", strCode + ", " + strDescription);
+
+        }
+        catch (Exception err)
+        {
+            strResult = err.ToString();
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                Context.Request.Cookies["Logon_UserName"].Value, "MenuSetup Form", "Save Category data - SaveCategoryProc function", err.ToString());
+        }
+        return gClass.GetXmlDocument(Guid.NewGuid(), strResult);
+    }
+    #endregion
+
+    #region [WebMethod] public XmlDocument SaveRegionProc()
+    [WebMethod]
+    public XmlDocument SaveRegionProc(string strRegionID_OldValue, string strRegionID, string strRegionName)
+    {
+        string strResult = "";
+        SqlCommand cmdSave = new SqlCommand();
+
+        gClass.MakeStoreProcedureName(ref cmdSave, "sp_Regions_SaveData", true);
+        cmdSave.Parameters.Add("@RegionId_OldValue", SqlDbType.VarChar, 6).Value = strRegionID_OldValue;
+        cmdSave.Parameters.Add("@RegionId", SqlDbType.VarChar, 6).Value = strRegionID;
+        cmdSave.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+        cmdSave.Parameters.Add("@RegionName", SqlDbType.VarChar, 50).Value = strRegionName.Replace("'", "`");
+        cmdSave.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["OrganizationCode"].Value);
+
+        try
+        {
+            gClass.ExecuteDMLCommand(cmdSave);
+            gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                Context.Request.Url.Host, "MenuSetup Form", 2, "Save Region data - " + (strRegionID.Equals(String.Empty) ? "Insert" : "Update"),
+                "Region ID and Name", strRegionID + ", " + strRegionName);
+            strResult = "0";
+        }
+        catch (Exception err)
+        {
+            strResult = err.ToString();
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                    Context.Request.Cookies["Logon_UserName"].Value, "MenuSetup Form", "Save Region data - SaveRegionProc function", err.ToString());
+        }
+
+        return gClass.GetXmlDocument(Guid.NewGuid(), strResult);
+    }
+    #endregion
+}

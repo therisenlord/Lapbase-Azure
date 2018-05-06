@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Untitled Page</title>
+</head>
+<body>
+    <table style="width:100%">
+        <tr style = "font-size : large; font-weight:bold; Color:BLUE">
+            <td colspan = "3" >Patient Name : <xsl:value-of select="Patient Name"/></td>
+            <td style ="width:50%" >Operation Details</td>
+        </tr>
+        <tr>
+            <td>Address : </td>
+            <td colspan="2"><xsl:value-of select="Address" /></td>
+            <td />
+        </tr>
+        <tr>
+            <td>Home Phone : </td>
+            <td><xsl:value-of select="Home Phone" /></td>
+            <td />
+            <td />
+        </tr>
+        <tr>
+            <td style="width:10%">Birth Date : </td>
+            <td style="width:10%"><xsl:value-of select="BirthDate" /></td>
+            <td >Age : <xsl:value-of select = "AGE"/></td>
+            <td />
+        </tr>
+        <tr>
+            <td colspan = "4" style= "font-size:medium; font-weight:bold; Color:BROWN;font-Style:italic">Initial Assessment</td>
+        </tr>
+        <tr>
+            <td colspan="4">
+              <table style="width:100%" border="0">
+                <tr>
+                  <td style="width:10%" >Height :</td>
+                  <td style="width:10%" >
+                    <xsl:value-of select="dsSchema/tblPatientData/Height"/>
+                  </td>
+                  <td style="width:10%" >
+                    <xsl:value-of select="dsSchema/tblPatientData/HeightMeasurment"/>
+                  </td>
+                  <td style="width:20%" >Ideal Weight : </td>
+                  <td style="width:10%" >
+                    <xsl:value-of select="dsSchema/tblPatientData/IdealWeight"/>
+                  </td>
+                  <td style="width:10%" >
+                    <xsl:value-of select="dsSchema/tblPatientData/WeightMeasurment"/>
+                  </td>
+                  <td rowspan = "3"/>
+                </tr>
+                
+                <tr>
+                  <td>Weight : </td>
+                  <td>
+                    <xsl:value-of select="dsSchema/tblPatientData/StartWeight"/>
+                  </td>
+                  <td>
+                    <xsl:value-of select="dsSchema/tblPatientData/WeightMeasurment"/>
+                  </td>
+                  <td>Target Weight : </td>
+                  <td>
+                    <xsl:value-of select="dsSchema/tblPatientData/TargetWeight"/>
+                  </td>
+                  <td>
+                    <xsl:value-of select="dsSchema/tblPatientData/WeightMeasurment"/>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>BMI : </td>
+                  <td>
+                    <xsl:value-of select="dsSchema/tblPatientData/StartBMI"/>
+                  </td>
+                  <td></td>
+                  <td>% above Ideal  Weight : </td>
+                  <td>
+                    <xsl:value-of select="dsSchema/tblPatientData/Above_Ideal_Weight"/>
+                  </td>
+                  <td />
+                </tr>
+              </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan = "3">Operation Details</td>
+            <td>Operation Name <xsl:value-of select = "operation name " /></td>
+        </tr>
+        <tr>
+            <td colspan ="4">
+                <table>
+                    <tr>
+                        <td>Date : </td>
+                        <td><xsl:value-of select = "OperationDate" /></td>
+                        <td>Approach : </td>
+                        <td><xsl:value-of select = "Approach" /></td>
+                        <td>Duration : </td>
+                        <td><xsl:value-of select = "Duration" /></td>
+                    </tr>
+                    <tr>
+                        <td>Surgeon : </td>
+                        <td><xsl:value-of select = "Segeon Name" /></td>
+                        <td>Category : </td>
+                        <td><xsl:value-of select = "Category"/></td>
+                        <td>BloodLoss : </td>
+                        <td><xsl:value-of select = "BloodLoss"/></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+    <xsl:if select = "SurgeryType = 61">
+    OpLoop Subreport
+    <table>
+        <tr>
+            <td>Ileal Segment :</td> 
+            <td><xsl:value-of select = "LGBilealSegment" />&#160;&#160;cms</td>
+            <td>Omental Patch :</td>
+            <td><input type = "checkbox"  /><xsl:value-of select="LGBomentalpatch"/></td>
+            <td>Reinforced Sutures :</td>
+            <td><input type = "checkbox" /><xsl:value-of select="LGBreinforcedSutures"/></td>
+        </tr>
+    </table>
+    </xsl:if>
+    
+    <xsl:if test = "SurgeryType == 1">
+    OPLapBand Subreport
+    <table>
+        <tr>
+            <td>Lapband SerialNumber :</td>
+            <td><xsl:value-of select = "LapbandSerialNumber" /></td>
+            <td>Reservoir Volume :</td>
+            <td><xsl:value-of select = "BalloonVolumne" /></td>
+        </tr>
+        <tr>
+            <td>Resevior :</td>
+            <td><xsl:value-of select = "ReservoirSite" /></td>
+            <td>Posterior Fixarion</td>
+            <td><input type = "checkbox" /></td>
+        </tr>
+        <tr>
+            <td>Bandsize :</td>
+            <td><xsl:value-of select = "BandSize" /></td>
+        </tr>
+    </table>
+    </xsl:if>
+    
+    <xsl:if test = "SurgeryType = 5">
+    OpVGB Subreport
+    <table>
+        <tr>
+            <td>Stomal Wrap :</td>
+            <td><xsl:value-of select = "VBGStomaWrap" /></td>
+            <td>Stomal Size :</td>
+            <td><xsl:value-of select = "VBGStomaSize" /></td>
+        </tr>
+    </table>
+    </xsl:if>
+    
+    <xsl:if test = "SurgeryType = 6" >
+    OpBD Subreport
+    <table>
+        <tr>
+            <td>Illegal Length :</td>
+            <td><xsl:value-of select = "BPDIlealLength" /></td>
+            <td>Channel Length :</td>
+            <td><xsl:value-of select = "BPDChannelLength" /></td>
+            <td>Duodenal Switch</td>
+            <td><input type="checkbox"/> <xsl:value-of select = "BPDDuodenalSwitch" /></td>
+        </tr>
+    </table>
+    
+    </xsl:if>
+    
+    <xsl:if test = "SurgeryType = 2">
+    OpRouxy Subreport
+    <table>
+        <tr>
+            <td>Limb Length :</td>
+            <td><xsl:value-of select = "RouxLimbLength" /></td>
+            <td>Retro / Antecotic</td>
+            <td><xsl:value-of select = "RouxEnterostomy" /></td>
+        </tr>
+        <tr>
+            <td>Gastroenterostomy :</td>
+            <td><xsl:value-of select = "RouxColic" /></td>
+            <td>Retro / Antegastric :</td>
+            <td><xsl:value-of select = "RouxGastric" /></td>
+        </tr>
+    </table>
+    </xsl:if>
+    
+    <xsl:if test = "(SurgeryType = 5) or (SurgeryType = 2) or (SurgeryType = 6)">or
+    <table>
+        <tr>
+            <td colspan = "5">Past Adbominal</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan = "2">1:&#160;<xsl:value-of select = "PrevAbdoSurgery1" /></td>
+            <td>2:&#160;<xsl:value-of select = "PrevAbdoSurgery2" /></td>
+            <td>3:&#160;<xsl:value-of select = "PrevAbdoSurgery3" /></td>
+        </tr>
+        <tr>
+            <td>Notes</td>
+            <td colspan = "4"><xsl:value-of select = "PrevAbdoSurgeryNotes" /></td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td colspan = "5">Past Pelvic</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan = "2">1:&#160;<xsl:value-of select = "PrevPelvicSurgery1" /></td>
+            <td>2:&#160;<xsl:value-of select = "PrevPelvicSurgery2" /></td>
+            <td>3:&#160;<xsl:value-of select = "PrevPelvicSurgery3" /></td>
+        </tr>
+        <tr>
+            <td>Notes</td>
+            <td colspan = "4"><xsl:value-of select = "PrevPelvicSurgeryNotes" /></td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td colspan = "5">Comcomitant Surgery</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan = "2">1:&#160;<xsl:value-of select = "ComcomitantSurgery1" /></td>
+            <td>2:&#160;<xsl:value-of select = "ComcomitantSurgery2" /></td>
+            <td>3:&#160;<xsl:value-of select = "ComcomitantSurgery3" /></td>
+        </tr>
+        <tr>
+            <td>Notes</td>
+            <td colspan = "4"><xsl:value-of select = "ComcomitantSurgeryNotes" /></td>
+        </tr>
+    </table>
+    </xsl:if>
+    
+    <p>Complications / Events</p>
+    <table>
+        <tr>
+            <td>Date</td>
+            <td>Wks PO</td>
+            <td>Complication</td>
+        </tr>
+        <xsl:for-each select="dsSchema/tblPatientVisit">
+        <tr>
+            <td><xsl:value-of select = "ComplicationDate" /></td>
+            <td><xsl:value-of select = "Weeks" /></td>
+            <td><xsl:value-of select = "Complication" /></td>
+        </tr>
+        </xsl:for-each>
+    </table>
+</body>
+</html>

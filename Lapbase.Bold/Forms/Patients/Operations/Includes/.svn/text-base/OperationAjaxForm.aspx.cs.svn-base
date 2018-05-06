@@ -1,0 +1,122 @@
+using System;
+using System.Data;
+using System.Collections;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+
+using System.Configuration;
+using System.Web.Security;
+using System.Web.UI.WebControls.WebParts;
+
+public partial class Forms_Patients_Operations_Includes_OperationAjaxForm : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+        Page.Culture = Request.Cookies["CultureInfo"].Value;
+
+        CheckRequestQueryString();
+    }
+
+    #region private void CheckRequestQueryString()
+    private void CheckRequestQueryString()
+    {
+        Response.Clear();
+        switch (Request.QueryString["QSN"].ToString().ToUpper()) //QSN
+        {
+            case "LOADPATIENTOPERATIONS":
+                LoadPatientOperations();
+                Response.End();
+                break;
+            case "LOADOPERATION":
+                LoadOperationData(Request.QueryString["QSV"].ToString());
+                Response.End();
+                break;
+        }
+        return;
+    }
+    #endregion
+
+    #region private void LoadPatientOperations()
+    private void LoadPatientOperations()
+    {
+        SqlCommand cmdSelect = new SqlCommand(); 
+        GlobalClass gClass = new GlobalClass();
+        string strReturn = "";
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Operation_SelectPatientOperationsList", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals("True");
+
+        try
+        {
+            DataSet dsTemp = gClass.FetchData(cmdSelect, "tblPatientOperation");
+            DataColumn dcStrDate = new DataColumn();
+
+            dcStrDate.ColumnName = "strDateOperation";
+            dcStrDate.DataType = Type.GetType("System.String");
+            dsTemp.Tables[0].Columns.Add(dcStrDate);
+            for(int Xh = 0; Xh < dsTemp.Tables[0].Rows.Count; Xh++)
+                dsTemp.Tables[0].Rows[Xh]["strDateOperation"] = gClass.TruncateDate(dsTemp.Tables[0].Rows[Xh]["OperationDate"].ToString(), Request.Cookies["CultureInfo"].Value, 1);
+            dsTemp.AcceptChanges();
+            strReturn = gClass.ShowSchema(dsTemp, Server.MapPath(".") + @"\OperationsListXSLTFile.xsl");
+        }
+        catch (Exception err)
+        {
+            strReturn = err.ToString();
+
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                Context.Request.Cookies["Logon_UserName"].Value, "Operation form (Ajax form)",
+                "Load Patient's Operation List - LoadPatientOperations function", err.ToString());
+        }
+        Response.Write(strReturn);
+        return;
+    }
+    #endregion
+
+    #region private void LoadOperationData(string AdmitID)
+    private void LoadOperationData(string strAdmitID)
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        GlobalClass gClass = new GlobalClass();
+        DataSet dsTemp;
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Operation_SelectPatientOperationData", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@AdmitId", SqlDbType.Int).Value = Convert.ToInt32(strAdmitID);
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals("True");
+
+        try
+        {
+            dsTemp = gClass.FetchData(cmdSelect, "tblPatientOperation");
+            if (dsTemp.Tables[0].Rows.Count > 0)
+            {
+                DataColumn dcStrDate = new DataColumn();
+
+                dcStrDate.ColumnName = "strDateOperation";
+                dcStrDate.DataType = Type.GetType("System.String");
+                dsTemp.Tables[0].Columns.Add(dcStrDate);
+                for (int Xh = 0; Xh < dsTemp.Tables[0].Rows.Count; Xh++)
+                    dsTemp.Tables[0].Rows[Xh]["strDateOperation"] = gClass.TruncateDate(dsTemp.Tables[0].Rows[Xh]["OperationDate"].ToString(), Request.Cookies["CultureInfo"].Value, 1);
+                dsTemp.AcceptChanges();
+            }
+            Response.Write(dsTemp.GetXml());
+            dsTemp.Dispose();
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                Context.Request.Cookies["Logon_UserName"].Value, "Operation form (Ajax form)",
+                "Load Operation data - LoadOperationData function", err.ToString());
+        }
+        return;
+    }
+    #endregion
+}

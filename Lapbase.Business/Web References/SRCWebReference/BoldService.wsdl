@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.surgicalreview.org/Bold" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://www.surgicalreview.org/Bold" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.surgicalreview.org/Bold">
+      <s:element name="SavePatient">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:SavePatientRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePatientRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RequestBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Patient" type="tns:dtoPatient" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="RequestBase">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SecurityToken" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Version" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RequestId" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="VendorCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PracticeCOEID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PatientChartNumber" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="dtoPatient">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Charity" nillable="true" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="ConsentRecieved" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="Deceased" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="DOB" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Employer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FirstName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LastName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="InsuranceCoversProcedure" nillable="true" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="MiddleInitial" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="SelfPay" nillable="true" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="Suffix" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="GenderCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EmploymentStatusCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RaceCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="PatientInsuranceCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="PreviousNonBariatricSurgeryCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="PreviousBariatricSurgeries" type="tns:ArrayOfDtoPreviousBariatricSurgery" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDtoPreviousBariatricSurgery">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="dtoPreviousBariatricSurgery" nillable="true" type="tns:dtoPreviousBariatricSurgery" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="dtoPreviousBariatricSurgery">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Code" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="OriginalWeight" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="0" maxOccurs="1" name="LowestWeightAchieved" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="1" maxOccurs="1" name="Year" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="SurgeonID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AdverseEventCodes" type="tns:ArrayOfString" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="dtoMetricUnit">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="UnitType" type="tns:eMetricUnitType" />
+          <s:element minOccurs="1" maxOccurs="1" name="MetricValue" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="Estimated" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="eMetricUnitType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Standard" />
+          <s:enumeration value="Metric" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="SavePatientResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SavePatientResult" type="tns:SavePatientResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePatientResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResponseBase" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ResponseBase">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Acknowledge" type="tns:AcknowledgeType" />
+          <s:element minOccurs="0" maxOccurs="1" name="CorrelationId" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Messages" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="ReservationId" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ReservationExpires" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Version" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Build" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="AcknowledgeType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Failure" />
+          <s:enumeration value="Success" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="SavePreOperativeVisit">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:SavePreOpVisitRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePreOpVisitRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RequestBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="PreOperativeVisit" type="tns:dtoPreOperativeVisit" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="dtoPreOperativeVisit">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ID" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="VisitDate" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Weight" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="0" maxOccurs="1" name="Height" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="0" maxOccurs="1" name="VitaminCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="MedicationCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="Comorbidities" type="tns:ArrayOfDtoComorbidity" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDtoComorbidity">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="dtoComorbidity" nillable="true" type="tns:dtoComorbidity" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="dtoComorbidity">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ComorbidityCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="StratificationCode" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SavePreOperativeVisitResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SavePreOperativeVisitResult" type="tns:SavePreOpVisitResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePreOpVisitResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResponseBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="VisitID" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SaveHospitalVisit">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:SaveHospitalVisitRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SaveHospitalVisitRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RequestBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="HospitalVisit" type="tns:dtoHospitalVisit" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="dtoHospitalVisit">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="SurgeryDate" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="DateOfAdmission" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="DateOfLastWeight" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="Revision" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="FacilityCOEID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SurgeonCOEID" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="DurationOfSurgery" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="DurationOfAnesthesia" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="EstimatedBloodLossInCC" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="BloodTransfusionInUnits" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="LastWeightBeforeSurgery" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="1" maxOccurs="1" name="SurgicalResidentParticipated" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="SurgicalFellowParticipated" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="DischargeDate" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="DischargeLocationCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ASAClassificationCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="BariatricProcedureCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="BariatricTechniqueCode" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DVTProphylaxisTherapyCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="ConcurrentProcedureCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="IntraOpAdverseEventCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="AdverseEventsBeforeDischarge" type="tns:ArrayOfDtoAdverseEventBeforeDischarge" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDtoAdverseEventBeforeDischarge">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="dtoAdverseEventBeforeDischarge" nillable="true" type="tns:dtoAdverseEventBeforeDischarge" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="dtoAdverseEventBeforeDischarge">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AdverseEventCode" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="TimeAfterSurgery" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="TimeAfterMeasurement" type="tns:eTimeMeasurement" />
+          <s:element minOccurs="0" maxOccurs="1" name="FacilityCOEID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SurgeonCOEID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SurgeryCodes" type="tns:ArrayOfString" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="eTimeMeasurement">
+        <s:restriction base="s:string">
+          <s:enumeration value="HOURS" />
+          <s:enumeration value="MINUTES" />
+          <s:enumeration value="DAYS" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="SaveHospitalVisitResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SaveHospitalVisitResult" type="tns:SaveHospitalVisitResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SaveHospitalVisitResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResponseBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="HospitalID" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SavePostOperativeVisit">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:SavePostOpVisitRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePostOpVisitRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RequestBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="PostOperativeVisit" type="tns:dtoPostOperativeVisit" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="dtoPostOperativeVisit">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ID" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="VisitDate" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Weight" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="0" maxOccurs="1" name="Height" type="tns:dtoMetricUnit" />
+          <s:element minOccurs="0" maxOccurs="1" name="VitaminCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="MedicationCodes" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="Comorbidities" type="tns:ArrayOfDtoComorbidity" />
+          <s:element minOccurs="0" maxOccurs="1" name="SupportGroupFrequency" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SavePostOperativeVisitResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SavePostOperativeVisitResult" type="tns:SavePostOpVisitResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePostOpVisitResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResponseBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="VisitID" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SavePostOperativeAdverseEvent">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:SavePostOpAdverseEventRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePostOpAdverseEventRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RequestBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="PostOperativeAdverseEvent" type="tns:dtoAdverseEventPostOperative" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="dtoAdverseEventPostOperative">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AdverseEventID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AdverseEventCode" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="DateOfEvent" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="FacilityCOEID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SurgeonCOEID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SurgeryCodes" type="tns:ArrayOfString" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SavePostOperativeAdverseEventResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SavePostOperativeAdverseEventResult" type="tns:SavePostOpAdverseEventResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SavePostOpAdverseEventResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResponseBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="AdverseEventID" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SignPatientRecord">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:PatientRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="PatientRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RequestBase" />
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SignPatientRecordResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SignPatientRecordResult" type="tns:PatientResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="PatientResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResponseBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Patient" type="tns:dtoPatient" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="SavePatientSoapIn">
+    <wsdl:part name="parameters" element="tns:SavePatient" />
+  </wsdl:message>
+  <wsdl:message name="SavePatientSoapOut">
+    <wsdl:part name="parameters" element="tns:SavePatientResponse" />
+  </wsdl:message>
+  <wsdl:message name="SavePreOperativeVisitSoapIn">
+    <wsdl:part name="parameters" element="tns:SavePreOperativeVisit" />
+  </wsdl:message>
+  <wsdl:message name="SavePreOperativeVisitSoapOut">
+    <wsdl:part name="parameters" element="tns:SavePreOperativeVisitResponse" />
+  </wsdl:message>
+  <wsdl:message name="SaveHospitalVisitSoapIn">
+    <wsdl:part name="parameters" element="tns:SaveHospitalVisit" />
+  </wsdl:message>
+  <wsdl:message name="SaveHospitalVisitSoapOut">
+    <wsdl:part name="parameters" element="tns:SaveHospitalVisitResponse" />
+  </wsdl:message>
+  <wsdl:message name="SavePostOperativeVisitSoapIn">
+    <wsdl:part name="parameters" element="tns:SavePostOperativeVisit" />
+  </wsdl:message>
+  <wsdl:message name="SavePostOperativeVisitSoapOut">
+    <wsdl:part name="parameters" element="tns:SavePostOperativeVisitResponse" />
+  </wsdl:message>
+  <wsdl:message name="SavePostOperativeAdverseEventSoapIn">
+    <wsdl:part name="parameters" element="tns:SavePostOperativeAdverseEvent" />
+  </wsdl:message>
+  <wsdl:message name="SavePostOperativeAdverseEventSoapOut">
+    <wsdl:part name="parameters" element="tns:SavePostOperativeAdverseEventResponse" />
+  </wsdl:message>
+  <wsdl:message name="SignPatientRecordSoapIn">
+    <wsdl:part name="parameters" element="tns:SignPatientRecord" />
+  </wsdl:message>
+  <wsdl:message name="SignPatientRecordSoapOut">
+    <wsdl:part name="parameters" element="tns:SignPatientRecordResponse" />
+  </wsdl:message>
+  <wsdl:portType name="BoldServiceSoap">
+    <wsdl:operation name="SavePatient">
+      <wsdl:input message="tns:SavePatientSoapIn" />
+      <wsdl:output message="tns:SavePatientSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SavePreOperativeVisit">
+      <wsdl:input message="tns:SavePreOperativeVisitSoapIn" />
+      <wsdl:output message="tns:SavePreOperativeVisitSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SaveHospitalVisit">
+      <wsdl:input message="tns:SaveHospitalVisitSoapIn" />
+      <wsdl:output message="tns:SaveHospitalVisitSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SavePostOperativeVisit">
+      <wsdl:input message="tns:SavePostOperativeVisitSoapIn" />
+      <wsdl:output message="tns:SavePostOperativeVisitSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SavePostOperativeAdverseEvent">
+      <wsdl:input message="tns:SavePostOperativeAdverseEventSoapIn" />
+      <wsdl:output message="tns:SavePostOperativeAdverseEventSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SignPatientRecord">
+      <wsdl:input message="tns:SignPatientRecordSoapIn" />
+      <wsdl:output message="tns:SignPatientRecordSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BoldServiceSoap" type="tns:BoldServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="SavePatient">
+      <soap:operation soapAction="http://www.surgicalreview.org/Bold/SavePatient" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SavePreOperativeVisit">
+      <soap:operation soapAction="http://www.surgicalreview.org/Bold/SavePreOperativeVisit" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SaveHospitalVisit">
+      <soap:operation soapAction="http://www.surgicalreview.org/Bold/SaveHospitalVisit" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SavePostOperativeVisit">
+      <soap:operation soapAction="http://www.surgicalreview.org/Bold/SavePostOperativeVisit" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SavePostOperativeAdverseEvent">
+      <soap:operation soapAction="http://www.surgicalreview.org/Bold/SavePostOperativeAdverseEvent" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SignPatientRecord">
+      <soap:operation soapAction="http://www.surgicalreview.org/Bold/SignPatientRecord" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="BoldServiceSoap12" type="tns:BoldServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="SavePatient">
+      <soap12:operation soapAction="http://www.surgicalreview.org/Bold/SavePatient" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SavePreOperativeVisit">
+      <soap12:operation soapAction="http://www.surgicalreview.org/Bold/SavePreOperativeVisit" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SaveHospitalVisit">
+      <soap12:operation soapAction="http://www.surgicalreview.org/Bold/SaveHospitalVisit" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SavePostOperativeVisit">
+      <soap12:operation soapAction="http://www.surgicalreview.org/Bold/SavePostOperativeVisit" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SavePostOperativeAdverseEvent">
+      <soap12:operation soapAction="http://www.surgicalreview.org/Bold/SavePostOperativeAdverseEvent" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SignPatientRecord">
+      <soap12:operation soapAction="http://www.surgicalreview.org/Bold/SignPatientRecord" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="BoldService">
+    <wsdl:port name="BoldServiceSoap" binding="tns:BoldServiceSoap">
+      <soap:address location="https://209.34.248.70/BoldServices/BoldService.asmx" />
+    </wsdl:port>
+    <wsdl:port name="BoldServiceSoap12" binding="tns:BoldServiceSoap12">
+      <soap12:address location="https://209.34.248.70/BoldServices/BoldService.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

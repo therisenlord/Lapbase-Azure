@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+<xsl:template match="/">
+    <html>
+    <body>
+      <xsl:choose>
+        <xsl:when test ="/dsSchema/tblEventData/EventLink = 'V'">
+          <table border = "0" cellspacing="0" cellpadding="0">
+            <tr style="vertical-align:top">
+              <td style="width:5%" id ="lblDate">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblDate'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td style="width:10%">
+                <xsl:value-of select="/dsSchema/tblEventData/EventDate"/>
+              </td>
+              <td style="width:5%" id ="lblWeight">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblWeight'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td style="width:5%">
+                <xsl:value-of select="round(/dsSchema/tblEventData/Weight)"/>
+              </td>
+              <td style="width:5%" id ="lblRV">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblRV'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td style="width:5%">
+                <xsl:value-of select="/dsSchema/tblEventData/ReservoirVolume"/>
+              </td>
+              <td style="width:7%" id ="lblSeenBy">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblSeenBy'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each>
+				</strong></td>
+              <td style="width:25%">
+                <xsl:value-of select="/dsSchema/tblEventData/DoctorName"/>
+              </td>
+            </tr>
+            <tr  style="vertical-align:top">
+              <td id="lblNotes"> 
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblNotes'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td colspan="7">
+                <textarea rows = "3" readonly="true" style="width:100%;background-color:transparent;border:0">
+                  <xsl:value-of select="/dsSchema/tblEventData/Notes"/>
+                </textarea>
+              </td>
+            </tr>
+          </table>
+        </xsl:when>
+        <xsl:when test ="EventLink ='O'">
+          <table style="width:100%">
+            <tr>
+              <td id="lblOperationDate">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblOperationDate'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="/dsSchema/tblEventData/EventDate"/>
+              </td>
+              <td id="lblSurgeon">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblSurgeon'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="/dsSchema/tblEventData/SurgeonName"/>
+              </td>
+            </tr>
+            <tr>
+              <td id="lblHospital">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblHospital'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="/dsSchema/tblEventData/HospitalName"/>
+              </td>
+              <td id="lblLosPostOps">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblLosPostOps'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="/dsSchema/tblEventData/DaysInHospital"/>
+              </td>
+            </tr>
+            <tr>
+              <td id="lblOperation">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblOperation'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="/dsSchema/tblEventData/SugeryDesc"/>
+              </td>
+              <td id="lblApproach">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblApproach'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="/dsSchema/tblEventData/Approach"/>
+              </td>
+            </tr>
+            <tr>
+              <td id="lblOperationWeight">
+                <strong>
+					<xsl:for-each select="/dsSchema/tblCaptions">
+						<xsl:if test ="Field_ID = 'lblOperationWeight'">
+							<xsl:value-of select="FIELD_CAPTION"/>
+						</xsl:if>
+					</xsl:for-each></strong></td>
+              <td>
+                <xsl:value-of select="round(/dsSchema/tblEventData/OperationWeight)"/>&#160;<xsl:value-of select="/dsSchema/tblEventData/WeightType"/>
+              </td>
+            </tr>
+          </table>
+        </xsl:when>
+      </xsl:choose>
+    </body>
+    </html>
+</xsl:template>
+
+</xsl:stylesheet> 
+

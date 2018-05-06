@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <configSections>
+        <sectionGroup name="applicationSettings" type="System.Configuration.ApplicationSettingsGroup, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" >
+            <section name="Lapbase.Business.Properties.Settings" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+        </sectionGroup>
+    </configSections>
+    <applicationSettings>
+        <Lapbase.Business.Properties.Settings>
+            <setting name="Lapbase_Business_SRCWebReference_BoldService"
+                serializeAs="String">
+                <value>https://209.34.248.70/BoldServices/BoldService.asmx</value>
+            </setting>
+        </Lapbase.Business.Properties.Settings>
+    </applicationSettings>
+</configuration>

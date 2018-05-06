@@ -1,0 +1,431 @@
+<%@ page language="C#" autoeventwireup="true" inherits="UsersManagement, Users.Lapbase.deploy" validaterequest="false" %>
+<%@ Register TagPrefix = "wucTextBox" TagName = "TextBox" Src = "~/UserControl/TextBoxWUCtrl.ascx" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head runat="server">
+    <%--<link href="http://lapbase.com/app_css/v2/admin_common.css" rel="stylesheet" type="text/css" />--%>
+    <link href='<%$ AppSettings:CssUrl%>' rel="stylesheet" type="text/css" />    
+    <script language="javascript" src = "Scripts/Global.js" type="text/javascript" ></script>
+    <script language="javascript" type="text/javascript" src="UsersManagement/UsersManagement.js"></script>
+    <title>LapBase - A Data Manager for Bariatric Surgery</title>
+</head>
+<body runat = "server" id="bodyLogon">
+    <div class="loginPage">
+        <div class="logoArea">
+		    <img src="img/logo.gif" alt="" />
+	    </div>
+	</div>
+		
+    <div class="tabMenus" style="display:none" id = "div_Menu">
+        <div class="manilaTabMenu">
+			<ul>
+			    <li class="current" id = "li_Div3" >
+				    <a href="#" onclick="javascript:controlBar_Buttons_OnClick(3);" id="ub_mnuItem03" >
+				        <img id="Img3" alt="" height="16" width="16" runat = "server"/><span id = "Span1">All Organizations</span></a>
+				</li>
+				<li id = "li_Div1" >
+				    <a href="#" onclick="javascript:controlBar_Buttons_OnClick(1);" id="ub_mnuItem01" >
+				        <img id="Img1" alt="" height="16" width="16" runat = "server"/><span id = "lblDemographics">All Users</span></a>
+				</li>
+				<li id = "li_Div2">
+				    <a href="#" onclick="javascript:controlBar_Buttons_OnClick(2);" id="ub_mnuItem02" >
+				        <img id="Img2" alt="" height="16" width="16" runat = "server"/><span id = "lblHeightWeightNotes">User details</span></a>
+				</li>
+			</ul>
+		</div>
+    </div>
+    
+    <form id="frmUsersManagement" runat="server" >
+        <div class="contentArea">
+            <asp:ScriptManager ID="scriptManager" runat="server" AsyncPostBackTimeout="600" />
+            <asp:LinkButton ID = "btnDelete" runat = "server" Text="My Link" OnClick = "btnDelete_onlick" style="display:none"/>
+            <asp:LinkButton ID = "btnOrganizationResetData" runat = "server" Text="Reset Data" OnClick = "btnOrganizationResetData_onclick" style="display:none"/>
+
+            <div id = "divErrorMessage" style ="display:none;clear:both;"><span><p id = "pErrorMessage"></p></span></div>
+            
+            <div class="loginBoxWrap" style="display:block;clear:both;" id = "div_Login" >
+                <asp:UpdatePanel runat = "server" ID = "up_Login" UpdateMode="conditional">
+                    <ContentTemplate>
+			            <div class="loginBox">
+				            <div class="boxTop">
+					            <h3 id = "lblLogin">Users management section</h3>
+					            <div style ="display:block">
+					                <p id = "lblForm">Please enter your username and password to access to users management form</p>
+
+				                    <table border ="0" style="width:100%">
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="2" align="center"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width:40%">
+                                                <asp:Label runat ="server" id="Label1" Text = "Username" />
+                                            </td>
+                                            <td style="width:60%">
+                                                <wucTextBox:TextBox ID="txtUserID" runat="server" maxLength="25" TabIndex="1" width= "75%"/>
+                                            </td>
+					                    </tr>
+            					        
+					                    <tr>
+                                            <td >
+                                                <asp:Label runat = "server" id = "lblUserPW" Text = "Password" />
+                                            </td>
+                                            <td >
+                                                <wucTextBox:TextBox id ="txtUserPW" Runat="server" Direction = "LTR" MaxLength="8" TextMode="Password" tabindex="2"  Width= "75%"/>
+                                            </td>
+                                        </tr>
+    					            </tbody>
+    					            </table>
+    					        </div>
+            					
+                                <div>
+                                    <table>
+                                    <tbody>
+                                        <tr style ="Height:30px" >
+                                            <td style="text-align:right" >&nbsp;</td>
+                                            <td style="text-align:left" >&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" align="center">
+                                                <asp:Button id = "btnLogonServer" OnClick="btnLogonServer_OnClick"  Text = "LOGIN" runat = "server" TabIndex="6"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    </table>
+                                </div>  
+                                <div class="boxBtm"></div>
+                            </div>
+			            </div>
+			        </ContentTemplate>
+                    <Triggers>
+                        <asp:AsyncPostBackTrigger ControlID="btnLogonServer" EventName = "Click"/>
+                        <asp:AsyncPostBackTrigger ControlID = "btnDeactivate" EventName = "Click"/>
+                    </Triggers>
+                </asp:UpdatePanel>
+            </div>
+            
+            <div id = "div_AllOrganizations" class="expandList" style="display:none" >
+                <asp:UpdatePanel ID="up_AllOrganizations" UpdateMode="Conditional" runat="server">
+                    <ContentTemplate>
+                        <div class="boxTop">
+                            <div class="expandListTitle">
+                                <table width = "500px" border = "0" cellpadding = "3" cellspacing = "0" >
+                                    <tr style="vertical-align:middle;">
+                                        <td style = "width:200px"><label id = "Label3" runat = "server">Organization name</label></td>
+                                        <td style = "width:75px"><label id = "Label6" runat = "server" >Version No</label></td>
+                                        <td style = "width:125px"><label id = "Label8" runat = "server" >Language</label></td>
+                                        <td style = "width:50px">...</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="boxBtm"></div>
+                        </div>
+                        <div class="expandListScroll" id="div_OrganizationsList" runat = "server" style="display:block;overflow:scroll;height:350px"/>
+                        <br />
+                        <div class="fakePopUpWindowContent" style="width:500px">
+                            <table width = "450px" cellpadding = "3" cellspacing = "0" border = "0">
+                                <tr>
+                                    <td style="width:120px;">
+                                        <asp:label runat = "server" ID = "Label4" Text = "Organization name" />
+                                    </td>
+                                    <td >
+                                        <wucTextBox:TextBox runat = "server" ID= "txtDomainName" width="100%" textMode="SingleLine" TabIndex="1"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "Label2" Text = "Version no" />
+                                    </td>
+                                    <td >
+                                        <asp:DropDownList runat = "server" ID = "cmbVersion" Width="100px" onchange="javascript:cmbVersion_onchange();" TabIndex="2"/>
+                                    </td>
+                                </tr>
+                                <tr style="height :30px; vertical-align:top;">
+                                    <td><asp:label runat = "server" ID = "Label7" Text = "Language" /></td>
+                                    <td>
+                                        <asp:DropDownList runat = "server" ID= "cmbLanguage" Width = "95%" AutoPostBack = "false" TabIndex="3"/>
+                                    </td>
+                                </tr>
+                                
+                                
+                                <tr>
+                                    <td>
+                                        <br /><b>Functionality</b>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" Text = "Default Sorting" />
+                                    </td>
+                                    <td >
+                                        <asp:DropDownList runat = "server" ID= "cmbSort" Width = "95%" AutoPostBack = "false"/>                    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" Text = "Super Bill" />
+                                    </td>
+                                    <td >
+                                        <input id="radioSuperBill_yes" type="radio" runat="server" name="radioSuperBill" value="1"/>Activate &nbsp; &nbsp; &nbsp; 
+                                        <input id="radioSuperBill_no" type="radio" runat="server" name="radioSuperBill" value="0" checked/>Deactivate                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:label runat = "server" ID = "lblLanguage" Text = "Data Clamp" />
+                                    </td>
+                                    <td >
+                                        <input id="radioDataClamp_yes" type="radio" runat="server" name="radioDataClamp" value="1"/>Activate &nbsp; &nbsp; &nbsp; 
+                                        <input id="radioDataClamp_no" type="radio" runat="server" name="radioDataClamp" value="0" checked/>Deactivate                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:label runat = "server" Text = "EMR" />
+                                    </td>
+                                    <td >
+                                        <input id="radioEMR_yes" type="radio" runat="server" name="radioEMR" value="1"/>Activate &nbsp; &nbsp; &nbsp; 
+                                        <input id="radioEMR_no" type="radio" runat="server" name="radioEMR" value="0" checked/>Deactivate                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:label runat = "server" Text = "Export" />
+                                    </td>
+                                    <td >
+                                        <input id="radioExport_yes" type="radio" runat="server" name="radioExport" value="1"/>Activate &nbsp; &nbsp; &nbsp; 
+                                        <input id="radioExport_no" type="radio" runat="server" name="radioExport" value="0" checked/>Deactivate                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:label runat = "server" Text = "BSR Export" />
+                                    </td>
+                                    <td >
+                                        <input id="radioBSRExport_yes" type="radio" runat="server" name="radioBSRExport" value="1"/>Activate &nbsp; &nbsp; &nbsp; 
+                                        <input id="radioBSRExport_no" type="radio" runat="server" name="radioBSRExport" value="0" checked/>Deactivate                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" Text = "Submit Data" />
+                                    </td>
+                                    <td >
+                                        <asp:DropDownList runat = "server" ID= "cmbSubmitData" Width = "95%" AutoPostBack = "false"/>                    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" Text = "BOLD Code" />
+                                    </td>
+                                    <td >
+                                        <wucTextBox:TextBox runat = "server" ID= "txtBoldCode" width="100%" textMode="SingleLine" TabIndex="1"/>                   
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" Text = "Admin Email" />
+                                    </td>
+                                    <td >
+                                        <wucTextBox:TextBox runat = "server" ID= "txtAdminEmail" width="100%" textMode="SingleLine" TabIndex="1"/>                   
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <input type="text" style="display:none" runat = "server" id = "txtHCode" value = "0" />
+                                        <input type="text" style="display:none" runat = "server" id = "txtHOrganizationCode" value = "0" />
+                                        <input type="text" style="display:none" runat = "server" id = "txtHVersionNo" value = "0" />
+                                        <input type="text" style="display:none" runat = "server" id = "txtHNewVersionNo" value = "0" />
+                                    </td>
+                                    <td/>
+                                </tr>
+                            </table>
+                            <div >
+                                <table width = "450px" cellpadding = "3" cellspacing = "0" border = "0">
+                                    <tr>
+                                        <td>
+                                            <input type = "button" id = "btnSaveOrganization"  value = "Save" style="width:100px;float:right" onclick = "javascript:btnSaveOrganization_onclick();" />
+                                            <asp:LinkButton ID = "btnDeactivate" runat = "server" OnClick = "btnDeactivate_onlick" style="display:none"/> 
+                                            <asp:LinkButton runat = "server" ID = "linkbtnSaveOrganization" Text = "Save" style="display:none" OnClick="linkbtnSaveOrganization_onclick" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:AsyncPostBackTrigger ControlID = "linkbtnSaveOrganization" EventName="Click"/>
+                        <asp:AsyncPostBackTrigger ControlID = "btnOrganizationResetData" EventName="Click"/>
+                    </Triggers>
+                </asp:UpdatePanel>
+            </div>
+            
+            <div id = "div_AllUsers" class="expandList" style="display:none">
+                <asp:UpdatePanel ID="UpdatePanel2" UpdateMode="Conditional" runat="server">
+                    <ContentTemplate>
+                        <div class="boxTop">
+                            <div class="expandListTitle">
+                                <table width = "100%" border = "0" cellpadding = "3" cellspacing = "0" >
+                                    <tr>
+                                        <td colspan="8">
+                                            <asp:label runat = "server" ID = "Label5" Text = "Organization " />: 
+                                            <asp:DropDownList runat = "server" ID= "cmbUserOrganization" width="220px" AutoPostBack = "true" TabIndex="1" OnSelectedIndexChanged="UserOrganizationChange"/>
+                                        </td>
+                                    </tr>
+                                    <tr style="vertical-align:middle;">
+                                        <td style = "width:5%"><label id = "lblRow_TH" runat = "server" >Row</label></td>
+                                        <td style = "width:15%"><label id = "lblUsername_TH" runat = "server">Username</label></td>
+                                        <td style = "width:20%"><label id = "lblOrganization_TH" runat = "server" >Organization</label></td>
+                                        <td style = "width:10%"><label id = "lblRole_TH" runat = "server" >Role</label></td>
+                                        <td style = "width:15%"><label id = "lblFirstname_TH" runat = "server" >Firstname</label></td>
+                                        <td style = "width:20%"><label id = "lblLastname_TH" runat = "server" >Lastname</label></td>
+                                        <td style = "width:10%"><%--<label id = "lblLanguage_TH" runat = "server" >Language</label>--%></td>
+                                        <td style = "width:5%"><label id = "lblDelete_TH" runat = "server" ></label></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="boxBtm"></div>
+                        </div>
+                        <div class="expandListScroll" id="div_UsersList" runat = "server" style="display:block"></div>
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:AsyncPostBackTrigger ControlID = "btnSave" EventName = "Click"/>
+                        <asp:AsyncPostBackTrigger ControlID = "btnDelete" EventName = "Click"/>
+                    </Triggers>
+                </asp:UpdatePanel>
+            </div>
+            
+            <div id = "div_UserDetails" style="display:none">
+                
+                <asp:UpdatePanel ID="UpdatePanel1" UpdateMode="Conditional" runat="server">
+                    <ContentTemplate>
+                        <div class="fakePopUpWindowContent">
+                            <table width = "400px" cellpadding = "3" cellspacing = "0" border = "0">
+                                <tr>
+                                    <td style="width:110px;">
+                                        <asp:label runat = "server" ID = "lblOrganization" Text = "Organization " />
+                                    </td>
+                                    <td >
+                                        <asp:DropDownList runat = "server" ID= "cmbOrganization" Width = "95%" AutoPostBack = "true" TabIndex="1" OnSelectedIndexChanged="OrganizationChange"/>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblUsername" Text = "Username" />
+                                    </td>
+                                    <td >
+                                        <wucTextBox:TextBox runat = "server" id = "txtUsername" width = "50%" maxLength = "25" TabIndex="2"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:label runat = "server" ID = "lblPassword" Text = "Password" />
+                                    </td>
+                                    <td>
+                                        <wucTextBox:TextBox runat = "server" id = "txtPassword" width = "50%" maxLength = "8" TabIndex="3"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:label runat = "server" ID = "lblFirstname" Text = "Firstname" />
+                                    </td>
+                                    <td>
+                                        <wucTextBox:TextBox runat = "server" id = "txtFirstname" width = "50%" maxLength = "50" TabIndex="4"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblLastname" Text = "Lastname" />
+                                    </td>
+                                    <td >
+                                        <wucTextBox:TextBox runat = "server" id = "txtLastname" width = "50%" maxLength = "50" TabIndex="5"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblShowlog" Text = "Show Log" />
+                                    </td>
+                                    <td >
+                                        <input type="checkbox" id="chkShowLog" runat="server" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblShowRegistry" Text = "Show Registry" />
+                                    </td>
+                                    <td >
+                                        <input type="checkbox" id="chkShowRegistry" runat="server" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblPermissionLvl" Text = "Permission Level" />
+                                    </td>
+                                    <td >                                        
+                                        <asp:DropDownList runat = "server" ID = "cmbPermissionLvl" Width="150px" TabIndex="6"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblSurgeonID" Text = "Surgeon" />
+                                    </td>
+                                    <td>
+                                        <asp:LinkButton runat = "server" ID = "linkBtnOrganization" OnClick = "OrganizationChange" />
+                                        <asp:DropDownList runat = "server" ID = "cmbSurgeon" Width="150px" TabIndex="7"/>                                        
+                                        <asp:HiddenField runat = "Server" ID = "txtHSurgeonID" Value=""/>
+                                        <asp:HiddenField runat = "Server" ID = "txtHRowClick" Value="0"/>                                            
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <asp:label runat = "server" ID = "lblChangePassword" Text = "Change password on next login?" />
+                                    </td>
+                                    <td valign="top">
+                                        <asp:CheckBox runat="server" ID = "chkChangePassword" Checked="true"/>                                        
+                                    </td>
+                                </tr>
+                                
+                                
+                                
+                                <tr style="height :30px; vertical-align:top;display:none">
+                                    <td><asp:label runat = "server" ID = "lblReplicateData" Text = "Replicate data" /></td>
+                                    <td>
+                                        <asp:CheckBox runat = "Server" ID = "chkReplicate" TabIndex="8"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan = "2">
+                                        <input type="text" id = "txtHUCode" runat = "Server" value = "0" style="display:none"/>
+                                        <asp:Button runat = "server" ID = "btnSave" Text = "Save" TabIndex="9" style="width:100px;float:right" OnClick="btnSave_onclick" OnClientClick= "javascript:btnSave_onclick();"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:AsyncPostBackTrigger ControlID = "linkbtnSaveOrganization" />
+                        <asp:AsyncPostBackTrigger ControlID = "btnSave" EventName = "Click"/>
+                        <asp:AsyncPostBackTrigger ControlID = "btnDelete" EventName = "Click"/>
+                    </Triggers>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+        
+        <asp:UpdatePanel runat = "server" ID = "updatePanel6" UpdateMode="conditional">
+            <ContentTemplate>
+                <textarea runat = "server" id = "txtTest" rows = "10" style="width:100%;display:none" cols = "80"></textarea>
+            </ContentTemplate>
+            <Triggers>
+                <asp:AsyncPostBackTrigger ControlID="btnLogonServer" EventName = "Click"/>
+                <asp:AsyncPostBackTrigger ControlID="linkbtnSaveOrganization" EventName = "Click"/>
+            </Triggers>
+        </asp:UpdatePanel>
+                                        
+        <input type="text" runat = "server" id = "txtHost" value= "" style="display:none" />
+    </form>
+</body>
+</html>

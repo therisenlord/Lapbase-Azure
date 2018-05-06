@@ -1,0 +1,2 @@
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="OrganizationWUrCtrl.ascx.cs" Inherits="UserControl_OrganizationWUrCtrl" %>
+<asp:DropDownList runat = "server" Width = "100%" ID = "OrganizationList" />

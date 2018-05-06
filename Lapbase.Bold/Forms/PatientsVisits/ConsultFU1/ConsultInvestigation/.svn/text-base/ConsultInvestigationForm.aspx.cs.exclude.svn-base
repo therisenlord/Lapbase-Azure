@@ -1,0 +1,518 @@
+using System;
+using System.Data;
+using System.Data.OleDb;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using System.Drawing;
+using System.Globalization;
+
+public partial class Forms_PatientsVisits_ConsultFU1_ConsultInvestigation_ConsultInvestigationForm : System.Web.UI.Page
+{
+    //============================================================================================================
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        try
+        {
+            if (! IsPostBack)
+            {
+                IntialiseFormSetting(gClass);
+            }
+        }
+        catch (Exception err)
+        {
+            Response.Write(err.ToString());
+
+            try
+            {
+//                gClass.LanguageCode = Application["LanguageCode"].ToString();
+                gClass.UserLogoned = true;
+            }
+            catch
+            {
+                gClass.UserLogoned = false;
+                gClass.LanguageCode = "en-au";
+            }
+//            Response.Redirect("~/Default.aspx");
+        }
+        return;
+    }
+
+    //=============================================================================================================
+    private void IntialiseFormSetting(GlobalClass gClass)
+    {
+        // 1) Fill tblUSysUserObjectLogs 
+        //UserObjectLogs_FX("Patients", 2);
+
+        // 2) Set System configuration
+        SetSystemConfig(gClass);
+
+        // 3) Set Investigation Normals
+        SetInvestigationNormal(gClass);
+        return;
+    }
+
+    //=============================================================================================================
+    private void SetSystemConfig(GlobalClass gClass)
+    {
+        gClass.FetchSystemDetails(Request.Cookies["UserPracticeCode"].Value);
+
+        //txtUseImperial.Value = gClass.SD_Imperial ? "1" : "0";
+        //txtRefBMI.Value = gClass.SD_ReferenceBMI.ToString();
+        //lblCity.Text = gClass.SD_Imperial ? "City" : "City / Suburb";
+        //lblMobile.Text = gClass.SD_Imperial ? "Cell" : "Mobile";
+        //lblWeightSize.Text = gClass.SD_Imperial ? "lbs" : "kgs";
+        //lblCWeight.Text = lblWeightSize.Text;
+        //lblTxtTWeight.Text = lblWeightSize.Text;
+        //lblTxtIWeight.Text = lblWeightSize.Text;
+        //lblTxtEWeight.Text = lblWeightSize.Text;
+        //lblTxtHeight.Text = gClass.SD_Imperial ? "inches" : "cms";
+
+        //txtBMIValue.Text = gClass.SD_TargetBMI.ToString();
+        //lblLIW.Text = gClass.SD_UseIWonBMI ? "Ideal Weight based on BMI of  " + gClass.SD_ReferenceBMI : "Ideal Weight based on Height";
+        //lblHeight.Visible = gClass.SD_UseIWonBMI ? false : true;
+        //lblCWeight.Visible = true;
+        //lblCW4.Visible = true;
+        //lblCWeight.Visible = (txtCurrentWeight.Text.Trim().Length == 0) ? false : true;
+
+        lblUserField1Name.Text = gClass.SD_Field1Name.Trim();
+        lblUserField1Name.Visible = (gClass.SD_Field1Name.Trim().Length > 0);
+        //cmbUserField1.Visible = (gClass.SD_Field1Name.Trim().Length > 0);
+        txtUserField1.Visible = (gClass.SD_Field1Name.Trim().Length > 0);
+        lblBaseUserField1.Visible = (gClass.SD_Field1Name.Trim().Length > 0);
+        txtBaseUserField1.Visible = (gClass.SD_Field1Name.Trim().Length > 0);
+
+        lblUserField2Name.Visible = (gClass.SD_Field2Name.Trim().Length > 0);
+        lblUserField2Name.Text = gClass.SD_Field2Name.Trim();
+        //cmbUserField2.Visible = (gClass.SD_Field2Name.Trim().Length > 0);
+        txtUserField2.Visible = (gClass.SD_Field2Name.Trim().Length > 0);
+        lblBaseUserField2.Visible = (gClass.SD_Field2Name.Trim().Length > 0);
+        txtBaseUserField2.Visible = (gClass.SD_Field2Name.Trim().Length > 0);
+
+        lblUserField3Name.Visible = (gClass.SD_Field3Name.Trim().Length > 0);
+        lblUserField3Name.Text = gClass.SD_Field3Name.Trim();
+        //cmbUserField3.Visible = (gClass.SD_Field3Name.Trim().Length > 0);
+        txtUserField3.Visible = (gClass.SD_Field3Name.Trim().Length > 0);
+        lblBaseUserField3.Visible = (gClass.SD_Field3Name.Trim().Length > 0);
+        txtBaseUserField3.Visible = (gClass.SD_Field3Name.Trim().Length > 0);
+
+        lblUserField4Name.Visible = (gClass.SD_Field4Name.Trim().Length > 0);
+        lblUserField4Name.Text = gClass.SD_Field4Name.Trim();
+        //cmbUserField4.Visible = (gClass.SD_Field4Name.Trim().Length > 0);
+        txtUserField4.Visible = (gClass.SD_Field4Name.Trim().Length > 0);
+        lblBaseUserField4.Visible = (gClass.SD_Field4Name.Trim().Length > 0);
+        txtBaseUserField4.Visible = (gClass.SD_Field4Name.Trim().Length > 0);
+
+        lblUserField5Name.Visible = (gClass.SD_Field5Name.Trim().Length > 0);
+        lblUserField5Name.Text = gClass.SD_Field5Name.Trim();
+        txtBaseUserField5.Visible = (gClass.SD_Field5Name.Trim().Length > 0);
+        //cmbUserField5.Visible = (gClass.SD_Field5Name.Trim().Length > 0);
+        txtUserField5.Visible = (gClass.SD_Field5Name.Trim().Length > 0);
+        lblBaseUserField5.Visible = (gClass.SD_Field5Name.Trim().Length > 0);
+        txtBaseUserField5.Visible = (gClass.SD_Field5Name.Trim().Length > 0);
+
+        lblUserMemoField1Name.Visible = (gClass.SD_MField1Name.Trim().Length > 0);
+        lblUserMemoField1Name.Text = gClass.SD_MField1Name.Trim();
+        txtBaseUserMemoField1.Visible = (gClass.SD_MField1Name.Trim().Length > 0);
+
+        lblUserMemoField2Name.Visible = (gClass.SD_MField2Name.Trim().Length > 0);
+        lblUserMemoField2Name.Text = gClass.SD_MField2Name.Trim();
+        txtBaseUserMemoField2.Visible = (gClass.SD_MField2Name.Trim().Length > 0);
+        return;
+    }
+
+    //=============================================================================================================
+    private void SetInvestigationNormal(GlobalClass gClass)
+    {
+        //gClass.GenderType = Convert.ToByte(rblGender.SelectedValue);
+        gClass.GenderType = 1; //Default of data for Male
+        //gClass.FetchSystemInvestigationNormals();
+
+        lblSodium1.Text = gClass.Inv_SodiumL;
+        lblSodium2.Text = gClass.Inv_SodiumH;
+        lblPotassium1.Text = gClass.Inv_PotassiumL;
+        lblPotassium2.Text = gClass.Inv_PotassiumU;
+        lblChloride1.Text = gClass.Inv_ChlorideL;
+        lblChloride2.Text = gClass.Inv_ChlorideH;
+        lblBicarbonate1.Text = gClass.Inv_BicarbonateL;
+        lblBicarbonate2.Text = gClass.Inv_BicarbonateH;
+        lblUrea1.Text = gClass.Inv_UreaL;
+        lblUrea2.Text = gClass.Inv_UreaH;
+        lblCreatinine1.Text = gClass.Inv_CreatinineL;
+        lblCreatinine2.Text = gClass.Inv_CreatinineH;
+        lblHomocysteine1.Text = gClass.Inv_HomocysteineL;
+        lblHomocysteine2.Text = gClass.Inv_HomocysteineH;
+        lblTSH1.Text = gClass.Inv_TSHL;
+        lblTSH2.Text = gClass.Inv_TSHH;
+        lblT41.Text = gClass.Inv_T4L;
+        lblT42.Text = gClass.Inv_T4H;
+        lblT31.Text = gClass.Inv_T3L;
+        lblT32.Text = gClass.Inv_T3H;
+        lblFBloodGlucose1.Text = gClass.Inv_FBloodGlucoseL;
+        lblFBloodGlucose2.Text = gClass.Inv_FBloodGlucoseH;
+
+        lblHBA1C1.Text = gClass.Inv_HBA1CL;
+        lblHBA1C2.Text = gClass.Inv_HBA1CH;
+        lblFSerumInsulin1.Text = gClass.Inv_FSerumInsulinL;
+        lblFSerumInsulin2.Text = gClass.Inv_FSerumInsulinH;
+        lblTriglycerides1.Text = gClass.Inv_TriglyceridesL;
+        lblTriglycerides2.Text = gClass.Inv_TriglyceridesH;
+        lblTotalCholesterol1.Text = gClass.Inv_TotalCholesterolL;
+        lblTotalCholesterol2.Text = gClass.Inv_TotalCholesterolH;
+        lblHDLCholesterol1.Text = gClass.Inv_TotalCholesterolL;
+        lblHDLCholesterol2.Text = gClass.Inv_TotalCholesterolH;
+        lblCalcium1.Text = gClass.Inv_CalciumL;
+        lblCalcium2.Text = gClass.Inv_CalciumH;
+        lblPhosphate1.Text = gClass.Inv_PhosphateL;
+        lblPhosphate2.Text = gClass.Inv_PhosphateH;
+        lblVitD1.Text = gClass.Inv_VitDL;
+        lblVitD2.Text = gClass.Inv_VitDH;
+        lblAlkPhos1.Text = gClass.Inv_AlkPhosL;
+        lblAlkPhos2.Text = gClass.Inv_AlkPhosH;
+        lblALT1.Text = gClass.Inv_ALTL;
+        lblALT2.Text = gClass.Inv_ALTH;
+
+        lblAST1.Text = gClass.Inv_Astl;
+        lblAST2.Text = gClass.Inv_ASTH;
+        lblGGT1.Text = gClass.Inv_GGTL;
+        lblGGT2.Text = gClass.Inv_GGTH;
+
+        lblTProtein1.Text = gClass.Inv_TproteinL;
+        lblTProtein2.Text = gClass.Inv_TproteinH;
+        lblAlbumin1.Text = gClass.Inv_AlbuminL;
+        lblAlbumin2.Text = gClass.Inv_AlbuminH;
+
+        lblHomocysteine1.Text = gClass.Inv_HomocysteineL;
+        lblHomocysteine2.Text = gClass.Inv_HomocysteineH;
+        lblHemoglobin1.Text = gClass.Inv_HomocysteineL;
+        lblHemoglobin2.Text = gClass.Inv_HomocysteineH;
+        lblWCC1.Text = gClass.Inv_WCCL;
+        lblWCC2.Text = gClass.Inv_WCCH;
+
+        lblPlatelets1.Text = gClass.Inv_PlateletsL;
+        lblPlatelets2.Text = gClass.Inv_PlateletsH;
+        lblIron1.Text = gClass.Inv_IronL;
+        lblIron2.Text = gClass.Inv_IronH;
+        lblFerritin1.Text = gClass.Inv_FerritinL;
+        lblFerritin2.Text = gClass.Inv_FerritinH;
+
+        lblTransferrin1.Text = gClass.Inv_TransferrinL;
+        lblTransferrin2.Text = gClass.Inv_TransferrinH;
+
+        lblIBC1.Text = gClass.Inv_IBCL;
+        lblIBC2.Text = gClass.Inv_IBCH;
+        lblFolate1.Text = gClass.Inv_FolateL;
+        lblFolate2.Text = gClass.Inv_FolateH;
+        lblB121.Text = gClass.Inv_B12L;
+        lblB122.Text = gClass.Inv_B12H;
+        return;
+    }
+
+    //=============================================================================================================
+    private void LoadConsultInvestigationData(GlobalClass gClass)
+    {
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand(); 
+        DataView dvConsult;
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_ConsultInvestigations_LoadData", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt64(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@ConsultID", System.Data.SqlDbType.Int).Value = Convert.ToInt64(txtHConsultID.Value);
+
+        dvConsult = gClass.FetchData(cmdSelect, "tblConsultInvestigations").Tables[0].DefaultView;
+        if (dvConsult.Count > 0)
+        {
+            // Page  Investigations / Body Fat
+            txtBaseBMR.Text = dvConsult[0]["BMR"].ToString();
+            txtBaseImpedance.Text = dvConsult[0]["Impedance"].ToString();
+
+            txtBaseFatPercent.Text = dvConsult[0]["FatPerCent"].ToString();
+            //txtBaseFatMass.Text = dvConsult[0]["FreeFatMass"].ToString(); ?????????????????????????????????
+            txtBaseFreeFatMass.Text = dvConsult[0]["FreeFatMass"].ToString();
+            txtBaseTotalBodyWater.Text = dvConsult[0]["TotalBodyWater"].ToString();
+            txtBaseHemoglobin.Text = dvConsult[0]["Hemoglobin"].ToString();
+            txtBaseWCC.Text = dvConsult[0]["WCC"].ToString();
+            txtBasePlatelets.Text = dvConsult[0]["Platelets"].ToString();
+            txtBaseIron.Text = dvConsult[0]["Iron"].ToString();
+            txtBaseFerritin.Text = dvConsult[0]["Ferritin"].ToString();
+            txtBaseTransferrin.Text = dvConsult[0]["Transferrin"].ToString();
+            txtBaseIBC.Text = dvConsult[0]["IBC"].ToString();
+            txtBaseFolate.Text = dvConsult[0]["Folate"].ToString();
+            txtBaseB12.Text = dvConsult[0]["B12"].ToString();
+            txtBaseFBloodGlucose.Text = dvConsult[0]["FBloodGlucose"].ToString();
+            txtBaseHBA1C.Text = dvConsult[0]["HBA1C"].ToString();
+            txtBaseFSerumInsulin.Text = dvConsult[0]["FSerumInsulin"].ToString();
+            txtLipids_BaseTriglycerides.Text = dvConsult[0]["Triglycerides"].ToString();
+            txtLipids_BaseTotalCholesterol.Text = dvConsult[0]["TotalCholesterol"].ToString();
+            txtLipids_BaseHDLCholesterol.Text = dvConsult[0]["HDLCholesterol"].ToString();
+            //txtLDLCholesterol.Text = dvConsult[0]["LDLCholesterol"].ToString(); ???????? txtLDLCholesterol is not in form ????????
+            txtBaseBilirubin.Text = dvConsult[0]["Bilirubin"].ToString();
+            txtBaseAlkPhos.Text = dvConsult[0]["AlkPhos"].ToString();
+            txtBaseALT.Text = dvConsult[0]["ALT"].ToString();
+            txtBaseAST.Text = dvConsult[0]["AST"].ToString();
+            txtBaseGGT.Text = dvConsult[0]["GGT"].ToString();
+            txtBaseTProtein.Text = dvConsult[0]["TProtein"].ToString();
+            txtBaseAlbumin.Text = dvConsult[0]["Albumin"].ToString();
+            txtBaseSodium.Text = dvConsult[0]["Sodium"].ToString();
+            txtBasePotassium.Text = dvConsult[0]["Potassium"].ToString();
+            txtBaseChloride.Text = dvConsult[0]["Chloride"].ToString();
+            txtBaseBicarbonate.Text = dvConsult[0]["Bicarbonate"].ToString();
+            txtBaseUrea.Text = dvConsult[0]["Urea"].ToString();
+            txtBaseCreatinine.Text = dvConsult[0]["Creatinine"].ToString();
+            txtBaseHomocysteine.Text = dvConsult[0]["Homocysteine"].ToString();
+            txtBaseTSH.Text = dvConsult[0]["TSH"].ToString();
+            txtBaseT4.Text = dvConsult[0]["T4"].ToString();
+            txtBaseT3.Text = dvConsult[0]["T3"].ToString();
+            txtBaseCalcium.Text = dvConsult[0]["Calcium"].ToString();
+            txtBasePhosphate.Text = dvConsult[0]["Phosphate"].ToString();
+            txtBaseVitD.Text = dvConsult[0]["VitD"].ToString();
+
+            // Page   Special Investigations
+            //cmbUserField1.SelectedValue = dvConsult[0]["UserField1"].ToString();
+            //cmbUserField2.SelectedValue = dvConsult[0]["UserField2"].ToString();
+            //cmbUserField3.SelectedValue = dvConsult[0]["UserField3"].ToString();
+            //cmbUserField4.SelectedValue = dvConsult[0]["UserField4"].ToString();
+            //cmbUserField5.SelectedValue = dvConsult[0]["UserField5"].ToString();
+            txtUserField1.Text = dvConsult[0]["UserField1"].ToString();
+            txtUserField2.Text = dvConsult[0]["UserField2"].ToString();
+            txtUserField3.Text = dvConsult[0]["UserField3"].ToString();
+            txtUserField4.Text = dvConsult[0]["UserField4"].ToString();
+            txtUserField5.Text = dvConsult[0]["UserField5"].ToString();
+
+            txtBaseUserField1.Text = dvConsult[0]["BaseUserField1"].ToString();
+            txtBaseUserField2.Text = dvConsult[0]["BaseUserField2"].ToString();
+            txtBaseUserField3.Text = dvConsult[0]["BaseUserField3"].ToString();
+            txtBaseUserField4.Text = dvConsult[0]["BaseUserField4"].ToString();
+            txtBaseUserField5.Text = dvConsult[0]["BaseUserField5"].ToString();
+
+            txtBaseUserMemoField1.Text = dvConsult[0]["UserMemoField1"].ToString();
+            txtBaseUserMemoField2.Text = dvConsult[0]["UserMemoField2"].ToString();
+        }
+        dvConsult.Dispose();
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnInvestigations_Click(object sender, System.EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SetViewPage(vInvestigations, ((LinkButton)sender).ID);
+        //gClass.SetSubMenuButton(Page, 6, 0, SubMenuButtonQty);
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnSpecial_Investigations_Click(object sender, System.EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SetViewPage(vSpecial_Investigations, ((LinkButton)sender).ID);
+        //gClass.SetSubMenuButton(Page, 6, 1, SubMenuButtonQty);
+        return;
+    }
+
+    //=============================================================================================================
+    private void SetViewPage(View MyView, string strID)
+    {
+        mvConsult.SetActiveView(MyView);
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnSave_Click(object sender, System.EventArgs e)
+    {
+        if (CanToSave())
+        {
+            OleDbCommand cmdUpdate = new OleDbCommand();
+            GlobalClass gClass = new GlobalClass();
+
+            cmdUpdate.CommandType = CommandType.StoredProcedure;
+            cmdUpdate.CommandText = "dbo.sp_ConsultInvestigations_UpdateData";
+
+            cmdUpdate.Parameters.Add("BMR", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Impedance", OleDbType.Double);
+            cmdUpdate.Parameters.Add("FatPerCent", OleDbType.Double);
+            cmdUpdate.Parameters.Add("FreeFatMass", OleDbType.Double);
+            cmdUpdate.Parameters.Add("TotalBodyWater", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Hemoglobin", OleDbType.Double);
+            cmdUpdate.Parameters.Add("WCC", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Platelets", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Iron", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Ferritin", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Transferrin", OleDbType.Double);
+            cmdUpdate.Parameters.Add("IBC", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Folate", OleDbType.Double);
+            cmdUpdate.Parameters.Add("B12", OleDbType.Double);
+            cmdUpdate.Parameters.Add("FBloodGlucose", OleDbType.Double);
+            cmdUpdate.Parameters.Add("HBA1C", OleDbType.Double);
+            cmdUpdate.Parameters.Add("FSerumInsulin", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Triglycerides", OleDbType.Integer);
+            cmdUpdate.Parameters.Add("TotalCholesterol", OleDbType.Integer);
+            cmdUpdate.Parameters.Add("HDLCholesterol", OleDbType.Integer);
+            cmdUpdate.Parameters.Add("Bilirubin", OleDbType.Integer);
+            cmdUpdate.Parameters.Add("AlkPhos", OleDbType.Double);
+            cmdUpdate.Parameters.Add("ALT", OleDbType.Double);
+            cmdUpdate.Parameters.Add("AST", OleDbType.Double);
+            cmdUpdate.Parameters.Add("GGT", OleDbType.Double);
+            cmdUpdate.Parameters.Add("TProtein", OleDbType.Integer);
+            cmdUpdate.Parameters.Add("Albumin", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Sodium", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Potassium", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Chloride", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Bicarbonate", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Urea", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Creatinine", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Homocysteine", OleDbType.Integer);
+            cmdUpdate.Parameters.Add("TSH", OleDbType.Double);
+            cmdUpdate.Parameters.Add("T4", OleDbType.Double);
+            cmdUpdate.Parameters.Add("T3", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Calcium", OleDbType.Double);
+            cmdUpdate.Parameters.Add("Phosphate", OleDbType.Double);
+            cmdUpdate.Parameters.Add("VitD", OleDbType.Double);
+            cmdUpdate.Parameters.Add("UserField1", OleDbType.VarChar, 50);
+            cmdUpdate.Parameters.Add("UserField2", OleDbType.VarChar, 50);
+            cmdUpdate.Parameters.Add("UserField3", OleDbType.VarChar, 50);
+            cmdUpdate.Parameters.Add("UserField4", OleDbType.VarChar, 50);
+            cmdUpdate.Parameters.Add("UserField5", OleDbType.VarChar, 50);
+            cmdUpdate.Parameters.Add("UserMemoField1", OleDbType.VarChar, 512);
+            cmdUpdate.Parameters.Add("UserMemoField2", OleDbType.VarChar, 512);
+            cmdUpdate.Parameters.Add("ConsultID", OleDbType.Integer);
+
+            gClass.AddLogParameters(ref cmdUpdate,
+                    Application["Logon_UserName"].ToString(),
+                    Application["Remote_IPAddress"].ToString(),
+                    "update");
+
+            cmdUpdate.Parameters["BMR"].Value = txtBaseBMR.Text;
+            cmdUpdate.Parameters["Impedance"].Value = txtBaseImpedance.Text;
+            cmdUpdate.Parameters["FatPerCent"].Value = txtBaseFatPercent.Text;
+            cmdUpdate.Parameters["FreeFatMass"].Value = txtBaseFreeFatMass.Text;
+            cmdUpdate.Parameters["TotalBodyWater"].Value = txtBaseTotalBodyWater.Text;
+            cmdUpdate.Parameters["Hemoglobin"].Value = txtBaseHemoglobin.Text;
+            cmdUpdate.Parameters["WCC"].Value = txtBaseWCC.Text;
+            cmdUpdate.Parameters["Platelets"].Value = txtBasePlatelets.Text;
+            cmdUpdate.Parameters["Iron"].Value = txtBaseIron.Text;
+            cmdUpdate.Parameters["Ferritin"].Value = txtBaseFerritin.Text;
+            cmdUpdate.Parameters["Transferrin"].Value = txtBaseTransferrin.Text;
+            cmdUpdate.Parameters["IBC"].Value = txtBaseIBC.Text;
+            cmdUpdate.Parameters["Folate"].Value = txtBaseFolate.Text;
+            cmdUpdate.Parameters["B12"].Value = txtBaseB12.Text;
+            cmdUpdate.Parameters["FBloodGlucose"].Value = txtBaseFBloodGlucose.Text;
+            cmdUpdate.Parameters["HBA1C"].Value = txtBaseHBA1C.Text;
+            cmdUpdate.Parameters["FSerumInsulin"].Value = txtBaseFSerumInsulin.Text;
+            cmdUpdate.Parameters["Triglycerides"].Value = txtLipids_BaseTriglycerides.Text;
+            cmdUpdate.Parameters["TotalCholesterol"].Value = txtLipids_BaseTotalCholesterol.Text;
+            cmdUpdate.Parameters["HDLCholesterol"].Value = txtLipids_BaseHDLCholesterol.Text;
+            cmdUpdate.Parameters["Bilirubin"].Value = txtBaseBilirubin.Text;
+            cmdUpdate.Parameters["AlkPhos"].Value = txtBaseAlkPhos.Text;
+            cmdUpdate.Parameters["ALT"].Value = txtBaseALT.Text;
+            cmdUpdate.Parameters["AST"].Value = txtBaseAST.Text;
+            cmdUpdate.Parameters["GGT"].Value = txtBaseGGT.Text;
+            cmdUpdate.Parameters["TProtein"].Value = txtBaseTProtein.Text;
+            cmdUpdate.Parameters["Albumin"].Value = txtBaseAlbumin.Text;
+            cmdUpdate.Parameters["Sodium"].Value = txtBaseSodium.Text;
+            cmdUpdate.Parameters["Potassium"].Value = txtBasePotassium.Text;
+            cmdUpdate.Parameters["Chloride"].Value = txtBaseChloride.Text;
+            cmdUpdate.Parameters["Bicarbonate"].Value = txtBaseBicarbonate.Text;
+            cmdUpdate.Parameters["Urea"].Value = txtBaseUrea.Text;
+            cmdUpdate.Parameters["Creatinine"].Value = txtBaseCreatinine.Text;
+            cmdUpdate.Parameters["Homocysteine"].Value = txtBaseHomocysteine.Text;
+            cmdUpdate.Parameters["TSH"].Value = txtBaseTSH.Text;
+            cmdUpdate.Parameters["T4"].Value = txtBaseT4.Text;
+            cmdUpdate.Parameters["T3"].Value = txtBaseT3.Text;
+            cmdUpdate.Parameters["Calcium"].Value = txtBaseCalcium.Text;
+            cmdUpdate.Parameters["Phosphate"].Value = txtBasePhosphate.Text;
+            cmdUpdate.Parameters["VitD"].Value = txtBaseVitD.Text;
+
+            cmdUpdate.Parameters["UserField1"].Value = txtUserField1.Text.Trim();
+            cmdUpdate.Parameters["UserField2"].Value = txtUserField2.Text.Trim();
+            cmdUpdate.Parameters["UserField3"].Value = txtUserField3.Text.Trim();
+            cmdUpdate.Parameters["UserField4"].Value = txtUserField4.Text.Trim();
+            cmdUpdate.Parameters["UserField5"].Value = txtUserField5.Text.Trim();
+
+            cmdUpdate.Parameters["UserMemoField1"].Value = txtBaseUserMemoField1.Text.Replace("'", "`");
+            cmdUpdate.Parameters["UserMemoField2"].Value = txtBaseUserMemoField2.Text.Replace("'", "`");
+
+            cmdUpdate.Parameters["ConsultID"].Value = txtHConsultID.Value;
+
+            gClass.ExecuteDMLCommand(cmdUpdate);
+        }
+        return;
+    }
+
+    //=============================================================================================================
+    private bool CanToSave()
+    {
+        GlobalClass gClass = new GlobalClass();
+        bool flag = true;
+        string strResult = "";
+        string[,] Fields = new string[,] {
+                    {"lblBaseBMR","txtBaseBMR", "Double"},
+                    {"lblBaseImpedance", "txtBaseImpedance", "Double"},
+                    {"lblBaseFatPercent","txtBaseFatPercent", "Double"},
+                    {"lblBaseFreeFatMass", "txtBaseFreeFatMass", "Double"},
+                    {"lblBaseTotalBodyWater", "txtBaseTotalBodyWater", "Double"},
+                    {"lblBaseHemoglobin", "txtBaseHemoglobin", "Double"},
+                    {"lblBaseWCC", "txtBaseWCC", "Double"},
+                    {"lblBasePlatelets" , "txtBasePlatelets", "Double"},
+                    {"lblBaseIron", "txtBaseIron", "Double"},
+                    {"lblBaseFerritin", "txtBaseFerritin", "Double"}, 
+                    {"lblBaseTransferrin", "txtBaseTransferrin", "Double"},
+                    {"lblBaseIBC", "txtBaseIBC", "Double"},
+                    {"lblBaseFolate", "txtBaseFolate", "Double"},
+                    {"lblBaseB12", "txtBaseB12", "Double"},
+                    {"lblBaseFBloodGlucose", "txtBaseFBloodGlucose", "Double"},
+                    {"lblBaseHBA1C", "txtBaseHBA1C", "Double"},
+                    {"lblBaseFSerumInsulin", "txtBaseFSerumInsulin", "Double"},
+                    {"lblLipids_Triglycerides", "txtLipids_BaseTriglycerides", "Integer"},
+                    {"lblLipids_TotalCholesterol", "txtLipids_BaseTotalCholesterol", "Integer"},
+                    {"lblLipids_HDL_Cholesterol", "txtLipids_BaseHDLCholesterol", "Integer"},
+                    {"lblBaseBilirubin", "txtBaseBilirubin", "Integer"},
+                    {"lblBaseAlkalinePhos", "txtBaseAlkPhos", "Double"},
+                    {"lblBaseALT", "txtBaseALT", "Double"},
+                    {"lblBaseAST", "txtBaseAST", "Double"},
+                    {"lblBaseGGT", "txtBaseGGT", "Double"},
+                    {"lblBaseTProtein", "txtBaseTProtein", "Interger"},
+                    {"lblBaseAlbumin", "txtBaseAlbumin", "Double"},
+                    {"lblBaseSodium", "txtBaseSodium", "Double"},
+                    {"lblBasePotassium", "txtBasePotassium", "Double"},
+                    {"lblBaseChloride", "txtBaseChloride", "Double"},
+                    {"lblBaseBicarbonate", "txtBaseBicarbonate", "Double"},
+                    {"lblBaseUrea", "txtBaseUrea", "Double"},
+                    {"lblBaseCreatinine", "txtBaseCreatinine", "Double"},
+                    {"lblBaseHomocysteine", "txtBaseHomocysteine", "Integer" },
+                    {"lblBaseTSH", "txtBaseTSH", "Integer"},  
+                    {"lblBaseT4", "txtBaseT4", "Integer"},
+                    {"lblBaseT3", "txtBaseT3", "Integer"},
+                    {"lblBaseCalcium", "txtBaseCalcium", "Double"},
+                    {"lblBasePhosphate", "txtBasePhosphate", "Double"},
+                    {"lblBaseVitD", "txtBaseVitD", "Double"}
+        };
+
+        try
+        {
+            for (int Idx = 0; Idx < Fields.Length / Fields.Rank; Idx++)
+            {
+                ((TableCell)FindControl(Fields[Idx, 0])).ForeColor = Color.Blue;
+                if (gClass.CheckFields(((UserControl_TextBoxWUCtrl)FindControl(Fields[Idx, 1])).Text.Trim(), Fields[Idx, 2], out strResult) == "ERROR")
+                {
+                    ((TableCell)FindControl(Fields[Idx, 0])).ForeColor = Color.Red;
+                    flag = false;
+                }
+                else
+                {
+                    ((UserControl_TextBoxWUCtrl)FindControl(Fields[Idx, 1])).Text = strResult;
+                }
+            }
+        }
+        catch
+        {
+            flag = false;
+        }
+        return (flag);
+    }
+}

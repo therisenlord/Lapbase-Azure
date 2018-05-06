@@ -1,0 +1,591 @@
+using System;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Drawing;
+using System.IO;
+using Microsoft.Web.UI;
+
+public partial class Forms_PatientsVisits_PatientsVisitsForm : Lapbase.Business.BasePage
+{
+    GlobalClass gClass = new GlobalClass();
+    int intNumberPerSheet = 9, NumberOfPages = 0, cntPatient = 0;
+
+    protected override void OnLoad(EventArgs e)
+    {
+        intNumberPerSheet = intNumberPerSheet;
+        gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+
+        gClass.LanguageCode = base.LanguageCode;
+        if (! Page.IsPostBack)
+        {
+            IntialiseFormSetting();
+            //gClass.SetListItems(frmPatientsList.ID, cmbSortBy, 1);
+            LoadLanguageCharactors();
+            PreLoadPatientsList();
+        }
+        base.OnLoad(e);
+    }
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    /*
+     * everytime, when the page is being loaded, the application checkes
+     * 1) The user has logoned to the application and is permitted to access to data of the current organization? by calling gClass.IsUserLogoned
+     * 2) adds a log record of browing patients list data, by calling gClass.SaveUserLogFile
+     * 3) Initializes the default setting for some controls, by calling IntialiseFormSetting
+     * 4) Loads and fills the "SORT BY" dropdownlist, by using the culture of selected language. by calling gClass.SetListItems
+     * 5) Loads letters and characters of the selected langauge by calling LoadLanguageCharactors()
+     * 6) Loads all patients and makes the list of them, by calling PreLoadPatientsList()
+     */
+
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+        bool LoadFlag = true;
+
+        /*IMPORTANT : because of using ajax function (javascript and asp.net), the browser MUST have no-cache setting*/
+        if (!Page.IsPostBack)
+        {
+            txtHApplicationURL.Value = Request.Url.Scheme + "://" + Request.Url.Host + Request.ApplicationPath + "/";
+
+            gClass.SaveUserLogFile(base.UserPracticeCode.ToString(), Request.Cookies["Logon_UserName"].Value, base.DomainURL, "Patient List Form", 2, "Browse", "", "");
+
+            gClass.SaveActionLog(gClass.OrganizationCode,
+                                 Request.Cookies["UserPracticeCode"].Value,
+                                 Request.Url.Host,
+                                 System.Configuration.ConfigurationManager.AppSettings["PatientPage"].ToString(),
+                                 System.Configuration.ConfigurationManager.AppSettings["LogRead"].ToString(),
+                                 "Load " + System.Configuration.ConfigurationManager.AppSettings["PatientPage"].ToString() + " List",
+                                 "",
+                                 "");
+
+            if (Request.Cookies["PermissionLevel"].Value == "1o")
+                divAddNewPatient.Style["display"] = "none";
+
+        }
+    }
+    #endregion
+
+    #region private void IntialiseFormSetting
+    /*this function is to initialize some controls by default values*/
+    private void IntialiseFormSetting()
+    {
+        bodyPatientsVistisPage.Attributes.Add("onload", "LoadDataProc()");
+        bodyPatientsVistisPage.Style.Add("Direction", base.Direction);
+        txtHShowType.Value = "ShowAll";
+        txtHSortOrder.Value = "ASC";
+        txtHPageNo.Value = "1";
+        txtHPageQty.Value = "0";
+
+        cmbSortBy.SelectedValue = "3";
+        txtHSortOrder.Value = "DESC";
+        /*
+        cmbSortBy.SelectedValue = Request.Cookies["DefaultSort"].Value;
+        if (Request.Cookies["DefaultSort"].Value == "3")
+            txtHSortOrder.Value = "DESC";
+        */
+        return;
+    }
+    #endregion 
+
+    ///<summary>
+    /// this function is called when users press "ADD NEW PATIENT" button, 
+    /// NOTICE : The PatientDataForm.aspx is used to add new/update a particulare patient, so for adding new data, the PID (QueryString Item) SHOULD BE 0*/
+    ///</summary>    
+    protected void btnAddNewPatient_OnClick(object sender, EventArgs e)
+    {
+        LapbaseSession.PatientId = 0;
+
+        /*
+        if (Convert.ToBoolean(Request.Cookies["EMR"].Value) == false)
+            Response.Redirect("~/Forms/Patients/PatientData/PatientDataForm.aspx?PID=0",false);
+        else
+         */
+            Response.Redirect("~/Forms/EMR/EMRForm.aspx?PID=0", false);
+    }
+
+    /// <summary>
+    /// Browses the Visit Page when any patient is selected on patient's list.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    protected void btnGoToVisit_OnClick(object sender, EventArgs e)
+    {
+        LapbaseSession.PatientId = Convert.ToInt32(txtHPatientId.Value);
+        LapbaseSession.OrganizationCode = base.OrganizationCode;
+        Response.Redirect("~/Forms/PatientsVisits/ConsultFU1/ConsultFU1Form.aspx?QSN=PID&QSV=" + txtHPatientId.Value + "&LP=Y",false);
+        //document.location.assign(document.getElementById("txtHApplicationURL").value + "/Forms/PatientsVisits/ConsultFU1/ConsultFU1Form.aspx?QSN=PID&QSV=" + strPatientID);
+    }
+
+    /// <summary>
+    /// this function is used to load all letters and characters of the selected language (merging XML document(of letter dataset) and XSL file)
+    /// </summary>
+    private void LoadLanguageCharactors()
+    {
+        divCharacters.InnerHtml = gClass.ShowSchema(gClass.LoadLanguageCharacters(), Server.MapPath(".") + @"\includes\CharactersXSLTFile.xsl");
+    }
+
+    #region protected void btnLoad_onlick(object sender, EventArgs e)
+    ///<summary>
+    /// this function is to load patients list and pagination, but it's called in different situation,
+    /// because this page is an asp.net ajax form, so we need to define an EVENT for asp:updatepanel component, 
+    /// if you have a look at script file of this page, PatientVisits.js, when user enters some values for patient name, surname and press SHOW ALL in letters table, 
+    /// the patients list should be reloaded. because all these events are done at the client-side, we need to call a function at the server-side to reload the patients list, 
+    /// so for all these client-side events, we use only one server-side function of btnLoad, this asp.net component is hidden and its onclick event is used to reload data.
+    ///</summary>
+    protected void btnLoad_onlick(object sender, EventArgs e)
+    {
+        PreLoadPatientsList();
+    }
+    #endregion 
+
+    #region private void PreLoadPatientsList()
+    /*this function is to load the patients list*/
+    private void PreLoadPatientsList()
+    {
+        string strScript = "";
+        try
+        {
+            LoadPatientsList();
+            strScript = "HideDivMessage();";
+        }
+        catch (Exception err)
+        {
+            strScript = "HideDivMessage();document.getElementById('divErrorMessage').style.display = 'block';SetInnerText(document.getElementById('pErrorMessage'), 'Error in loading patients list...');";
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Patient List Form", "btnLoad_onlick function", err.ToString());
+        }
+        ScriptManager.RegisterStartupScript(up_PatientsList, btnLoad.GetType(), Guid.NewGuid().ToString(), strScript, true);
+    }
+    #endregion
+
+    #region void LoadPatientsList()
+    ///<summary>
+    /// this is the main function of loading patients list, first we find out the number of patients for doing pagination, then we load all patients data.
+    /// notice: the patients list is created by using XML document (from dataset) and XSL file, the result of this merging (string) is used as InnerHTML of div_patientslist
+    ///</summary>
+    private void LoadPatientsList()
+    {
+        String  strSql = String.Empty
+                , strTemp = String.Empty
+                , strOrderBy = String.Empty;
+        System.Data.DataSet dsPatient = new System.Data.DataSet();
+        System.Data.SqlClient.SqlCommand cmdSql = new System.Data.SqlClient.SqlCommand();
+
+        cmdSql.CommandType = System.Data.CommandType.StoredProcedure;
+        gClass.MakeStoreProcedureName(ref cmdSql, "sp_PatientsList_LoadPatientsList", true);
+
+        cmdSql.Parameters.Add("@vstrShowType", System.Data.SqlDbType.VarChar, 50).Value = txtHShowType.Value.ToUpper();
+        cmdSql.Parameters.Add("@vstrLetter", System.Data.SqlDbType.VarChar, 5).Value = String.Format("{0}%", txtHText.Value );
+        strTemp = txtSurName.Text.Trim().Replace("'", "`");
+        cmdSql.Parameters.Add("@vstrSurName", System.Data.SqlDbType.VarChar, 50).Value = strTemp.Equals(String.Empty) ? String.Empty : String.Format("{0}%", strTemp);
+        strTemp = txtName.Text.Trim().Replace("'", "`");
+        cmdSql.Parameters.Add("@vstrFirstName", System.Data.SqlDbType.VarChar, 50).Value = strTemp.Equals(String.Empty) ? String.Empty : String.Format("{0}%", strTemp);
+        cmdSql.Parameters.Add("@vintOrganizationCode", System.Data.SqlDbType.VarChar, 10).Value = gClass.OrganizationCode;
+        cmdSql.Parameters.Add("@vboolLoadPageCount", System.Data.SqlDbType.Bit).Value = 1;
+
+        cmdSql.Parameters.Add("@vintSortBy", System.Data.SqlDbType.Int).Value = 0;
+        cmdSql.Parameters.Add("@vstrSortOrder", System.Data.SqlDbType.VarChar, 50).Value = String.Empty;
+        cmdSql.Parameters.Add("@vintPageNo", System.Data.SqlDbType.Int).Value = 0;
+        cmdSql.Parameters.Add("@vintNumberPerSheet", System.Data.SqlDbType.Int).Value = 0;
+        cmdSql.Parameters.Add("@vintDoctorID", System.Data.SqlDbType.VarChar, 10).Value = ((Request.Cookies["PermissionLevel"].Value == "1o" || Request.Cookies["PermissionLevel"].Value == "2t" || Request.Cookies["PermissionLevel"].Value == "3f") && Request.Cookies["SurgeonID"].Value != "0") ? Request.Cookies["SurgeonID"].Value : String.Empty;
+
+
+        gClass.FetchData(cmdSql, "tblPatientQty");
+        cntPatient = Convert.ToInt32(gClass.dsGlobal.Tables["tblPatientQty"].Rows[0][0].ToString());
+        CreatePagesNo();
+
+        //2) then we fetch all patients
+        strSql = "With rstPatientList as (";
+        strSql += "SELECT  A.[Patient Id] as PatientID, dbo.udfGetPatientCustomId(A.OrganizationCode, A.[Patient Id]) as Patient_CustomId, A.Surname, A.Firstname, A.Street, A.Suburb, A.Birthdate, ";
+        strSql += " C.LapBandDate, C.SurgeryType, A.[Date Last Visit] as DateLastVisit, C.SurgeryType_Description ";
+        strSql += " , '' as tempBirthdate, '' as tempLapBandDate, '' as tempDateLastVisit,  dbo.fn_GetDoctorInitial(A.[Doctor Id], A.OrganizationCode) as DoctorInitial , ";
+        strSql += "Row_Number() over ( ";
+
+        strOrderBy = GetOrderBy();
+        /*
+        switch (cmbSortBy.SelectedValue)
+        {
+            case "0":
+                strSql += "ORDER BY A.[Patient Id], A.Surname, A.Firstname ";
+                break;
+            case "1":
+                //strSql += "ORDER BY case when len(dbo.udfGetPatientCustomId(A.OrganizationCode, A.[Patient Id])) <> 0 then dbo.udfGetPatientCustomId(A.OrganizationCode, A.[Patient Id]) else A.[Patient Id] end ";
+                strSql += "ORDER BY  A.[Patient Id] ";
+                break;
+            case "2":
+                strSql += "ORDER BY A.Surname ";
+                break;
+            case "3":
+                strSql += "ORDER BY C.LapBandDate ";
+                break;
+            default:
+                strSql += "ORDER BY A.[Patient Id], A.Surname, A.Firstname ";
+                break;
+        }
+         */
+        strSql += " " + strOrderBy;
+        strSql += txtHSortOrder.Value + ", A.Firstname ) RowNumber  ";
+
+        AddExteraParameter(ref strSql);
+        strSql += String.Format(") Select * from rstPatientList where RowNumber between {0} and {1}" , ((Convert.ToInt16(txtHPageNo.Value) - 1) * intNumberPerSheet + 1).ToString() , ((Convert.ToInt16(txtHPageNo.Value)) * intNumberPerSheet).ToString());
+
+        strSql = strSql;
+        cmdSql.Parameters.Clear();
+        cmdSql.CommandType = System.Data.CommandType.Text;
+        cmdSql.CommandText = strSql;
+        gClass.FetchData(cmdSql, "tblPatients");
+        dsPatient = gClass.dsGlobal;
+        if (dsPatient.Tables.Count > 0)
+        {
+            Page.Culture = Request.Cookies["CultureInfo"].Value;
+            for (int Idx = 0; Idx < dsPatient.Tables[0].Rows.Count; Idx++)
+            {
+                dsPatient.Tables[0].Rows[Idx]["Surname"] = dsPatient.Tables[0].Rows[Idx]["Surname"].ToString().Trim().Replace("`", "'");
+                dsPatient.Tables[0].Rows[Idx]["Firstname"] = dsPatient.Tables[0].Rows[Idx]["Firstname"].ToString().Trim().Replace("`", "'");
+                dsPatient.Tables[0].Rows[Idx]["Street"] = dsPatient.Tables[0].Rows[Idx]["Street"].ToString().Trim().Replace("`", "'");
+                dsPatient.Tables[0].Rows[Idx]["Suburb"] = dsPatient.Tables[0].Rows[Idx]["Suburb"].ToString().Trim().Replace("`", "'");
+
+                try{dsPatient.Tables[0].Rows[Idx]["tempBirthdate"] = Convert.ToDateTime(dsPatient.Tables[0].Rows[Idx]["Birthdate"].ToString().Trim()).ToShortDateString();}catch { }
+                try{dsPatient.Tables[0].Rows[Idx]["tempLapBandDate"] = Convert.ToDateTime(dsPatient.Tables[0].Rows[Idx]["LapBandDate"].ToString().Trim()).ToShortDateString(); }catch { }
+                try{dsPatient.Tables[0].Rows[Idx]["tempDateLastVisit"] = Convert.ToDateTime(dsPatient.Tables[0].Rows[Idx]["DateLastVisit"].ToString().Trim()).ToShortDateString(); }catch { }
+            }
+            dsPatient.Tables[0].AcceptChanges();
+        }
+        div_PatientsList.InnerHtml = gClass.ShowSchema(dsPatient, Server.MapPath(".") + @"\includes\PatientsListXSLTFile.xsl");
+        return;
+    }
+    #endregion
+
+    #region 
+    private String GetOrderBy()
+    {
+        String strOrderBy = String.Empty;
+
+        /*if (txtSurName.Text.Trim().Length > 0)
+        {
+            strOrderBy = " ORDER BY A.Surname ";
+        }
+        else if (txtName.Text.Trim().Length > 0)
+        {
+            strOrderBy = "  ORDER BY A.Firstname ";
+        }
+        else
+        {*/
+            switch (cmbSortBy.SelectedValue)
+            {
+                case "0":
+                    strOrderBy = " ORDER BY A.[Patient Id], A.Surname, A.Firstname ";
+                    break;
+                case "1":
+                    strOrderBy = " ORDER BY  A.[Patient Id] ";
+                    break;
+                case "2":
+                    strOrderBy = " ORDER BY A.Surname, A.Firstname ";
+                    break;
+                case "3":
+                    strOrderBy = " ORDER BY C.LapBandDate ";
+                    break;
+                case "4":
+                    strOrderBy = " ORDER BY A.Firstname, A.Surname ";
+                    break;
+                default:
+                    strOrderBy = " ORDER BY A.[Patient Id], A.Surname, A.Firstname ";
+                    break;
+            }
+        
+        return strOrderBy;
+    }
+    #endregion 
+
+    #region private void CreatePagesNo()
+    ///<summary>
+    /// this function and AddPageNavigator (the next function) are to do pagination of patients list, setting style and events for each page no and first, prev, next and last icons.
+    ///</summary>
+    private void CreatePagesNo()
+    {
+        int intPageCnt = 10; 
+
+        if (cntPatient % intNumberPerSheet == 0)
+            NumberOfPages = cntPatient / intNumberPerSheet;
+        else
+            NumberOfPages = (int)(cntPatient / intNumberPerSheet) + 1;
+
+        txtHPageQty.Value = NumberOfPages.ToString();
+        if (NumberOfPages > 1)
+        {
+            int Xh = 0, Idx = 0;
+
+            System.Web.UI.HtmlControls.HtmlGenericControl lblPageIntro = new System.Web.UI.HtmlControls.HtmlGenericControl("LABEL");
+            System.Web.UI.HtmlControls.HtmlGenericControl lblPage = new System.Web.UI.HtmlControls.HtmlGenericControl("LABEL");
+            System.Web.UI.HtmlControls.HtmlGenericControl lblBlank = new System.Web.UI.HtmlControls.HtmlGenericControl("LABEL");
+            System.Web.UI.WebControls.TextBox txtGoTo = new System.Web.UI.WebControls.TextBox();
+
+            lblPageIntro.InnerText = "Page : ";
+            lblPageIntro.Attributes.Add("style", "font-size:8pt;font-weight:bold");
+            div_PagesNo.Controls.Add(lblPageIntro);
+
+            //goto page
+            txtGoTo.Attributes.Add("value", txtHPageNo.Value);
+            txtGoTo.Attributes.Add("id", "txtGoToPage");
+            txtGoTo.Attributes.Add("style", "font-size:7.5pt");
+            txtGoTo.Attributes.Add("size", "2");
+            div_PagesNo.Controls.Add(txtGoTo);
+            AddPageNavigator("G", true);
+
+            lblBlank.InnerText = " ";
+            div_PagesNo.Controls.Add(lblBlank);
+
+
+            if (Convert.ToInt16(txtHPageNo.Value) > intPageCnt) Xh = Convert.ToInt16(txtHPageNo.Value) - intPageCnt + 1;
+            else Xh = 1;
+
+            if (NumberOfPages > intPageCnt)
+            {
+                AddPageNavigator("F", (Xh > 1) || (Convert.ToInt16(txtHPageNo.Value) > 1));
+                AddPageNavigator("P", (Xh > 1) || (Convert.ToInt16(txtHPageNo.Value) > 1));
+            }
+
+            for (; (Xh <= NumberOfPages) && (++Idx <= intPageCnt); Xh++)
+            {
+                System.Web.UI.HtmlControls.HtmlAnchor aPage = new System.Web.UI.HtmlControls.HtmlAnchor();
+                aPage.HRef = "#";
+                if (txtHPageNo.Value.Equals(Xh.ToString()))
+                {
+                    aPage.InnerText = String.Format( "[{0}]", Xh.ToString());
+                    aPage.Attributes.Add("class", "selected");
+                    aPage.Attributes.Add("style", "font-size:8pt;font-weight:bold");
+                }
+                else
+                {
+                    aPage.InnerText = Xh.ToString();
+                    aPage.Attributes.Add("style", "font-size:8pt;font-weight:normal");
+                }
+                aPage.Attributes.Add("onclick", String.Format("javascript:LoadRecordsOfPage({0}, {1});" , NumberOfPages , Xh.ToString()));
+                div_PagesNo.Controls.Add(aPage);
+            }
+
+            if (NumberOfPages > intPageCnt)
+            {
+                AddPageNavigator("N", (Convert.ToInt16(txtHPageNo.Value) < Convert.ToInt16(txtHPageQty.Value)));
+                AddPageNavigator("L", (Convert.ToInt16(txtHPageNo.Value) < Convert.ToInt16(txtHPageQty.Value)));
+            }
+
+            lblPage = new System.Web.UI.HtmlControls.HtmlGenericControl("LABEL");
+            lblPage.InnerText = String.Format("   of {0} (Patients: {1})", txtHPageQty.Value, cntPatient.ToString());
+            lblPage.Attributes.Add("style", "font-size:8pt;font-weight:bold");
+            div_PagesNo.Controls.Add(lblPage);
+        }
+    }
+    #endregion
+
+    #region private void AddPageNavigator(string strNavigateCode)
+    /*
+     * this function and CreatePagesNo (the previous function) are to do pagination of patients list, setting style and events for each page no and first, prev, next and last icons.
+     */
+    private void AddPageNavigator(string strNavigateCode, bool ShowFlag)
+    {
+        if (!ShowFlag) return;
+        System.Web.UI.HtmlControls.HtmlAnchor aPage = new System.Web.UI.HtmlControls.HtmlAnchor();
+        switch (strNavigateCode)
+        {
+            case "F":
+                aPage.InnerText = "<<";
+                break;
+            case "P":
+                aPage.InnerText = "<";
+                break;
+            case "N":
+                aPage.InnerText = ">";
+                break;
+            case "L":
+                aPage.InnerText = ">>";
+                break;
+            case "G":
+                aPage.InnerText = "Go";
+                break;
+        }
+        aPage.Attributes.Add("class", "squareBtn");
+        aPage.Attributes.Add("style", "font-size:7.5pt;font-weight:normal");
+        aPage.HRef = "#";
+        aPage.Attributes.Add("onclick", "javascript:PageNavigator('" + strNavigateCode + "')");
+        div_PagesNo.Controls.Add(aPage);
+    }
+    #endregion 
+
+    #region private void AddExteraParameter(ref string strSql)
+    ///<summary>
+    /// this function is called by "LoadPatientsList" function to add some criteria and filtering conditions
+    ///</summary>
+    private void AddExteraParameter(ref string strSql)
+    {
+        bool whereFlag = false;
+
+        strSql += "FROM ";
+        strSql += "tblPatients A with (nowait,nolock) left join ";
+        strSql += "(Select B.[Patient Id], B.UserPracticeCode, B.LapBandDate, B.SurgeryType, B.NextComorbidVisit, ";
+        strSql += "dbo.fn_GetSystemDescription_Bold (B.SurgeryType, 'BST', 'BST') as SurgeryType_Description ";
+        strSql += "from tblPatientWeightData B with(nowait,nolock) where organizationcode = " + gClass.OrganizationCode + ") C ";
+        strSql += "ON ((A.[Patient Id] = C.[Patient Id])) ";
+
+        switch (txtHShowType.Value.ToUpper())
+        {
+            case "LOADBYFIRSTLETTER":
+                strSql += "where (A.Surname Like '" + txtHText.Value + "%') ";
+                whereFlag = true;
+                break;
+
+            case "SHOWALL":
+                if (txtSurName.Text.Trim().Length > 0)
+                {
+                    strSql += " where (A.Surname like '%" + txtSurName.Text.Trim().Replace("'", "`") + "%') ";
+                    whereFlag = true;
+                }
+
+                if (txtName.Text.Trim().Length > 0)
+                {
+                    if (whereFlag)
+                        strSql += " and (A.FirstName like '%" + txtName.Text.Replace("'", "`") + "%') ";
+                    else
+                    {
+                        strSql += " where (A.FirstName like '%" + txtName.Text.Replace("'", "`") + "%') ";
+                        whereFlag = true;
+                    }
+                }
+                break;
+        }
+
+        strSql += (whereFlag ? " and " : " where ") + "(A.OrganizationCode = " + gClass.OrganizationCode + ") AND A.DateDeleted is null";
+        strSql += ((Request.Cookies["PermissionLevel"].Value == "1o" || Request.Cookies["PermissionLevel"].Value == "2t" || Request.Cookies["PermissionLevel"].Value == "3f") && Request.Cookies["SurgeonID"].Value != "0") ? " AND (A.[Doctor ID] = " + Request.Cookies["SurgeonID"].Value + ")" : "";
+    }
+    #endregion
+
+    #region protected void btnCheckPatientID_onclick(object sender, EventArgs e)
+    ///<summary>
+    /// because this page is an asp.net ajax, and using asp:updatepanel, we need to define an event for this asp:updatepanel.
+    /// when user enters a patient id (at the client-side), the application should check this value, if there is any patient with this ID in the database, the Patient form (PatientDataForm.aspx)
+    /// should be loaded with the patient's data (server-side), otherwise a error message is displayed.
+    /// to do server-side tasks, we need to submit patientID to server by using asp.net ajax tool, so we have a hidden button "btnCheckPatientID" and when user enters a patientID, we call the onclick event of "btnCheckPatientID".
+    /// In the PatientVisits.JS, there is a client-side function "txtPatientID_onchange()" that's called when users change the Patient ID field, this client-side function calls "btnCheckPatientID_onclick"
+    ///this function "btnCheckPatientID_onclick" with "CheckPatientID" function (the next one) check the patient id and if this value is correct, the PatientDataForm.aspx is loaded.
+    ///</summary>
+    protected void btnCheckPatientID_onclick(object sender, EventArgs e)
+    {
+        string strScript = "";
+
+        System.Data.DataSet dsPatient = new System.Data.DataSet();
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand();
+
+        //replaced by below functions
+        //try{CheckPatientID(ref strScript);}
+        try
+        {
+
+            gClass.MakeStoreProcedureName(ref cmdSelect, "sp_PatientData_LoadData", true);
+            cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+            cmdSelect.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+            cmdSelect.Parameters.Add("@PatientID", System.Data.SqlDbType.Int).Value = 0;
+            cmdSelect.Parameters.Add("@Patient_CustomID", System.Data.SqlDbType.VarChar, 20).Value = txtPatientID.Text;
+
+            if ((Request.Cookies["PermissionLevel"].Value == "1o" || Request.Cookies["PermissionLevel"].Value == "2t" || Request.Cookies["PermissionLevel"].Value == "3f") && Convert.ToInt32(Request.Cookies["SurgeonID"].Value) > 0)
+                cmdSelect.Parameters.Add("@SurgeonID", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["SurgeonID"].Value);
+            
+            dsPatient = gClass.FetchData(cmdSelect, "tblPatientData");
+
+            if ((dsPatient.Tables.Count > 0) && (dsPatient.Tables[0].Rows.Count > 0))
+            {
+                LapbaseSession.PatientId = Convert.ToInt32(dsPatient.Tables["tblPatientData"].Rows[0]["PatientID"].ToString());
+                LapbaseSession.OrganizationCode = base.OrganizationCode;
+                Response.Redirect(String.Format("ConsultFU1/ConsultFU1Form.aspx?QSN=PID&QSV={0}", dsPatient.Tables["tblPatientData"].Rows[0]["PatientID"].ToString()),false);
+            }
+            else
+            {
+                divErrorMessageScriptBuilder(ref strScript, "The patient is either not exist or has been allocated to other surgeon");
+            }
+
+        }
+        catch (Exception err)
+        {
+            divErrorMessageScriptBuilder(ref strScript, "Error in loading patient data");
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Patient List Form", "btnCheckPatientID_onclick function", err.ToString());
+        }
+        ScriptManager.RegisterStartupScript(up_PatientsList, btnCheckPatientID.GetType(), Guid.NewGuid().ToString(), strScript, true);
+        return;
+    }
+    #endregion 
+
+    #region private void CheckPatientID(ref string strScript)
+    ///<summary>
+    /// this function with "btnCheckPatientID_onclick" function (the previous one) check the patient id and if this value is correct, the PatientDataForm.aspx is loaded.
+    ///</summary>
+    private void CheckPatientID(ref string strScript)
+    {
+        Lapbase.Business.Patient objPatient = new Lapbase.Business.Patient();
+
+        objPatient.OrganizationCode = Convert.ToInt32(gClass.OrganizationCode);
+        objPatient.UserPracticeCode = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        objPatient.PatientId = null;
+        objPatient.PatientCustomId = txtPatientID.Text;
+        objPatient.SurgeonID = Convert.ToInt32(Request.Cookies["SurgeonID"].Value);
+        objPatient.PermissionLevel = Request.Cookies["PermissionLevel"].Value;
+        objPatient.GetPatientByPatientCustomID();
+
+        if (objPatient.PatientId > 0)
+        {
+            base.UserPracticeCode = objPatient.UserPracticeCode;
+            base.OrganizationCode = objPatient.OrganizationCode;
+            base.PatientID = objPatient.PatientId.Value;
+            LapbaseSession.PatientId = objPatient.PatientId.Value;
+            LapbaseSession.OrganizationCode = objPatient.OrganizationCode;
+            LapbaseSession.UserPracticeCode = objPatient.UserPracticeCode;
+            base.UpdateUserApplicationData();
+            Response.Redirect(String.Format("ConsultFU1/ConsultFU1Form.aspx?QSN=PID&QSV={0}", objPatient.PatientId.Value.ToString()),false);
+        }
+        else
+        {
+            divErrorMessageScriptBuilder(ref strScript, "The patient is either not exist or has been allocated to other surgeon");
+        }
+
+        /*
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand();
+        System.Data.DataSet dsPatient = new System.Data.DataSet();
+
+        gClass.MakeStoreProcedureName(ref cmdSelect , "sp_PatientData_LoadData", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt64(gClass.OrganizationCode);
+        cmdSelect.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = Convert.ToInt64(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", System.Data.SqlDbType.Int).Value = DBNull.Value;
+        cmdSelect.Parameters.Add("@Patient_CustomID", System.Data.SqlDbType.VarChar, 20).Value = txtPatientID.Text;
+        dsPatient = gClass.FetchData(cmdSelect, "tblPatient");
+
+        if ((dsPatient.Tables.Count > 0) && (dsPatient.Tables[0].Rows.Count > 0))
+        {
+            String strPatientID = dsPatient.Tables[0].Rows[0]["PatientID"].ToString();
+            base.PatientID = Convert.ToInt32(strPatientID);
+            dsPatient.Dispose();
+            Response.Redirect(String.Format(txtHApplicationURL.Value + "Forms/PatientsVisits/ConsultFU1/ConsultFU1Form.aspx?QSN=PID&QSV={0}" , strPatientID));
+        }
+        else
+        {
+            divErrorMessageScriptBuilder(ref strScript, "Wrong Patient ID");
+            dsPatient.Dispose();
+        }
+         */
+    }
+    #endregion
+
+    #region private void divErrorMessageScriptBuilder(ref string strScript, string strErrorMessage)
+    private void divErrorMessageScriptBuilder(ref string strScript, string strErrorMessage)
+    {
+        strScript  = "SetEvents();";
+        strScript += "HideDivMessage();";
+        strScript += "document.getElementById('txtPatientID_txtGlobal').focus(); ";
+        strScript += "document.getElementById('divErrorMessage').style.display = 'block';";
+        strScript += String.Format("SetInnerText(document.getElementById('pErrorMessage'), '{0}...');", strErrorMessage);
+        return;
+    }
+    #endregion 
+
+}

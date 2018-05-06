@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="8" virtualPath="/Lapbase.Bold/global.asax" hash="fffffffffd083089" filehash="2f66d565d80e" flags="150000" assembly="Lapbase.deploy" type="ASP.global_asax">
+  <filedeps>
+    <filedep name="/Lapbase.Bold/global.asax" />
+  </filedeps>
+</preserve>

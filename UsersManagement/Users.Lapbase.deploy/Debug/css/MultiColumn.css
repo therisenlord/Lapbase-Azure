@@ -1,0 +1,17 @@
+﻿#ajax_listOfOptions{
+    position:absolute;	/* Never change this one */
+    width:250px;	    /* Width of box */
+    height:150px;	    /* Height of box */
+    overflow:auto;	    /* Scrolling features */
+    border:1px solid #A9A9A9;	/* Dark green border */
+    background-color:#FFF;	    /* White background color */
+    text-align:left;
+    font-size:0.9em;
+    z-index:100;
+    
+}
+#ajax_listOfOptions_iframe{
+    background-color:#F1A;/*F00*/
+    position:absolute;
+    z-index:5;
+}

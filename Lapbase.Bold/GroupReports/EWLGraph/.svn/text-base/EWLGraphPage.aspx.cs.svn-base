@@ -1,0 +1,303 @@
+#region Using Modules
+using System;
+using System.Data;
+//using System.Data.OleDb;
+using System.Data.SqlClient;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Globalization;
+using dotnetCHARTING;
+#endregion Using Modules
+
+public partial class Reports_EWLGraph_EWLGraphPage : System.Web.UI.Page
+{
+    #region Global Variables
+    GlobalClass gClass = new GlobalClass();
+    DataSet dsReport = new DataSet("dsSchema");
+    #endregion 
+
+    //------------------------------------------------------------------------------------------------------------
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+        try
+        {
+            txtHCulture.Value = Request.Cookies["CultureInfo"].Value;
+            txtHApplicationURL.Value = Request.Url.Scheme + "://" + Request.Url.Host + "/";
+            if (gClass.IsUserLogoned(Session.SessionID, Request.Cookies["UserPracticeCode"].Value, Request.Url.Host))
+            {
+                if (!IsPostBack)
+                {
+                    FetchEWLData();
+                    SetChartConfig();
+                }
+            }
+            else
+                gClass.ReturnToLoginPage(Request.Url.Host, Request.Cookies["LanguageCode"].Value, Response);
+        }
+        catch (Exception err)
+        {
+            string strLanguageCode;
+            try
+            {
+                strLanguageCode = Request.Cookies["LanguageCode"].Value;
+                gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "EWL Graph", "Loading Files Data (Page_Load function)", err.ToString());
+            }
+            catch { strLanguageCode = "en-US"; }
+            gClass.ReturnToLoginPage(Request.Url.Host, strLanguageCode, Response);
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    #region private void FetchEWLData
+    private void FetchEWLData()
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Rep_EWL_WLGraphFullPage", true);
+
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["PID"]);
+        cmdSelect.Parameters.Add("@ImperialFlag", SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals("True"); 
+        
+        dsReport.Tables.Add(gClass.FetchData(cmdSelect, "tblReport").Tables[0].Copy());
+        if (dsReport.Tables[0].Rows.Count > 0)
+        {
+            //AddDateSeenDate();
+            LoadEWLData();
+        }
+    }
+    #endregion
+
+    #region private void AddDateSeenDate
+    private void AddDateSeenDate()
+    {
+        DataColumn tempDC = new DataColumn();
+
+        tempDC.DataType = Type.GetType("System.DateTime");
+        tempDC.Caption = "VisitDate";
+        tempDC.ColumnName = "VisitDate";
+        dsReport.Tables[0].Columns.Add(tempDC);
+
+        System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo(Context.Request.Cookies["CultureInfo"].Value, true);
+        //System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo(GlobalClass.CultureInfo, true);
+        for (int Xh = 0; Xh < dsReport.Tables[0].Rows.Count; Xh++)
+        {
+            dsReport.Tables[0].Rows[Xh]["VisitDate"] = Convert.ToDateTime(dsReport.Tables[0].Rows[Xh]["DateSeen"].ToString());
+        }
+        dsReport.AcceptChanges();
+    }
+    #endregion
+
+    //------------------------------------------------------------------------------------------------------------
+    #region private void LoadEWLData
+    private void LoadEWLData()
+    {
+        DataView    dvReport = dsReport.Tables[0].DefaultView;
+
+        valueOfPatientName.Text = dvReport[0]["PatientName"].ToString();
+        valueOfAGE.Text = dvReport[0]["AGE"].ToString();
+        if (dvReport[0]["VisitWeeksFlag"].ToString() == "3")
+        {
+            lblSurgeryDate.Text = "Zero Date : ";
+            valueOfLapBandDate.Text = dvReport[0]["strZeroDate"].ToString();
+        }
+        else
+        {
+            lblSurgeryDate.Text = "Surgery Date : ";
+            valueOfLapBandDate.Text = dvReport[0]["strLapBandDate"].ToString();
+        }
+        valueOfCurrentWeight.Text = Math.Round(Convert.ToDecimal(dvReport[0]["CurrentWeight"].ToString())).ToString();
+        valueOfTargetWeight.Text = Math.Round(Convert.ToDecimal(dvReport[0]["TargetWeight"].ToString())).ToString();
+        valueOfInitBMI.Text = dvReport[0]["InitBMI"].ToString();
+        valueOfStartWeight.Text = Math.Round(Convert.ToDecimal(dvReport[0]["StartWeight"].ToString())).ToString();
+        valueOfStartWeight_Unit.Text = dsReport.Tables[0].Rows[0]["WeightMeasurment"].ToString();
+        valueOfCurrentWeight_Unit.Text = dsReport.Tables[0].Rows[0]["WeightMeasurment"].ToString();
+        valueOfTargetWeight_Unit.Text = dsReport.Tables[0].Rows[0]["WeightMeasurment"].ToString();
+
+        //if (dsReport.Tables.Count > 0)
+        //    gClass.FindMinMax(dsReport.Tables[0].DefaultView, "EWL", ref strMax, ref strMin);
+        return;
+    }
+    #endregion
+
+    //#region private void FindMinMax(string FieldName)
+    //public void FindMinMax(DataView dvTemp, string FieldName, ref string strMax, ref string strMin)
+    //{
+    //    decimal minValue = 0, maxValue = 100;
+
+    //    dvTemp.Sort = FieldName + " ASC";
+    //    strMin = dvTemp[0][FieldName].ToString();
+    //    dvTemp.Sort = FieldName + " DESC";
+    //    strMax = dvTemp[0][FieldName].ToString();
+    //    dvTemp.Dispose();
+
+    //    try { minValue = Convert.ToDecimal(strMin); }
+    //    catch { minValue = 0; }
+
+    //    try { maxValue = Convert.ToDecimal(strMax); }
+    //    catch { maxValue = 100; }
+
+    //    if ((maxValue > 0) && (maxValue < 100)) maxValue = 100;
+    //    else if ((maxValue >= 100) && (maxValue < 150)) maxValue = 150;
+    //    else if ((maxValue >= 150) && (maxValue < 200)) maxValue = 200;
+    //    else maxValue = 300;
+
+    //    if (minValue > 0) minValue = 0;
+    //    else if ((minValue < 0) && (minValue > -50)) minValue = -50;
+    //    else if ((minValue <= -50) && (minValue > -100)) minValue = -100;
+    //    else minValue = -200;
+
+    //    strMin = minValue.ToString();
+    //    strMax = maxValue.ToString();
+    //}
+    //#endregion
+
+    //------------------------------------------------------------------------------------------------------------
+    private void SetChartConfig()
+    {
+        //chartEWL.Title = "% Excess Weight Loss";
+        chartEWL.TempDirectory = "../../temp";
+        chartEWL.Mentor = false;
+        chartEWL.Use3D = false;
+        chartEWL.Width = 800;
+        chartEWL.Height = 450;
+        chartEWL.Debug = true;
+        chartEWL.LegendBox.Visible = false;
+        
+        chartEWL.DefaultSeries.Type = SeriesType.Line;
+        chartEWL.DefaultSeries.Line.Width = 2;
+        chartEWL.DefaultSeries.Line.DashStyle = DashStyle.Dash;
+        chartEWL.XAxis.Label.Text = "Date Seen";
+        chartEWL.YAxis.Label.Text = "% EWL";
+
+        chartEWL.XAxis.Scale = Scale.Time;
+        chartEWL.XAxis.TimeScaleLabels.RangeMode = TimeScaleLabelRangeMode.Dynamic;
+        chartEWL.XAxis.TimeScaleLabels.Mode = TimeScaleLabelMode.Dynamic;
+        chartEWL.XAxis.TimeScaleLabels.YearTick.SetAllColors(Color.DarkRed);
+        
+        SeriesCollection mySC = getEWLData();
+        chartEWL.SeriesCollection.Add(mySC);
+        return;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    SeriesCollection getEWLData()
+    {
+        SeriesCollection SC = new SeriesCollection();
+        DateTime dtDateSeen = new DateTime();
+
+        Series s = new Series();
+        s.Name = "%EWL Series";
+
+        System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo(Request.Cookies["CultureInfo"].Value, true);
+        for (int b = 0; b < dsReport.Tables[0].Rows.Count; b++)
+        {
+            try
+            {
+                Element e = new Element();
+                e.Name = dsReport.Tables[0].Rows[b]["DateSeen"].ToString(); //VisitDate
+                dtDateSeen = Convert.ToDateTime(dsReport.Tables[0].Rows[b]["DateSeen"].ToString());
+                e.XDateTime = dtDateSeen;
+                e.YValue = Convert.ToDouble(dsReport.Tables[0].Rows[b]["EWL"].ToString());
+
+                //e.ShowValue = true;
+                s.Elements.Add(e);
+            }
+            catch { }
+        }
+        SC.Add(s);
+        //}
+        SC[0].PaletteName = Palette.Two;//.Color = Color.FromArgb(49,255,49);
+        return SC;
+    }
+
+    //#region protected void rptViewer_Init
+    //protected void rptViewer_Init(object sender, EventArgs e)
+    //{
+
+    //    ((ReportViewer)sender).ProcessingMode                   = ProcessingMode.Local;
+    //    ((ReportViewer)sender).LocalReport.EnableExternalImages = false;
+    //    ((ReportViewer)sender).LocalReport.EnableHyperlinks     = false;
+    //    ((ReportViewer)sender).ShowBackButton                   = false;
+    //    ((ReportViewer)sender).ShowDocumentMapButton            = true;
+    //    ((ReportViewer)sender).ShowExportControls               = true;
+    //    ((ReportViewer)sender).ShowFindControls                 = false;
+    //    ((ReportViewer)sender).ShowParameterPrompts             = false;
+    //    ((ReportViewer)sender).ShowPageNavigationControls       = false;
+    //    ((ReportViewer)sender).ShowReportBody                   = true;
+    //    ((ReportViewer)sender).SizeToReportContent              = true;
+    //    ((ReportViewer)sender).ShowToolBar                      = false;
+    //    ((ReportViewer)sender).ShowZoomControl                  = false;
+    //    ((ReportViewer)sender).DocumentMapCollapsed             = true;
+    //    ((ReportViewer)sender).SizeToReportContent              = true;
+    //    ((ReportViewer)sender).Visible                          = true;
+    //}
+    //#endregion 
+
+    //#region protected void rptViewer_DataBinding
+    //protected void rptViewer_DataBinding(object sender, EventArgs e)
+    //{
+    //    try
+    //    {
+    //        GraphGenerator myGraph = new GraphGenerator();
+    //        strReportPath = Server.MapPath("") + "\\"; //Server.MapPath("Default.aspx").Replace("Default.aspx", "");
+    //        strReportName = Guid.NewGuid().ToString().Trim().Replace("-", "") + ".rdlc";
+    //        string[,] XFields = { { "strDateSeen", "System.String" } };
+    //        string[,] YFields = { { "EWL", "System.Decimal" } };
+
+    //        myGraph.Chart3D = false; 
+    //        myGraph.ChartType = GraphGenerator.ChartTypeList.Line;
+    //        myGraph.ChartSubType = GraphGenerator.ChartSubTypeList.SmoothLine;
+    //        myGraph.MarkerType = GraphGenerator.MarkerTypeList.Circle;
+    //        myGraph.MarkerSize = 5;
+    //        myGraph.Min = strMin;
+    //        myGraph.Max = strMax;
+    //        myGraph.GraphDescrition = "Excess Weight Lost";
+    //        myGraph.DatasetName = dsReport.DataSetName;
+    //        myGraph.XAxisCaption = "Date Seen";
+    //        myGraph.YAxisCaption = "%EWL";
+    //        myGraph.XFields = XFields;
+    //        myGraph.YFields = YFields;
+    //        myGraph.SeriesCaption = "EWL Series";
+    //        myGraph.ReportWidth = 25;
+    //        myGraph.ReportHeight = 11;
+    //        myGraph.PaletteType = GraphGenerator.PaletteTypeList.Pastel;
+            
+    //        myGraph.GenerateRdl(Response, "% Excess Weight Loss", strReportPath.Trim(), strReportName);
+    //        ((ReportViewer)sender).LocalReport.DisplayName = "EWL Report";
+    //        ((ReportViewer)sender).LocalReport.ReportPath = strReportPath + strReportName;
+
+    //        if ((dsReport.Tables.Count > 0) && (dsReport.Tables[0].Rows.Count > 0))
+    //        {
+    //            ((ReportViewer)sender).LocalReport.DataSources.Clear();
+    //            ((ReportViewer)sender).LocalReport.DataSources.Add(new ReportDataSource("dsSchema", dsReport.Tables[0]));
+    //        }
+    //    }
+    //    catch (Exception err)
+    //    {
+    //        Response.Write(err.ToString());
+    //    }
+    //}
+    //#endregion 
+
+    //#region protected void rptViewer_Unload
+    //protected void rptViewer_Unload(object sender, EventArgs e)
+    //{
+    //    ((ReportViewer)sender).Dispose();
+
+    //    try
+    //    {
+    //        System.IO.FileInfo f = new System.IO.FileInfo(strReportPath + strReportName);
+    //        f.Delete();
+    //    }
+    //    catch{}
+    //}
+    //#endregion 
+}

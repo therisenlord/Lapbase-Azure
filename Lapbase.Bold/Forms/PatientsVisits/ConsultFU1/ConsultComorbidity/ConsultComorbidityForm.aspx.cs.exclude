@@ -1,0 +1,397 @@
+using System;
+using System.Data;
+using System.Data.OleDb;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using System.Drawing;
+
+public partial class Forms_PatientsVisits_ConsultFU1_ConsultComorbidity_ConsultComorbidityForm : System.Web.UI.Page
+{
+    //=============================================================================================================
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        try
+        {
+            SetAttributes();
+            if (! IsPostBack)
+            {
+                IntialiseFormSetting(gClass);
+//                LoadConsultComorbidityData(gClass);
+            }
+        }
+        catch (Exception err)
+        {
+            try
+            {
+                gClass.LanguageCode = Application["LanguageCode"].ToString();
+                gClass.UserLogoned = true;
+            }
+            catch
+            {
+                gClass.UserLogoned = false;
+                gClass.LanguageCode = "en-au";
+            }
+            Response.Write(err.ToString() + "<br/>");
+            //Response.Redirect("~/Default.aspx");
+        }
+        return;
+    }
+
+    //=============================================================================================================
+    private void IntialiseFormSetting(GlobalClass gClass)
+    {
+        // 1) Fill tblUSysUserObjectLogs 
+        //UserObjectLogs_FX("Patients", 2);
+
+        // 3) Set Investigation Normals
+        SetInvestigationNormal(gClass);
+        return;
+    }
+
+    //=============================================================================================================
+    private void SetInvestigationNormal(GlobalClass gClass)
+    {
+        //gClass.GenderType = Convert.ToByte(rblGender.SelectedValue);
+        gClass.GenderType = 1; //Default of data for Male
+        //gClass.FetchSystemInvestigationNormals();
+
+        lblSodium1.Text = gClass.Inv_SodiumL;
+        lblSodium2.Text = gClass.Inv_SodiumH;
+        lblPotassium1.Text = gClass.Inv_PotassiumL;
+        lblPotassium2.Text = gClass.Inv_PotassiumU;
+        lblChloride1.Text = gClass.Inv_ChlorideL;
+        lblChloride2.Text = gClass.Inv_ChlorideH;
+        lblBicarbonate1.Text = gClass.Inv_BicarbonateL;
+        lblBicarbonate2.Text = gClass.Inv_BicarbonateH;
+        lblUrea1.Text = gClass.Inv_UreaL;
+        lblUrea2.Text = gClass.Inv_UreaH;
+        lblCreatinine1.Text = gClass.Inv_CreatinineL;
+        lblCreatinine2.Text = gClass.Inv_CreatinineH;
+        lblHomocysteine1.Text = gClass.Inv_HomocysteineL;
+        lblHomocysteine2.Text = gClass.Inv_HomocysteineH;
+        lblTSH1.Text = gClass.Inv_TSHL;
+        lblTSH2.Text = gClass.Inv_TSHH;
+        lblT41.Text = gClass.Inv_T4L;
+        lblT42.Text = gClass.Inv_T4H;
+        lblT31.Text = gClass.Inv_T3L;
+        lblT32.Text = gClass.Inv_T3H;
+        lblFBloodGlucose1.Text = gClass.Inv_FBloodGlucoseL;
+        lblFBloodGlucose2.Text = gClass.Inv_FBloodGlucoseH;
+
+        lblHBA1C1.Text = gClass.Inv_HBA1CL;
+        lblHBA1C2.Text = gClass.Inv_HBA1CH;
+        lblFSerumInsulin1.Text = gClass.Inv_FSerumInsulinL;
+        lblFSerumInsulin2.Text = gClass.Inv_FSerumInsulinH;
+        lblTriglycerides1.Text = gClass.Inv_TriglyceridesL;
+        lblTriglycerides2.Text = gClass.Inv_TriglyceridesH;
+        lblTotalCholesterol1.Text = gClass.Inv_TotalCholesterolL;
+        lblTotalCholesterol2.Text = gClass.Inv_TotalCholesterolH;
+        lblHDLCholesterol1.Text = gClass.Inv_TotalCholesterolL;
+        lblHDLCholesterol2.Text = gClass.Inv_TotalCholesterolH;
+        lblCalcium1.Text = gClass.Inv_CalciumL;
+        lblCalcium2.Text = gClass.Inv_CalciumH;
+        lblPhosphate1.Text = gClass.Inv_PhosphateL;
+        lblPhosphate2.Text = gClass.Inv_PhosphateH;
+        lblVitD1.Text = gClass.Inv_VitDL;
+        lblVitD2.Text = gClass.Inv_VitDH;
+        lblAlkPhos1.Text = gClass.Inv_AlkPhosL;
+        lblAlkPhos2.Text = gClass.Inv_AlkPhosH;
+        lblALT1.Text = gClass.Inv_ALTL;
+        lblALT2.Text = gClass.Inv_ALTH;
+
+        lblAST1.Text = gClass.Inv_Astl;
+        lblAST2.Text = gClass.Inv_ASTH;
+        lblGGT1.Text = gClass.Inv_GGTL;
+        lblGGT2.Text = gClass.Inv_GGTH;
+
+        lblTProtein1.Text = gClass.Inv_TproteinL;
+        lblTProtein2.Text = gClass.Inv_TproteinH;
+        lblAlbumin1.Text = gClass.Inv_AlbuminL;
+        lblAlbumin2.Text = gClass.Inv_AlbuminH;
+
+        lblHomocysteine1.Text = gClass.Inv_HomocysteineL;
+        lblHomocysteine2.Text = gClass.Inv_HomocysteineH;
+        lblHemoglobin1.Text = gClass.Inv_HomocysteineL;
+        lblHemoglobin2.Text = gClass.Inv_HomocysteineH;
+        lblWCC1.Text = gClass.Inv_WCCL;
+        lblWCC2.Text = gClass.Inv_WCCH;
+
+        lblPlatelets1.Text = gClass.Inv_PlateletsL;
+        lblPlatelets2.Text = gClass.Inv_PlateletsH;
+        lblIron1.Text = gClass.Inv_IronL;
+        lblIron2.Text = gClass.Inv_IronH;
+        lblFerritin1.Text = gClass.Inv_FerritinL;
+        lblFerritin2.Text = gClass.Inv_FerritinH;
+
+        lblTransferrin1.Text = gClass.Inv_TransferrinL;
+        lblTransferrin2.Text = gClass.Inv_TransferrinH;
+
+        lblIBC1.Text = gClass.Inv_IBCL;
+        lblIBC2.Text = gClass.Inv_IBCH;
+        lblFolate1.Text = gClass.Inv_FolateL;
+        lblFolate2.Text = gClass.Inv_FolateH;
+        lblB121.Text = gClass.Inv_B12L;
+        lblB122.Text = gClass.Inv_B12H;
+        return;
+    }
+
+    //=============================================================================================================
+    private void SetAttributes()
+    {
+        cmbAsthmaCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbAsthmaCurrentLevel_OnSelectedIndexChange);
+        cmbRefluxCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbRefluxCurrentLevel_OnSelectedIndexChange);
+        cmbSleepCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbSleepCurrentLevel_OnSelectedIndexChange);
+        cmbFertilityCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbFertilityCurrentLevel_OnSelectedIndexChange);
+        cmbIncontinenceCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbIncontinenceCurrentLevel_OnSelectedIndexChange);
+        cmbBackCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbBackCurrentLevel_OnSelectedIndexChange);
+        cmbArthritisCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbArthritisCurrentLevel_OnSelectedIndexChange);
+        cmbCVDLevelCurrentLevel.selectedIndexChanged = new System.EventHandler(cmbCVDLevelCurrentLevel_OnSelectedIndexChange);
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbAsthmaCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHAsthmaResolved.Value = (cmbAsthmaCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtAsthmaResolvedDate.Text = (cmbAsthmaCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHAsthmaResolvedLevel.Value = (cmbAsthmaCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbRefluxCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHRefluxResolved.Value = (cmbRefluxCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtRefluxResolvedDate.Text = (cmbRefluxCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHRefluxResolvedLevel.Value = (cmbRefluxCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbSleepCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHSleepResolved.Value = (cmbSleepCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtSleepResolvedDate.Text = (cmbSleepCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHSleepResolvedLevel.Value = (cmbSleepCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbFertilityCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHFertilityResolved.Value = (cmbFertilityCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtFertilityResolvedDate.Text = (cmbFertilityCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHFertilityResolvedLevel.Value = (cmbFertilityCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbIncontinenceCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHIncontinenceResolved.Value = (cmbIncontinenceCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtIncontinenceResolvedDate.Text = (cmbIncontinenceCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHIncontinenceResolvedLevel.Value = (cmbIncontinenceCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbBackCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHBackResolved.Value = (cmbBackCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtBackResolvedDate.Text = (cmbBackCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHBackResolvedLevel.Value = (cmbBackCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbArthritisCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHArthritisResolved.Value = (cmbArthritisCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtArthritisResolvedDate.Text = (cmbArthritisCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHArthritisResolvedLevel.Value = (cmbArthritisCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void cmbCVDLevelCurrentLevel_OnSelectedIndexChange(object sender, System.EventArgs e)
+    {
+        txtHCVDLevelResolved.Value = (cmbArthritisCurrentLevel.SelectedValue == "1") ? "1" : "0";
+        txtCVDLevelResolvedDate.Text = (cmbArthritisCurrentLevel.SelectedValue == "1") ? txtDateSeen.Text.Trim() : "";
+        txtHCVDLevelResolvedLevel.Value = (cmbArthritisCurrentLevel.SelectedValue == "1") ? "1" : "";
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnDetails_Click(object sender, System.EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SetViewPage(vDetail, ((LinkButton)sender).ID);
+        //gClass.SetSubMenuButton(Page, 5, 0, SubMenuButtonQty);
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnInvestigations_Click(object sender, System.EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SetViewPage(vInvestigations, ((LinkButton)sender).ID);
+        //gClass.SetSubMenuButton(Page, 5, 1, SubMenuButtonQty);
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnMajor_Comorbidities_Click(object sender, System.EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SetViewPage(vMajor_Comorbidities, ((LinkButton)sender).ID);
+        //gClass.SetSubMenuButton(Page, 5, 2, SubMenuButtonQty);
+        return;
+    }
+
+    
+
+    //=============================================================================================================
+    protected void btnMinor_Comorbidities_Click(object sender, System.EventArgs e)
+    {
+        GlobalClass gClass = new GlobalClass();
+        mvConsult.SetActiveView(vMinor_Comorbidities);
+        //gClass.SetSubMenuButton(Page, 5, 3, SubMenuButtonQty);
+        return;
+    }
+
+    //=============================================================================================================
+    private void SetViewPage(View MyView, string strID)
+    {
+        mvConsult.SetActiveView(MyView);
+        return;
+    }
+
+    //=============================================================================================================
+    protected void btnSave_Click(object sender, System.EventArgs e)
+    {
+        //if (CanToSave())
+        //{
+        //    OleDbCommand cmdUpdate = new OleDbCommand();
+        //    GlobalClass gClass = new GlobalClass();
+        //    SqlClassLibrary.SqlCommandClass sqlClass = new SqlClassLibrary.SqlCommandClass();
+
+        //    switch (Application["DBEngine"].ToString().ToUpper())
+        //    {
+        //        case "ACCESS":
+        //            cmdUpdate.CommandType = CommandType.Text;
+        //            cmdUpdate.CommandText = sqlClass.ConsultInvestigation_cmdUpdate;
+        //            break;
+
+        //        case "SQLSERVER":
+        //            cmdUpdate.CommandType = CommandType.StoredProcedure;
+        //            cmdUpdate.CommandText = "dbo.sp_ConsultComorbidity_UpdateData";
+        //            break;
+        //    }
+        //}
+        return;
+    }
+
+    //=============================================================================================================
+    private bool CanToSave()
+    {
+        GlobalClass gClass = new GlobalClass();
+        bool flag = true;
+        string strResult = "";
+        string[,] Fields = new string[,] {     // All fields that should be checked their values before Insert/Update
+                    // Page 1- Detail fields
+                    {"lblDateSeen_Detail", "txtDateSeen", "Date"},
+                    {"lblWeight_Detail", "txtWeight", "Double"},
+                    {"lblDateNextVisit", "txtDateNextVisit", "Date"},
+                    {"lblSystolic", "txtSystolic", "integer"}, 
+                    {"lblDiastolic", "txtBaseDiastolicBP" , "integer" }, 
+                    {"lblHypertensionResolvedDate", "txtHypertensionResolvedDate", "Date"}, //PWD
+                    {"lblBloodSugar", "txtBaseFBloodGlucose_P2", "double" } , 
+                    {"lblDiabetesResolvedDate", "txtDiabetesResolvedDate", "Date"}, //PWD
+                    {"lblBaseTriglycerides", "txtBaseTriglycerides", "Double"},
+                    {"lblBaseTotalCholesterol" , "txtBaseTotalCholesterol", "double"},
+                    {"lblHDLChol","txtBaseHDLCholesterol", "double"},
+                    {"lblLDLChol", "txtBaseLDLCholesterol", "double"},
+                    {"lblLipidsResolvedDate", "txtLipidsResolvedDate", "date"}, //PWD
+
+                    // Page 2- Investigation fields
+                    {"lblBaseBMR","txtBaseBMR", "Double"},
+                    {"lblBaseImpedance", "txtBaseImpedance", "Double"},
+                    {"lblBaseFatPercent","txtBaseFatPercent", "Double"},
+                    {"lblBaseFreeFatMass", "txtBaseFreeFatMass", "Double"},
+                    {"lblBaseTotalBodyWater", "txtBaseTotalBodyWater", "Double"},
+                    {"lblBaseHemoglobin", "txtBaseHemoglobin", "Double"},
+                    {"lblBaseWCC", "txtBaseWCC", "Double"},
+                    {"lblBasePlatelets" , "txtBasePlatelets", "Double"},
+                    {"lblBaseIron", "txtBaseIron", "Double"},
+                    {"lblBaseFerritin", "txtBaseFerritin", "Double"}, 
+                    {"lblBaseTransferrin", "txtBaseTransferrin", "Double"},
+                    {"lblBaseIBC", "txtBaseIBC", "Double"},
+                    {"lblBaseFolate", "txtBaseFolate", "Double"},
+                    {"lblBaseB12", "txtBaseB12", "Double"},
+                    {"lblBaseFBloodGlucose", "txtBaseFBloodGlucose", "Double"},
+                    {"lblBaseHBA1C", "txtBaseHBA1C", "Double"},
+                    {"lblBaseFSerumInsulin", "txtBaseFSerumInsulin", "Double"},
+                    {"lblLipids_Triglycerides", "txtLipids_BaseTriglycerides", "Integer"},
+                    {"lblLipids_TotalCholesterol", "txtLipids_BaseTotalCholesterol", "Integer"},
+                    {"lblLipids_HDL_Cholesterol", "txtLipids_BaseHDLCholesterol", "Integer"},
+                    {"lblBaseBilirubin", "txtBaseBilirubin", "Integer"},
+                    {"lblBaseAlkalinePhos", "txtBaseAlkPhos", "Double"},
+                    {"lblBaseALT", "txtBaseALT", "Double"},
+                    {"lblBaseAST", "txtBaseAST", "Double"},
+                    {"lblBaseGGT", "txtBaseGGT", "Double"},
+                    {"lblBaseTProtein", "txtBaseTProtein", "Interger"},
+                    {"lblBaseAlbumin", "txtBaseAlbumin", "Double"},
+                    {"lblBaseSodium", "txtBaseSodium", "Double"},
+                    {"lblBasePotassium", "txtBasePotassium", "Double"},
+                    {"lblBaseChloride", "txtBaseChloride", "Double"},
+                    {"lblBaseBicarbonate", "txtBaseBicarbonate", "Double"},
+                    {"lblBaseUrea", "txtBaseUrea", "Double"},
+                    {"lblBaseCreatinine", "txtBaseCreatinine", "Double"},
+                    {"lblBaseHomocysteine", "txtBaseHomocysteine", "Integer" },
+                    {"lblBaseTSH", "txtBaseTSH", "Integer"},  
+                    {"lblBaseT4", "txtBaseT4", "Integer"},
+                    {"lblBaseT3", "txtBaseT3", "Integer"},
+                    {"lblBaseCalcium", "txtBaseCalcium", "Double"},
+                    {"lblBasePhosphate", "txtBasePhosphate", "Double"},
+                    {"lblBaseVitD", "txtBaseVitD", "Double"},
+                    // Page 3- Major Comorbidities
+                    {"lblBaseAsthmaLevel", "txtAsthmaResolvedDate", "Date"},
+                    {"lblRefluxResolvedDate", "txtRefluxResolvedDate", "Date"},
+                    {"lblSleepResolvedDate", "txtSleepResolvedDate", "date"},
+
+                    // Page 4- Minor Comorbidities
+                    {"lblFertilityResolvedDate", "txtFertilityResolvedDate", "Date"},
+                    {"lblIncontinenceResolvedDate", "txtIncontinenceResolvedDate", "Date"},
+                    {"lblBackResolvedDate", "txtBackResolvedDate", "Date"},
+                    {"lblArthritisResolvedDate", "txtArthritisResolvedDate", "date"},
+                    {"lblCVDLevelResolvedDate", "txtCVDLevelResolvedDate", "date"}
+        };
+
+        try
+        {
+            //gClass.CultureInfo = Application["CultureInfo"].ToString();
+            for (int Idx = 0; Idx < Fields.Length / Fields.Rank; Idx++)
+            {
+                ((TableCell)FindControl(Fields[Idx, 0])).ForeColor = Color.Blue;
+                if (gClass.CheckFields(((UserControl_TextBoxWUCtrl)FindControl(Fields[Idx, 1])).Text.Trim(), Fields[Idx, 2], out strResult) == "ERROR")
+                {
+                    ((TableCell)FindControl(Fields[Idx, 0])).ForeColor = Color.Red;
+                    flag = false;
+                }
+            }
+        }
+        catch
+        {
+            flag = false;
+        }
+
+        return (flag);
+    }
+}

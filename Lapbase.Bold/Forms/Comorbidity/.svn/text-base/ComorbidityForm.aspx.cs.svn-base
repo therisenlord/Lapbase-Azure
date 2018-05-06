@@ -1,0 +1,141 @@
+using System;
+using System.Data;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.HtmlControls;
+
+public partial class Forms_Comorbidity_ComorbidityForm : System.Web.UI.Page
+{
+    GlobalClass gClass = new GlobalClass();
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+        
+        try
+        {
+            Page.Culture = Request.Cookies["CultureInfo"].Value;
+            gClass.LanguageCode = Request.Cookies["LanguageCode"].Value;
+            bodyComorbidity.Attributes.Add("onload", "javascript:LoadPatientComplicationHistoryData();");
+            txtHApplicationURL.Value = Request.Url.Scheme + "://" + Request.Url.Host + Request.ApplicationPath + "/";
+            bodyComorbidity.Attributes.Add("onload", "javascript:InitialPage();");
+            
+            if (! gClass.IsUserLogoned(Session.SessionID, Request.Cookies["UserPracticeCode"].Value, Request.Url.Host))
+            {
+                gClass.ReturnToLoginPage(Request.Url.Host, Request.Cookies["LanguageCode"].Value, Response);
+                return;
+            }
+        }
+        catch (Exception err)
+        {
+            string strLanguageCode;
+            try
+            {
+                strLanguageCode = Request.Cookies["LanguageCode"].Value;
+                gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Visit Comorbidity Form", "Page_Load function", err.ToString());
+            }
+            catch { strLanguageCode = "en-US"; }
+            gClass.ReturnToLoginPage(Request.Url.Host, strLanguageCode, Response);
+        }
+    }
+    #endregion
+
+    #region private void CheckQueryStringParams()
+    private void CheckQueryStringParams()
+    {
+        switch (Request.QueryString["QSN"].ToUpper())
+        {
+            case "LOADCOMORBIDITY" :
+                FetchComorbidityProc();
+                break;
+
+            case "LOADINVESTIGATION" :
+                FetchInvestigationProc();
+                break;
+        }
+    }
+    #endregion
+
+    #region private void FetchComorbidityProc()
+    private void FetchComorbidityProc()
+    {
+        System.Data.SqlClient.SqlCommand  cmdSelect = new System.Data.SqlClient.SqlCommand();
+        DataSet dsData;
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_ConsultFU1_LoadComorbidityVisits", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+        cmdSelect.Parameters.Add("@ImperialFlag", System.Data.SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals("True");
+
+        dsData = gClass.FetchData(cmdSelect, "tblComorbidities");
+        DataColumn dcTemp = new DataColumn();
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = "";
+        dcTemp.ColumnName = "tempDateSeen";
+        dcTemp.Caption = "tempDateSeen";
+        dsData.Tables[0].Columns.Add(dcTemp);
+
+        for (int Idx = 0; Idx < dsData.Tables[0].Rows.Count; Idx++)
+            try { dsData.Tables[0].Rows[Idx]["tempDateSeen"] = Convert.ToDateTime(dsData.Tables[0].Rows[Idx]["DateSeen"].ToString().Trim()).ToShortDateString(); }
+            catch { }
+        dsData.AcceptChanges();
+
+        Response.Clear();
+        Response.Write(gClass.ShowSchema(dsData, Server.MapPath(".") + @"\Includes\ComorbidityXSLTFile.xsl"));
+        Response.End();
+        return;
+    }
+    #endregion
+
+    #region private void FetchInvestigationProc()
+    private void FetchInvestigationProc()
+    {
+        System.Data.SqlClient.SqlCommand    cmdSelectSystemNormals = new System.Data.SqlClient.SqlCommand(),
+                                            cmdSelect = new System.Data.SqlClient.SqlCommand();
+        DataSet dsData;
+        DataTable MyTable = new DataTable("tblInvestigations");
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_SystemNormals_LoadData", true);
+        gClass.MakeStoreProcedureName(ref cmdSelectSystemNormals, "sp_SystemNormals_LoadData", true);
+
+        cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["OrganizationCode"].Value);
+        cmdSelect.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        cmdSelect.Parameters.Add("@PatientID", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+        cmdSelect.Parameters.Add("@ImperialFlag", System.Data.SqlDbType.Bit).Value = Request.Cookies["Imperial"].Value.Equals("True");
+
+        cmdSelectSystemNormals.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+
+        
+        dsData = gClass.FetchData(cmdSelectSystemNormals, "tblSystemNormals");
+        MyTable = gClass.FetchData(cmdSelect, "tblInvestigations").Tables[0].Copy();
+        
+        DataColumn dcTemp = new DataColumn();
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = "";
+        dcTemp.ColumnName = "tempDateSeen";
+        dcTemp.Caption = "tempDateSeen";
+        MyTable.Columns.Add(dcTemp);
+
+        for (int Idx = 0; Idx < MyTable.Rows.Count; Idx++)
+            try{MyTable.Rows[Idx]["tempDateSeen"] = Convert.ToDateTime(MyTable.Rows[Idx]["DateSeen"].ToString().Trim()).ToShortDateString();}
+            catch { }
+        dsData.Tables.Add(MyTable);
+        dsData.AcceptChanges();
+
+        Response.Clear();
+        Response.Write(gClass.ShowSchema(dsData, Server.MapPath(".") + @"\Includes\InvestigationXSLTFile.xsl"));
+        Response.End();
+    }
+    #endregion
+
+    #region protected void btnSaveComorbidity_OnClick(object sender, EventArgs e)
+    protected void btnSaveComorbidity_OnClick(object sender, EventArgs e)
+    {
+    }
+    #endregion
+}

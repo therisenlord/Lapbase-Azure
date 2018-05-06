@@ -1,0 +1,77 @@
+﻿.scrollTable table {
+	border-collapse: collapse;
+	}
+.scrollTable th {
+	background-color: #969696;
+	color: #ffffff;
+	font-weight: bold;
+	}
+.scrollTable table td {
+	margin: 0px;
+	padding: 3px 10px;
+	white-space: nowrap;
+	vertical-align: top;
+	text-align: center;
+	font-size: x-small;
+	border-top: solid 1px #aaaaaa;
+	border-bottom: solid 1px #aaaaaa;background-color: #fff;
+	}
+.scrollTable #headerRow table th {
+	margin: 0px;
+	padding: 1px 10px;
+	vertical-align: top;
+	text-align: center;
+	font-size: x-small;
+	white-space: nowrap;
+	border-top: solid 1px #aaaaaa;
+	border-bottom: solid 1px #aaaaaa;
+	}
+.scrollTable #headerColumn table th {
+	/* vertical-align: top; */
+	margin: 0px;
+	padding: 3px 10px;/* Needs to be the same as table content padding - or else lose alignment */
+	white-space: nowrap;
+	border-top: solid 1px #aaaaaa;
+	border-bottom: solid 1px #aaaaaa;
+	}
+.scrollTable #hbc, .scrollTable #hlip, .scrollTable #hlfts, .scrollTable #htfts {
+	background-color: #b0b0b0;
+	}
+.scrollTable #hdiab, .scrollTable #hhema, .scrollTable #helec, .scrollTable #hcalc {
+	background-color: #c0c0c0;
+	}
+.scrollTable div#headerColumn table tr th div, div#headerColumn table tr td {
+	text-align: right;
+	font-weight: normal;
+	font-size: x-small;
+	background-color: #969696;
+	color: #ffffff;
+	}
+.scrollTable .range {
+	color: #F0F0F0;
+	text-align: center;
+	font-size: x-small;
+	font-weight: normal;
+	}
+.scrollTable #corner table th {
+	/* vertical-align: top; */
+	text-align: right;
+	margin: 0px;
+	padding: 1px 10px;
+	white-space: nowrap;
+	border-top: solid 1px #aaaaaa; /* Border-top for IE  */
+	border-bottom: solid 1px #aaaaaa;
+	}
+.scrollTable #cornDate, .scrollTable #cornWgt, .scrollTable #cornEWL {
+	/* background-color: #ff0000; */
+	color: #FFFFFF;
+	font-weight: normal;
+	/* vertical-align: bottom; */
+	vertical-align: top;
+    padding-bottom: 3px;
+	font-size: x-small;
+	
+	}
+.scrollTable #dateDiv {
+	text-align: center; 
+	}

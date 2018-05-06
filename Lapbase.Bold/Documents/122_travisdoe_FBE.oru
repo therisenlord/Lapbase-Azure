@@ -1,0 +1,25 @@
+MSH|^~\&|ULTRA_V3.1|DOREVITCH PATHOLOGY|ULTRA_V3.1|MDPIT|201201201025||ORU^R01|94619284|P|2.3|220400514||ER||AU
+PID||NA|NA^^^^UR~xxxxxxxxxx4^^^AUSHIC^MC||DOE^TRAVIS||19941213|M|||31 HAZE DR^^WARRAGUL^VIC^3820||^^^^^^12345678||||||xxxxxxxxxx
+PV1||O|GSP^GPS SPECIMEN RECEPTION|||||039974CL^GIN^D|9999999F^ROGERS^JAMES
+ORC|RE||12-8765432-FBE-0||R
+OBR|1||12-8765432-FBE-0|FBE^FULL BLOOD EXAMINATION||20111220|20120117|||GSP||||201201171038||039974CL^GIN^D^ ^^DR|||||6JROD|201201201025||HM|F||^^^20111220|6GPS^WEBSTRO^^ ^^DR
+OBX|1|NM|718-7^HAEMOGLOBIN^LN||149|g/L|130-180||||F|||201201171109|TRA|i_michy
+OBX|2|NM|4544-3^ PCV:^LN||0.43||0.40-0.54||||F|||201201171109|TRA|i_michy
+OBX|3|NM|789-8^ Red Cell Count:^LN||5.15|x10*12/L|4.50-6.50||||F|||201201171109|TRA|i_michy
+OBX|4|NM|786-4^MCHC^LN||345|g/L|320-360||||F|||201201171109|TRA|i_michy
+OBX|5|NM|787-2^MEAN CORPUSCULAR VOLUME^LN||84|fL|80-96||||F|||201201171109|TRA|i_michy
+OBX|6|NM|785-6^MEAN CORPUSCULAR HB^LN||29|pg|27-32||||F|||201201171109|TRA|i_michy
+OBX|7|NM|6690-2^ Total Leucocyte Count:^LN||8.5|x10*9/L|4.0-11.0||||F|||201201171109|TRA|i_michy
+OBX|8|NM|770-8^ Neutrophils:^LN||33|%|||||F|||201201171109|TRA|i_michy
+OBX|9|NM|736-9^ Lymphoctyes:^LN||55|%|||||F|||201201171109|TRA|i_michy
+OBX|10|NM|5905-5^ Monocytes:^LN||10|%|||||F|||201201171109|TRA|i_michy
+OBX|11|NM|713-8^EOSINOPHILS^LN||1|%|||||F|||201201171109|TRA|i_michy
+OBX|12|NM|706-2^ Basophils:^LN||1|%|||||F|||201201171109|TRA|i_michy
+OBX|13|NM|777-3^ Platelet Count:^LN||319|x10*9/L|150-450||||F|||201201171109|TRA|i_michy
+OBX|14|FT|5909-7^BLOOD FILM^LN||Moderate numbers of atypical lymphocytes present. Show normal morphology show normal morphology \.br\I.M. test - positive. (Lab. interest, no charge). \.br\The findings are those of Infectious Mononucleosis.||||||F|||201201171457|TRA|isakr
+OBX|15|NM|751-8^ Neutrophils:^LN||2.8|x10*9/L|2.0-8.0||||F|||201201201025|TRA
+OBX|16|NM|731-0^LYMPHOCYTES (ABSOLUTE)^LN||4.7|x10*9/L|1.0-4.0|H|||F|||201201201025|TRA
+OBX|17|NM|742-7^MONOCYTES (ABSOLUTE)^LN||0.8|x10*9/L|< 1.0||||F|||201201201025|TRA
+OBX|18|NM|711-2^        Eosinophil Count :^LN||0.1|x10*9/L|< 0.5||||F|||201201201025|TRA
+OBX|19|NM|704-7^BASOPHILS (ABSOLUTE)^LN||0.1|x10*9/L|< 0.2||||F|||201201201025|TRA
+OBX|20|FT|^^PIT||100 Start Patient  :      DOE,TRAVIS\.br\101                       31 HAZE DR, WARRAGUL, VIC 3820\.br\104                       Birthdate: 13/12/1994    Age: Y17    Sex: M\.br\105                       Telephone: 12345678\.br\109 \.br\110 Your Reference :      \.br\111 Lab  Reference :      12-8765432\.br\112 Medicare Number:      xxxxxxxxxx\.br\115 Phone Enquiries:                                       \.br\119 \.br\121 Referred By... :      DR. D GIN\.br\123 Addressee      :                            9999999F\.br\129 \.br\200 Start of Result:\.br\201 Specimen       :      \.br\203 Requested      :      20/12/2011\.br\204 Collection     :      17/01/2012  00:00\.br\205 Name of Test   :      FBE-0 (Full Blood Examination)\.br\206 Reported       :      20/01/2012  10:25\.br\208 Test Category  :      R\.br\209 \.br\210 Normal Result  :      N\.br\211 Requested Tests:      FBE, FES, MBI, LIP, ESU\.br\212 RequestComplete:      Y\.br\299 \.br\301 Clinical Notes : fasting\.br\301 \.br\301    FULL BLOOD EXAMINATION\.br\301                                                                 (x10\S\9  /L)\.br\301     HB :  149  g/L    (130-180)         WHITE CELL COUNT:   8.5 (4.0-11.0)\.br\301     HCT: 0.43  L/L    (0.40-0.54)       Neutrophils:  33%   2.8 (2.0-8.0)\.br\301     RCC: 5.15  x10\S\12  /L(4.50-6.50) *  Lymphocytes:  55%   \R\SBLD\R\\R\FG04\R\4.7\R\EBLD\R\\R\FG99\R\ (1.0-4.0)\.br\301     MCV:   84  fL     (80-96)           Monocytes  :  10%   0.8 (0.0-1.0)\.br\301     MCH:   29  pg     (27-32)           Eosinophils:   1%   0.1 (0.0-0.5)\.br\301     MCHC  345  g/L    (320-360)         Basophils  :   1%   0.1 (0.0-0.2)\.br\301 \.br\301                                         PLATELETS       :   319 (150-450)\.br\301 \.br\301  FILM: WBC...Moderate numbers of atypical lymphocytes present.\.br\301        Red cells and platelets show normal morphology.\.br\301 \.br\301  COMMENT: There is a mild lymphocytosis.\.br\301         I.M. test - positive. (Lab. interest, no charge).\.br\301         The findings are those of Infectious Mononucleosis.\.br\301 \.br\301  Requested Tests : FBE, FES, MBI, LIP, ESU\.br\309 \.br\390 End of Report:\.br\|||A|||F

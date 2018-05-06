@@ -1,0 +1,16 @@
+to do initial import
+- right click folder
+- import
+
+to export
+- go to folder
+- checkout
+
+
+
+
+
+
+UserManagement - done
+website - 
+lapbase - 

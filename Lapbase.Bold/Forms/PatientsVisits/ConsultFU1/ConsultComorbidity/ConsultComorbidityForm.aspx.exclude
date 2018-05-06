@@ -1,0 +1,1318 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="ConsultComorbidityForm.aspx.cs" Inherits="Forms_PatientsVisits_ConsultFU1_ConsultComorbidity_ConsultComorbidityForm" %>
+<%@ Register TagPrefix = "wucDoctor" TagName = "DoctorsList" Src = "~/UserControl/DoctorsListWUCtrl.ascx"%>
+<%@ Register TagPrefix = "wucSystemCode" TagName = "SystemCodeList" Src = "~/UserControl/SystemCodeWUCtrl.ascx"%>
+<%@ Register TagPrefix = "wucPatient" TagName = "PatientTitle" Src = "~/UserControl/PatientTitleDataWUCtrl.ascx" %>
+<%@ Register TagPrefix = "wucTextBox" TagName = "TextBox" Src = "~/UserControl/TextBoxWUCtrl.ascx" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head runat="server">
+    <link href="http://lapbase.com/app_css/v2/admin_common.css" rel="stylesheet" type="text/css" />
+	<title>LAPBASE - A DATA MANAGER FOR BARIATRIC SURGERY</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body runat = "server" id="bodyConsultComorbidity" >
+<table width="100%">
+  <tr>
+    <td>
+	
+	<table width="950%">
+	  <tr>
+		<td>
+			<div class="headerArea">
+				<div class="helpArea">
+					<div class="edition"><img src="~/img/logo.gif" alt="." runat = "server"/></div>
+				</div>
+				
+				<div class="menuArea">
+					<div id="mainMnu">
+						<ul id="navlist">
+						    <li><asp:HyperLink id="mnuItem07" NavigateUrl="~/Forms/PatientsVisits/PatientsVisitsForm.aspx" runat = "server" Text = "Home" /></li>
+							<li><asp:HyperLink id="mnuItem04" NavigateUrl="~/Reports/GroupReport/GroupReportsForm.aspx" runat = "Server" Text = "Reports" /></li>
+							<li><asp:HyperLink id="mnuItem05" NavigateUrl="~/Forms/MenuSetup/MenuSetupForm.aspx" runat = "server" Text="System" /></li>
+							<li><asp:HyperLink id="mnuItem06" NavigateUrl="#" runat = "Server" Text = "Design" /></li>
+							<li><asp:HyperLink id="mnuItem08" NavigateUrl="~/Default.aspx" runat = "Server" Text = "Log Out" /></li>
+						</ul>                     
+					</div>
+				</div>
+			</div>
+		</td>
+	  </tr>
+	</table>
+	
+	<div class="contentPanelWrp">
+		<div class="contentPanel">
+		<form id="frmConsultComorbidity" runat="server">
+		    <div class="subMnuWrpLeft">
+			    <div class="subMnuWrpRight">
+				    <div id="subMnu">
+					    
+				    </div>
+			    </div>
+		    </div>
+		    <table width="100%">
+		    <tr>
+		      <td align="left" valign="top">
+			    <div class="mainContentPanel">
+				    <div class="controlBar">
+				        <p>
+				            <asp:LinkButton id="sub_mnuItem01" runat="server" OnClick="btnDetails_Click" Text = "Details" 
+				                    OnClientClick = "for(int idx = 2; idx <= 6; Idx++) document.getElementById('sub_mnuItem0' + idx).disabled = true;"/>
+				            <asp:LinkButton id="sub_mnuItem02" runat="server" OnClick="btnInvestigations_Click"  Text = "Investigations" 
+				                    OnClientClick = "for(int idx = 1; idx <= 6; Idx++) if (idx != 2) document.getElementById('sub_mnuItem0' + idx).disabled = true;"/> 
+				            <asp:LinkButton id="sub_mnuItem03" runat="server" OnClick="btnMajor_Comorbidities_Click" Text = "Major Comorbidities" 
+				                    OnClientClick = "for(int idx = 1; idx <= 6; Idx++) if (idx != 3) document.getElementById('sub_mnuItem0' + idx).disabled = true;"/> 
+				            <asp:LinkButton id="sub_mnuItem04" runat="server" OnClick="btnMinor_Comorbidities_Click"  Text = "Minor Comorbidities" 
+				                    OnClientClick = "for(int idx = 1; idx <= 6; Idx++) if (idx != 4) document.getElementById('sub_mnuItem0' + idx).disabled = true;"/>
+				        </p>
+				        <asp:Button id="btnSave" runat="server" Text="Save" OnClick = "btnSave_Click"/>
+				    </div>
+				    <table class="mainContent">
+				      <tr>
+					    <td>
+                            <table width = "100%">
+                                <tr>
+                                    <td>
+                                        <wucPatient:PatientTitle runat = "server" ID = "tblPatientTitle" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <asp:MultiView id="mvConsult" runat="server" ActiveViewIndex="0">
+                                            <asp:View id="vDetail" runat="server">
+                                                <table width = "100%" class="TRBL">
+                                                    <tr>
+                                                        <td style="Vertical-Align :Top">
+                                                            <table width = "100%" >
+                                                                <tr>
+                                                                    <td style="width:40%">
+                                                                        <asp:Label runat = "Server" ID = "lblDateSeen_Detail" Text = "Date Seen" />
+                                                                    </td>
+                                                                    <td style="width:60%">
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtDateSeen" MaxLength = "10" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td >
+                                                                        <asp:Label runat = "Server" ID = "lblWeight_Detail" Text = "Weight" />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtWeight" MaxLength = "10" Width = "50%"/> &nbsp;
+                                                                        <asp:Label runat = "server" ID = "lblWeight_Unit" ForeColor = "Green"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "Server" ID = "lblSeenby" Text = "Seen by" />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucDoctor:DoctorsList runat = "server" ID = "cmbDoctorsList" Width= "80" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "Server" ID = "lblDateNextVisit" Text = "Next Comorbidity Visit" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtDateNextVisit" MaxLength = "2" Width = "15%"/> &nbsp;
+                                                                        <asp:Label runat = "Server" Text = "months" Id = "lblMonths"/> &nbsp;
+                                                                        <wucTextBox:TextBox Id = "txtNextComorbidVisit" MaxLength = "10" runat = "Server" Width = "40%"/>
+                                                                    </td> 
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td colspan = "2" />
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="Width:33%; Vertical-Align:top; Border-Width :1px" >
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "6">
+                                                                        <asp:Label Text = "Blood Pressure" ID = "lblBloodPressure" runat = "server" ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label Text = "Systolic" ID= "lblSystolic" runat = "server" />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseSystolicBP" Width = "100%" MaxLength = "50"/>
+                                                                    </td>
+                                                                    <td style="Width:5%" />
+                                                                    <td style="width:20%">
+                                                                        <asp:Label ID = "lblDiastolic" Text = "Diastolic" runat = "server" />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID="txtBaseDiastolicBP" Width = "80%" MaxLength="50"/>
+                                                                    </td>
+                                                                    <td />
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID="lblHypertensive" text = "Hypertensive" />
+                                                                    </td>
+                                                                    <td colspan = "5" >
+                                                                        <asp:CheckBox runat = "server" ID="chkBaseHypertensionProblems" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan = "5">
+                                                                        <asp:Label runat = "server" Text = "Treatment" Id= "lblBloodTreatment"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan = "5">
+                                                                        <wucTextBox:TextBox runat = "server" ID="txtBaseBloodPressureRxDetails" TextMode = "MultiLine" MaxLength="1024"
+                                                                            Width="100%" Rows = "4"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan = "2">
+                                                                        <asp:Label runat = "Server" Text = "Resolved" ID = "lblHypertensionResolved" /> &nbsp;
+                                                                        <asp:CheckBox runat = "server" ID = "chkHypertensionResolved" />
+                                                                    </td>
+                                                                    <td colspan = "3">
+                                                                        <asp:Label runat = "Server" Text = "Date" ID = "lblHypertensionResolvedDate" /> &nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" id = "txtHypertensionResolvedDate" MaxLength = "10" Width = "50%"/>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td style="Width:33%; Vertical-Align:top; Border-Width:1px" >
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "3">
+                                                                        <asp:Label Text = "DIABETES" ID = "lblDiabetes" runat = "server" ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID= "lblBloodSugar" text = "Blood sugar" />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <wucTextBox:TextBox runat = "Server" ID= "txtBaseFBloodGlucose_P2" Width = "95%" />
+                                                                    </td>
+                                                                    <td style="width:60%" rowspan = "2"/>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "Server" ID="lblDiabetic" text = "Diabetic" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:CheckBox runat = "server" ID="chkBaseDiabetesProblems" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan = "3">
+                                                                        <asp:Label runat = "server" ID= "lblDiabetTreatment" Text = "Treatment" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan = "3">
+                                                                        <wucTextBox:TextBox runat = "Server" ID= "txtBaseDiabetesRxDetails" MaxLength = "1024" TextMode = "MultiLine"
+                                                                            Width="100%" Rows="4"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td colspan = "2">
+                                                                        <asp:Label runat = "Server" Text = "Resolved" ID = "lblDiabetesResolved" /> &nbsp;
+                                                                        <asp:CheckBox runat = "server" ID = "chkDiabetesResolved" /> 
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "Server" Text = "Date" ID = "lblDiabetesResolvedDate" /> &nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" id = "txtDiabetesResolvedDate" MaxLength = "10" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td style="Width:33%; Vertical-Align:top; Border-Width :1px" >
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "6" >
+                                                                        <asp:Label text="LIPIDS" ID = "lblLipids" ForeColor = "BLUE" runat = "server"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "Triglycerides" runat = "Server" ID= "lblBaseTriglycerides" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" id = "txtBaseTriglycerides" Width = "90%" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "T. Cholest." runat = "server" ID = "lblBaseTotalCholesterol" />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseTotalCholesterol" Width = "90%" />
+                                                                    </td>
+                                                                    <td colspan = "2" />
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style =" width:20%">
+                                                                        <asp:Label Text = "Lipid Prob." runat = "Server" ID= "lblLipidProblems" />
+                                                                    </td>
+                                                                    <td style =" width:15%" >
+                                                                        <asp:CheckBox runat = "server" ID= "chkBaseLipidProblems" />
+                                                                    </td>
+                                                                    <td style =" width:20%">
+                                                                        <asp:Label Text = "HDL Chol." runat = "server" ID = "lblHDLChol" />
+                                                                    </td>
+                                                                    <td style =" width:15%">
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseHDLCholesterol" Width = "90%" />
+                                                                    </td>
+                                                                    <td style =" width:15%">
+                                                                        <asp:Label Text = "LDL Chol" runat = "server" ID = "lblLDLChol" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseLDLCholesterol" Width = "90%" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td colspan = "6" >
+                                                                        <asp:Label text="Treatment" ID = "lblLIPIDSTreatment" runat = "server"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan = "6" >
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseLipidRxDetails" Width = "100%" TextMode = "MultiLine"
+                                                                            Rows = "4" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td colspan = "3">
+                                                                        <asp:Label runat = "Server" Text = "Resolved" ID = "lblLipidsResolved" /> &nbsp;
+                                                                        <asp:CheckBox runat = "server" ID = "chkLipidsResolved" />
+                                                                    </td>
+                                                                    <td colspan = "3">
+                                                                        <asp:Label runat = "Server" Text = "Date" ID = "lblLipidsResolvedDate" /> &nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" id = "txtLipidsResolvedDate" MaxLength = "10" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </asp:View>
+                                            
+                                            <asp:View id="vInvestigations" runat="server">
+                                                <table width = "100%" class="TRBL">
+                                                    <tr>
+                                                        <td rowspan = "2" style="Width:30%; Vertical-Align :Top; Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "2">
+                                                                        <asp:Label Text = "Body Composition" ID = "lblBodyComposition" runat = "server" ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style ="width:35%">
+                                                                        <asp:Label Text = "BMR" ID= "lblBaseBMR" runat = "server" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseBMR" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label Text = "Impedance" ID= "lblBaseImpedance" runat = "server" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseImpedance" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label Text = "Fat %" ID= "lblBaseFatPercent" runat = "server" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseFatPercent" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label Text = "Fat Mass" ID= "lblBaseFatMass" runat = "server" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseFatMass" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label Text = "Free Fat Mass" ID= "lblBaseFreeFatMass" runat = "server" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseFreeFatMass" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                    <asp:Label Text = "Total body water" ID= "lblBaseTotalBodyWater" runat = "server" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseTotalBodyWater" Width = "50%" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td style="Width:35%; Vertical-Align :top; Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "4">
+                                                                        <asp:Label Text = "Diabetic" ID = "lblDiabetic_TC" runat = "server" ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style ="width:30%">
+                                                                        <asp:Label Text = "F.Blood Sugar" runat = "Server" ID= "lblBaseFBloodGlucose_P3" />
+                                                                    </td>
+                                                                    <td style ="width:30%">
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseFBloodGlucose_P3" width = "95%"/>
+                                                                    </td>
+                                                                    <td style ="width:20%">
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblFBloodGlucose1" />
+                                                                    </td>
+                                                                    <td style ="width:20%">
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblFBloodGlucose2" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "HbA1c" runat = "Server" ID= "lblBaseHBA1C" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseHBA1C" width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblHBA1C1" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblHBA1C2" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "F Serum Insulin" runat = "Server" ID= "lblBaseFSerumInsulin" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseFSerumInsulin" width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblFSerumInsulin1" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblFSerumInsulin2" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        
+                                                        <td rowspan = "3" style="Vertical-Align:top; Border-Width :1px">
+                                                            <table width = "100%"> 
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "4">
+                                                                        <asp:Label Text = "Electrolytes" ID = "lblElectrolytes" runat = "server"   ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label Text = "Na" runat = "Server" ID= "lblBaseSodium"  />
+                                                                    </td>
+                                                                    <td style="width:30%">
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseSodium"  width = "95%"/>
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblSodium1"  />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblSodium2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "K" runat = "Server" ID= "lblBasePotassium"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBasePotassium"  width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblPotassium1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblPotassium2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "Cl" runat = "Server" ID= "lblBaseChloride"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseChloride"  width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblChloride1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblChloride2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "HCO3" runat = "Server" ID= "lblBaseBicarbonate"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseBicarbonate"  width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblBicarbonate1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblBicarbonate2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "Urea" runat = "Server" ID= "lblBaseUrea"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseUrea"  width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblUrea1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblUrea2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "Creatinine" runat = "Server" ID= "lblBaseCreatinine"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseCreatinine"  width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblCreatinine1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblCreatinine2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "H.cysteine" runat = "Server" ID= "lblBaseHomocysteine"  />
+                                                                    </td>
+                                                                    
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseHomocysteine"  width = "95%"/>
+                                                                    </td>
+                                                                    
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblHomocysteine1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblHomocysteine2"  />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td rowspan = "2" style="Vertical-Align:top; Border-Width :1px">
+                                                            <table width = "100%"> 
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "4">
+                                                                        <asp:Label Text = "Lipids" ID = "lblLipids_Title" runat = "server"   ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style ="width:30%">
+                                                                        <asp:Label Text = "Triglycerides" runat = "Server" ID= "lblLipids_Triglycerides"  Width="30%"/>
+                                                                    </td>
+                                                                    <td style ="width:30%">
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtLipids_BaseTriglycerides"  width = "95%"/>
+                                                                    </td>
+                                                                    <td style ="width:20%">
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblTriglycerides1" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblTriglycerides2" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "Total Cholesterol" runat = "Server" ID= "lblLipids_TotalCholesterol"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtLipids_BaseTotalCholesterol"  width = "95%"/>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblTotalCholesterol1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblTotalCholesterol2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "HDL Cholesterol" runat = "Server" ID= "lblLipids_HDL_Cholesterol"  />
+                                                                    </td>
+                                                                    
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtLipids_BaseHDLCholesterol"  width = "95%"/>
+                                                                    </td>
+                                                                    
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblHDLCholesterol1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label Text = "" runat = "Server" ID= "lblHDLCholesterol2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label Text = "LDL Cholesterol" runat = "Server" ID= "lblBaseLDLCholesterol_Lipids"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBaseLDLCholesterol_Lipids"  width = "95%"/>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td rowspan = "3" style="Vertical-Align:top; Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "4">
+                                                                        <asp:Label Text = "Hematology" ID = "lblHematology" runat = "server"   ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label runat = "server" Text = "Hemoglobin" ID = "lblBaseHemoglobin" Width = "30%" />
+                                                                    </td>
+                                                                    <td style="width:30%">
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseHemoglobin" Width = "95%"  />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID = "lblHemoglobin1"   Width = "20%" />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID = "lblHemoglobin2"   Width = "20%" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "WCC" ID = "lblBaseWCC"  />
+                                                                    </td>
+                                                                    <td  >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseWCC" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblWCC1"  Text = ""  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblWCC2"  Text = ""  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Platelets" ID = "lblBasePlatelets"  />
+                                                                    </td>
+                                                                    <td  >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBasePlatelets" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblPlatelets1"  Text = ""  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblPlatelets2"  Text = ""  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Iron" ID = "lblBaseIron"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseIron" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblIron1"  Text = ""  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblIron2"  Text = ""  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Ferritin" ID = "lblBaseFerritin"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseFerritin" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblFerritin1"  Text = ""  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblFerritin2"  Text = ""  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Transferrin" ID = "lblBaseTransferrin"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseTransferrin" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblTransferrin1"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblTransferrin2"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "IBC" ID = "lblBaseIBC"  />
+                                                                    </td>
+                                                                    <td  >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseIBC" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblIBC1"   />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblIBC2"   />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Folate" ID = "lblBaseFolate"  />
+                                                                    </td>
+                                                                    <td  >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseFolate" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblFolate1"  Text = ""  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblFolate2"  Text = ""  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "B12" ID = "lblBaseB12"  />
+                                                                    </td>
+                                                                    <td  >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseB12" Width = "95%"  />
+                                                                    </td>
+                                                                    
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblB121"  Text = ""  />
+                                                                    </td>
+                                                                    <td>
+                                                                    <asp:Label runat = "server" ID = "lblB122"  Text = ""  />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td rowspan = "2" style="Vertical-Align:top; Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "4">
+                                                                        <asp:Label Text = "LFT's" ID = "lblLFTs" runat = "server"   ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label runat = "server" Text = "Bilirubin" ID = "lblBaseBilirubin"  />
+                                                                    </td>
+                                                                    <td style="Width :30%">
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseBilirubin" Width = "95%"  />
+                                                                    </td>
+                                                                    <td style="Width :20%">
+                                                                        <asp:Label runat = "server" ID = "lblBilirubin1"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <asp:Label runat = "server" ID = "lblBilirubin2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Alkaline Phos." ID = "lblBaseAlkalinePhos"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseAlkPhos" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblAlkPhos1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:TableCell runat = "server" ID = "lblAlkPhos2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "ALT" ID = "lblBaseALT"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseALT" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblALT1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblALT2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "AST" ID = "lblBaseAST"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseAST" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblAST1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblAST2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "GGT" ID = "lblBaseGGT"   />
+                                                                    </td>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseGGT" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblGGT1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblGGT2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "TProtein" ID = "lblBaseTProtein"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseTProtein" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblTProtein1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblTProtein2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Albumin" ID = "lblBaseAlbumin"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseAlbumin" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblAlbumin1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblAlbumin2"    />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        
+                                                        <td style="Vertical-Align:top; Border-Width :1px">
+                                                            <table width = "100%">
+                                                                <tr class = "HTR" >
+                                                                    <td colspan="4" >
+                                                                        <asp:Label Text = "TFT's" ID = "lblTFTs" runat = "server"   ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label runat = "server" Text = "TSH" ID = "lblBaseTSH"   />
+                                                                    </td>
+                                                                    <td style="width:30%">
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseTSH" Width = "95%"  />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID = "lblTSH1"   />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID = "lblTSH2"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "T4" ID = "lblBaseT4"  />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseT4" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblT41"   />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblT42"    />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "T3" ID = "lblBaseT3"   />
+                                                                    </td>
+                                                                    <td  >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseT3" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblT31"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblT32"    />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td rowspan = "2" style="Vertical-Align:top; Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr class = "HTR" >
+                                                                    <td colspan = "4">
+                                                                        <asp:Label Text = "Calcium" ID = "lblCalcium_Title" runat = "server"   ForeColor = "BLUE"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td style="width:30%">
+                                                                        <asp:Label runat = "server" Text = "Calcium" ID = "lblBaseCalcium"  />
+                                                                    </td>
+                                                                    <td style="width:30%">
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseCalcium" Width = "95%"  />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID = "lblCalcium1"    />
+                                                                    </td>
+                                                                    <td style="width:20%">
+                                                                        <asp:Label runat = "server" ID = "lblCalcium2"   />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Phosphate" ID = "lblBasePhosphate"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBasePhosphate" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblPhosphate1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblPhosphate2"   />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" Text = "Vitamin D" ID = "lblBaseVitD"   />
+                                                                    </td>
+                                                                    <td >
+                                                                        <wucTextBox:TextBox runat = "server" ID = "txtBaseVitD" Width = "95%"  />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblVitD1"    />
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblVitD2"    />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </asp:View>
+                                            
+                                            <asp:View id="vMajor_Comorbidities" runat="server">
+                                                <table width = "100%" class="TRBL">
+                                                    <tr>
+                                                        <td rowspan = "4" style="Vertical-Align:top; Width:10%">
+                                                            <asp:CheckBox runat = "server" ID= "chkBaseAsthmaProblems" /> &nbsp; 
+                                                            <asp:Label runat = "server" text = "ASTHMA" ID = "lblAsthma"  />
+                                                        </td>
+                                                        <td colspan = "2">
+                                                            <wucSystemCode:SystemCodeList runat = "server" ID="cmbAsthmaCurrentLevel"  Width = "100" CriteriaString = "QAS" autoPostBack = "true" />
+                                                        </td>
+                                                        <td style="Width:20%" rowspan = "4"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="Width :10%">
+                                                            <asp:Label runat = "Server" ID = "lblBaseAsthmaLevel" Text = "Date Resolved"  /> &nbsp;
+                                                        </td>
+                                                        <td style="Width:60%">
+                                                            <wucTextBox:TextBox runat = "server" ID = "txtAsthmaResolvedDate"  MaxLength = "10" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <asp:Label runat = "Server" ID = "lvlBaseAsthmaLevel" Text = "Baseline"  /> &nbsp;
+                                                        </td>
+                                                        <td>
+                                                            <wucSystemCode:SystemCodeList runat = "server" ID="cmbBaseAsthmaLevel"  Width = "100" CriteriaString = "QAS"
+                                                                autoPostBack = "true"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan = "3">
+                                                            <wucTextBox:TextBox id= "txtBaseAsthmaDetails" runat = "server"  TextMode = "multiLine" Rows = "3" Width = "100%" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan = "4" >
+                                                            <hr />
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td rowspan = "4"  style="vertical-align:top" >
+                                                            <asp:CheckBox runat = "server" ID= "chkBaseRefluxProblems" /> &nbsp; 
+                                                            <asp:Label runat = "server" text = "REFLUX" ID = "lblReflux"  />
+                                                        </td>
+                                                        <td colspan = "2">
+                                                            <wucSystemCode:SystemCodeList runat = "server" ID="cmbRefluxCurrentLevel"  Width = "100" CriteriaString = "QGE" 
+                                                                autoPostBack = "true"/>
+                                                        </td>
+                                                        <td style="Width:20%" rowspan = "4"/>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <asp:Label runat = "Server" ID = "lblRefluxResolvedDate" Text = "Date Resolved"  /> &nbsp;
+                                                        </td>
+                                                        <td>
+                                                            <wucTextBox:TextBox runat = "server" ID = "txtRefluxResolvedDate"  MaxLength = "10" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <asp:Label runat = "Server" ID = "lblBaseRefluxLevel" Text = "Baseline"  /> &nbsp;
+                                                        </td>
+                                                        <td>
+                                                            <wucSystemCode:SystemCodeList runat = "server" ID="cmbBaseRefluxLevel"  Width = "100" CriteriaString = "QGE"
+                                                                autoPostBack = "true"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan = "3">
+                                                            <wucTextBox:TextBox id= "txtBaseRefluxDetails" runat = "server"  TextMode = "multiLine" Rows = "3" Width = "100%" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan = "4" >
+                                                            <hr />
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td rowspan = "4"  style="Vertical-Align:top" >
+                                                            <asp:CheckBox runat = "server" ID= "chkBaseSleepProblems" /> &nbsp; 
+                                                            <asp:Label runat = "server" text = "SLEEP" ID = "lblSleep"  />
+                                                        </td>
+                                                        <td colspan = "2">
+                                                            <wucSystemCode:SystemCodeList runat = "server" ID="cmbSleepCurrentLevel"  Width = "100" CriteriaString = "QAS"
+                                                                autoPostBack = "true"/>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td>
+                                                            <asp:Label runat = "Server" ID = "lblSleepResolvedDate" Text = "Date Resolved"  /> &nbsp;
+                                                        </td>
+                                                        <td>
+                                                            <wucTextBox:TextBox runat = "server" ID = "txtSleepResolvedDate"  MaxLength = "10" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <asp:Label runat = "Server" ID = "lblBaseSleepLevel" Text = "Baseline"  /> &nbsp;
+                                                        </td>
+                                                        <td>
+                                                            <wucSystemCode:SystemCodeList runat = "server" ID="cmbBaseSleepLevel"  Width = "100" CriteriaString = "QAS"
+                                                                autoPostBack = "true"/>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td colspan = "3">
+                                                            <wucTextBox:TextBox id= "txtBaseSleepDetails" runat = "server"  TextMode = "multiLine" Rows = "3" Width = "100%" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </asp:View>
+                                            
+                                            <asp:View id="vMinor_Comorbidities" runat="server">
+                                                <table width = "100%" class="TRBL">
+                                                    <tr>
+                                                        <td style ="vertical-align:top" colspan="3">
+                                                            <asp:Label Text = "OTHER COMORBIDITIES" runat = "Server"  ID= "lblOtherComorbidities_Title"  Font-Bold ="true"  />
+                                                        </td>
+                                                        <td colspan = "3">Tick appropriate box if comorbidity applies</td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <td style="Width:30%; Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr style="Height :25; Vertical-Align:top">
+                                                                    <td>
+                                                                        <asp:CheckBox runat = "server" ID = "chkBaseFertilityProblems" Visible = "true"/> 
+                                                                        <asp:Label runat = "server" ID= "lblFertility" Text = "FERTILITY"  />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr  style="Height:25">
+                                                                    <td>
+                                                                        <asp:Label runat = "Server" Text = "Current"  id = "lblFertilityCurrentLevel" /> &nbsp;&nbsp;
+                                                                        <wucSystemCode:SystemCodeList runat = "server" ID = "cmbFertilityCurrentLevel"  CriteriaString = "QFE" Width = "70" 
+                                                                            autoPostBack = "true"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr style="Height:25">
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblFertilityResolvedDate" Text = "Date Resolved"  />&nbsp;&nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtFertilityResolvedDate"  MaxLength = "10" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr >
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseFertilityDetails" Width = "95%"  TextMode = "MultiLine" Rows = "3" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        
+                                                        <td style="Width:30%; Border-Width:1px">
+                                                            <table width = "100%" >
+                                                                <tr  style="Height:25; Vertical-Align:top">
+                                                                    <td>
+                                                                        <asp:CheckBox runat = "server" ID = "chkBaseIncontinenceProblems"  Visible = "true" />
+                                                                        <asp:Label runat = "server" ID= "lblIncontinence" Text = "INCONTINENCE"  />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr  style="Height :25">
+                                                                    <td>
+                                                                        <asp:Label ID="lblIncontinenceCurrentLevel" runat = "Server" Text = "Current"  /> &nbsp;&nbsp;
+                                                                        <wucSystemCode:SystemCodeList runat = "server" ID = "cmbIncontinenceCurrentLevel"  CriteriaString = "QSYO" Width = "70" 
+                                                                            autoPostBack = "true"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr style="Height:25">
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblIncontinenceResolvedDate" Text = "Date Resolved"  />&nbsp;&nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtIncontinenceResolvedDate"  MaxLength = "10"  />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr >
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseIncontinenceDetails" Width = "95%"  TextMode = "MultiLine" Rows = "3" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        
+                                                        <td style="Width:30%; Border-Width :1px">
+                                                            <table width = "100%">
+                                                                <tr style="Height:25; Vertical-Align :top">
+                                                                    <td>
+                                                                        <asp:CheckBox runat = "server" ID = "chkBaseBackProblems"  Visible = "true"/> 
+                                                                        <asp:Label runat = "server" ID= "lblLowerBack" Text = "LOWER BACK "  />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr  style="Height :25">
+                                                                    <td>
+                                                                        <asp:Label ID="lblBackCurrentLevel" runat = "Server" Text = "Current"  /> &nbsp;&nbsp;
+                                                                        <wucSystemCode:SystemCodeList runat = "server" ID = "cmbBackCurrentLevel"  CriteriaString = "QSYO" Width = "70" 
+                                                                            autoPostBack = "true"/>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr style="Height:25">
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblBackResolvedDate" Text = "Date Resolved"  />&nbsp;&nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtBackResolvedDate"  MaxLength = "10" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseBackDetails" Width = "95%"  TextMode = "MultiLine" Rows = "3" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="Border-Width :1px">
+                                                            <table width = "100%">
+                                                                <tr  style="Height :25; Vertical-Align :top">
+                                                                    <td>
+                                                                        <asp:CheckBox runat = "server" ID = "chkBaseArthritisProblems"  Visible = "true"/> 
+                                                                        <asp:Label runat = "server" ID= "lblJointPain" Text = "JOINT PAIN"  />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr  style="Height:25">
+                                                                    <td>
+                                                                        <asp:Label runat = "Server" Text = "Current"  id = "lblcmbArthritisCurrentLevel" /> &nbsp;&nbsp;
+                                                                        <wucSystemCode:SystemCodeList runat = "server" ID = "cmbArthritisCurrentLevel"  CriteriaString = "QFE" Width = "70" 
+                                                                            autoPostBack = "true"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr style="Height:25">
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblArthritisResolvedDate" Text = "Date Resolved"  />&nbsp;&nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtArthritisResolvedDate"  MaxLength = "10" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseArthritisDetails" Width = "95%"  TextMode = "MultiLine" Rows = "3" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        
+                                                        <td style="Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr style="Height:25; Vertical-Align :top">
+                                                                    <td>
+                                                                        <asp:CheckBox runat = "server" ID = "chkBaseCVDProblems"  Visible = "true"/> 
+                                                                        <asp:Label runat = "server" ID= "lblCardiovascular" Text = "CARDIOVASCULAR"  />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr style="Height :25">
+                                                                    <td>
+                                                                        <asp:Label ID="lblcmbCVDLevelCurrentLevel" runat = "Server" Text = "Current"  /> &nbsp;&nbsp;
+                                                                        <wucSystemCode:SystemCodeList runat = "server" ID = "cmbCVDLevelCurrentLevel"  CriteriaString = "QSYO" Width = "70" 
+                                                                            autoPostBack = "true"/>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr style="Height :25">
+                                                                    <td>
+                                                                        <asp:Label runat = "server" ID = "lblCVDLevelResolvedDate" Text = "Date Resolved"  />&nbsp;&nbsp;
+                                                                        <wucTextBox:TextBox runat = "Server" ID = "txtCVDLevelResolvedDate"  MaxLength = "10" />
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                                <tr>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseCVDDetails" Width = "95%"  TextMode = "MultiLine" Rows = "3" />
+                                                                    </td>
+                                                                </tr>
+                                                             </table>
+                                                        </td>
+                                                        
+                                                        <td style="Border-Width :1px">
+                                                            <table width = "100%" >
+                                                                <tr  style="Height :75">
+                                                                    <td style="Vertical-Align:top">
+                                                                        <asp:CheckBox runat = "server" ID = "chkOtherComorbidities" Visible="false"/> 
+                                                                        <asp:Label runat = "server" ID= "lblOtherComorbidities" Text = "OTHER COMORBIDITIES"  />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <wucTextBox:TextBox runat = "server" ID= "txtBaseOtherDetails" Width = "95%"  TextMode = "MultiLine" Rows = "3" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        <//td>
+                                                    </tr>
+                                                </table>
+                                            </asp:View>
+                                        </asp:MultiView>
+                                    </td>
+                                </tr>
+                            </table>
+					    </td>
+					    </tr>
+				    </table>
+    				
+			    </div>
+		     </td>
+		    </tr>
+		    </table>
+		    <asp:HiddenField runat = "server" ID = "txtHConsultID" />
+            <asp:HiddenField runat = "Server" ID = "txtHHypertensionResolvedSystolic" />
+            <asp:HiddenField runat = "Server" ID = "txtHHypertensionResolvedDiastolic" />
+            <asp:HiddenField runat = "Server" ID = "txtHDiabetesResolvedFBglucose" />
+            <asp:HiddenField runat = "server" ID = "txtHAsthmaResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHAsthmaResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHRefluxResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHRefluxResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHSleepResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHSleepResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHFertilityResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHFertilityResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHArthritisResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHArthritisResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHIncontinenceResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHIncontinenceResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHCVDLevelResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHCVDLevelResolvedLevel" />
+            <asp:HiddenField runat = "Server" ID = "txtHBackResolved" />
+            <asp:HiddenField runat = "Server" ID = "txtHBackResolvedLevel" />
+		</form>
+		</div>
+	</div>
+	
+	<img class="spacer" src="~/img/blank.gif" width="960" height="1" alt = "." runat= "server"/>
+	</td>
+  </tr>
+</table>
+</body>
+</html>

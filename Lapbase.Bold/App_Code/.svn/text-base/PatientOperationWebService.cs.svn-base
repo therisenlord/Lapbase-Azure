@@ -1,0 +1,397 @@
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Data.OleDb;
+using System.Web;
+using System.Collections;
+using System.Web.Services;
+using System.Web.Services.Protocols;
+using System.Xml;
+using System.Globalization;
+
+/// <summary>
+/// Summary description for PatientOperationWebService
+/// </summary>
+[WebService(Namespace = "http://tempuri.org/")]
+[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+public class PatientOperationWebService : System.Web.Services.WebService
+{
+
+    public PatientOperationWebService()
+    {
+
+        //Uncomment the following line if using designed components 
+        //InitializeComponent(); 
+    }
+
+    #region [WebMethod] public XmlDocument CheckSurgeon
+    [WebMethod]
+    public XmlDocument CheckSurgeon(int SurgeonCode) 
+    {
+        GlobalClass gClass = new GlobalClass();
+        SqlCommand cmdSelect = new SqlCommand();
+        string strReturn;
+        DataSet dsDoctor;
+
+        try
+        {
+            gClass.MakeStoreProcedureName(ref cmdSelect, "sp_Doctors_SelectDoctorByDoctorID", true);
+            cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["OrganizationCode"].Value);
+            cmdSelect.Parameters.Add("@DoctorID", SqlDbType.Int).Value = Convert.ToInt32(SurgeonCode);
+            cmdSelect.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+
+            dsDoctor = gClass.FetchData(cmdSelect, "tblDoctor");
+            strReturn = dsDoctor.GetXml();
+        }
+        catch (Exception err)
+        {
+            strReturn = err.ToString();
+        }
+        return gClass.GetXmlDocument(Guid.NewGuid(), strReturn);
+    }
+    #endregion
+
+    #region [WebMethod] public XmlDocument SaveOperationProc
+    [WebMethod]
+    public XmlDocument SaveOperationProc(
+            int PageNo, string AdmitID, string SurgeonId, string OperationDate, string Duration, string SurgeryType,
+            string Approach, string Category, string Group, string BloodLoss, string Banded, string TubeSize,
+            string BPDIlealLength, string VBGStomaWrap, string RouxLimbLength, string BPDChannelLength,
+            string VBGStomaSize, string RouxEnterostomy, string ReservoirSite, string BPDDuodenalSwitch,
+            string RouxColic, string BalloonVolume, string BPDStomachSize, string BandSize, string RouxGastric,
+            string Pathway, string GeneralNotes, string HospitalCode, string DaysInHospital, string OpWeight, 
+            string chkUpdateWeight, string StartWeight, string Imperial)
+    {
+
+        GlobalClass gClass = new GlobalClass();
+        string strReturn = "";
+
+        System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo(Context.Request.Cookies["CultureInfo"].Value, true);
+        SqlCommand cmdOperation = new SqlCommand();
+        AddOleCommandParameters(gClass, AdmitID, ref cmdOperation);
+        try
+        {
+            cmdOperation.Parameters["@PageNo"].Value = Convert.ToInt32(PageNo);
+            cmdOperation.Parameters["@OrganizationCode"].Value = Convert.ToInt32(Context.Request.Cookies["OrganizationCode"].Value);
+            cmdOperation.Parameters["@UserPracticeCode"].Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+            cmdOperation.Parameters["@PatientId"].Value = Convert.ToInt32(Context.Request.Cookies["PatientID"].Value);
+            cmdOperation.Parameters["@SurgeonId"].Value = Convert.ToInt32(SurgeonId);
+            cmdOperation.Parameters["@HospitalCode"].Value = HospitalCode;
+            try{cmdOperation.Parameters["@OperationDate"].Value = Convert.ToDateTime(OperationDate);}
+            catch{cmdOperation.Parameters["@OperationDate"].Value = DBNull.Value;}
+
+            try { cmdOperation.Parameters["@Duration"].Value = Convert.ToInt32(Duration); }
+            catch{cmdOperation.Parameters["@Duration"].Value = 0;}
+            cmdOperation.Parameters["@SurgeryType"].Value = SurgeryType;
+            cmdOperation.Parameters["@Approach"].Value = Approach;
+            cmdOperation.Parameters["@Category"].Value = Category;
+            cmdOperation.Parameters["@Group"].Value = Group;
+            cmdOperation.Parameters["@BloodLoss"].Value = 0;// Convert.ToDouble(BloodLoss);
+            cmdOperation.Parameters["@Banded"].Value = Banded;
+
+            cmdOperation.Parameters["@TubeSize"].Value = TubeSize;
+            cmdOperation.Parameters["@BPDIlealLength"].Value = BPDIlealLength;
+            cmdOperation.Parameters["@VBGStomaWrap"].Value = VBGStomaWrap;
+            cmdOperation.Parameters["@RouxLimbLength"].Value = RouxLimbLength;
+            cmdOperation.Parameters["@BPDChannelLength"].Value = BPDChannelLength;
+            cmdOperation.Parameters["@VBGStomaSize"].Value = VBGStomaSize;
+            cmdOperation.Parameters["@RouxEnterostomy"].Value = RouxEnterostomy;
+            cmdOperation.Parameters["@ReservoirSite"].Value = ReservoirSite;
+            cmdOperation.Parameters["@BPDDuodenalSwitch"].Value = (BPDDuodenalSwitch == "true");
+            cmdOperation.Parameters["@RouxColic"].Value = RouxColic;
+            try { cmdOperation.Parameters["@BalloonVolume"].Value = Convert.ToDecimal(BalloonVolume); }
+            catch { cmdOperation.Parameters["@BalloonVolume"].Value = 0; }
+            try { cmdOperation.Parameters["@BPDStomachSize"].Value = Convert.ToDecimal(BPDStomachSize); }
+            catch { cmdOperation.Parameters["@BPDStomachSize"].Value = 0; }
+
+            cmdOperation.Parameters["@BandSize"].Value = BandSize;
+            cmdOperation.Parameters["@RouxGastric"].Value = RouxGastric;
+            cmdOperation.Parameters["@Pathway"].Value = Pathway;
+            cmdOperation.Parameters["@GeneralNotes"].Value = GeneralNotes;
+
+            try { cmdOperation.Parameters["@DaysInHospital"].Value = Convert.ToInt16(DaysInHospital);}
+            catch { cmdOperation.Parameters["@DaysInHospital"].Value = 0; }
+
+            try { cmdOperation.Parameters["@OpWeight"].Value = Convert.ToDecimal(OpWeight);}
+            catch { cmdOperation.Parameters["@OpWeight"].Value = 0; }
+
+            strReturn = gClass.SaveOperationData(cmdOperation);
+
+            UpdatePatientData_InPatientWeightDataTable(chkUpdateWeight == "true", OperationDate, OpWeight, SurgeryType, Approach, Category, Group, StartWeight, Imperial);
+
+            if (AdmitID == "0") // means new Patient Data, data must be inserted
+                gClass.SaveUserLogFile( Context.Request.Cookies["UserPracticeCode"].Value,
+                                        Context.Request.Cookies["Logon_UserName"].Value,
+                                        Context.Request.Url.Host, 
+                                        "Operatoin Form", 2, "Add Operation - PID : " , "Operation Code",
+                                        strReturn);
+            else
+            {
+                strReturn = AdmitID; // UPDATE, DON'T CHANGE IT!!!!
+                gClass.SaveUserLogFile( Context.Request.Cookies["UserPracticeCode"].Value,
+                                        Context.Request.Cookies["Logon_UserName"].Value,
+                                        Context.Request.Url.Host, 
+                                        "Operatoin Form", 2, "Modify Operation", "Operation Code", AdmitID);
+            }
+
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                        Context.Request.Cookies["Logon_UserName"].Value, "Operation  PID : " + Context.Request.Cookies["PatientID"].Value, "Data saving Operation - SaveOperationProc function", err.ToString());
+            strReturn = "-1";
+        }
+        return gClass.GetXmlDocument(Guid.NewGuid(), strReturn);
+    }
+    #endregion
+
+    #region [WebMethod] public XmlDocument SaveOperationProc
+    [WebMethod]
+    public XmlDocument SaveOperationProc_OtherDetails(
+            int PageNo, string AdmitID, string StartNeck, string StartWaist, string StartHip, string PreviousSurgery,
+            string PrevAbdoSurgery1, string PrevAbdoSurgery2, string PrevAbdoSurgery3, string PrevAbdoSurgeryNotes,
+            string PrevPelvicSurgery, string PrevPelvicSurgery1,
+            string PrevPelvicSurgery2, string PrevPelvicSurgery3, string PrevPelvicSurgeryNotes,
+            string ComcomitantSurgery, string ComcomitantSurgery1,
+            string ComcomitantSurgery2, string ComcomitantSurgery3, string ComcomitantSurgeryNotes)
+    {
+        GlobalClass gClass = new GlobalClass();
+        string strReturn = "";
+
+        SqlCommand cmdOperation = new SqlCommand(); //CreateOLECommand(AdmitID);
+        try
+        {
+            AddOleCommandParameters(gClass, AdmitID, ref cmdOperation);
+
+            cmdOperation.Parameters["@PageNo"].Value = Convert.ToInt32(PageNo);
+            cmdOperation.Parameters["@OrganizationCode"].Value = Convert.ToInt32(Context.Request.Cookies["OrganizationCode"].Value);
+            cmdOperation.Parameters["@UserPracticeCode"].Value = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+            cmdOperation.Parameters["@PatientId"].Value = Convert.ToInt32(Context.Request.Cookies["PatientID"].Value);
+            try { cmdOperation.Parameters["@StartNeck"].Value = Convert.ToDecimal(StartNeck); }
+            catch { cmdOperation.Parameters["@StartNeck"].Value = 0; }
+            try { cmdOperation.Parameters["@StartWaist"].Value = Convert.ToDecimal(StartWaist);}
+            catch { cmdOperation.Parameters["@StartWaist"].Value = 0; }
+            try { cmdOperation.Parameters["@StartHip"].Value = Convert.ToDecimal(StartHip); }
+            catch { cmdOperation.Parameters["@StartHip"].Value = 0; }
+            cmdOperation.Parameters["@PreviousSurgery"].Value = (PreviousSurgery == "true");
+            cmdOperation.Parameters["@PrevAbdoSurgery1"].Value = PrevAbdoSurgery1;
+            cmdOperation.Parameters["@PrevAbdoSurgery2"].Value = PrevAbdoSurgery2;
+            cmdOperation.Parameters["@PrevAbdoSurgery3"].Value = PrevAbdoSurgery3;
+            cmdOperation.Parameters["@PrevAbdoSurgeryNotes"].Value = PrevAbdoSurgeryNotes.Trim();
+            cmdOperation.Parameters["@PrevPelvicSurgery"].Value = (PrevPelvicSurgery == "true");
+            cmdOperation.Parameters["@PrevPelvicSurgery1"].Value = PrevPelvicSurgery1;
+            cmdOperation.Parameters["@PrevPelvicSurgery2"].Value = PrevPelvicSurgery2;
+            cmdOperation.Parameters["@PrevPelvicSurgery3"].Value = PrevPelvicSurgery3;
+            cmdOperation.Parameters["@PrevPelvicSurgeryNotes"].Value = PrevPelvicSurgeryNotes.Trim();
+            cmdOperation.Parameters["@ComcomitantSurgery"].Value = (ComcomitantSurgery == "true");
+            cmdOperation.Parameters["@ComcomitantSurgery1"].Value = ComcomitantSurgery1;
+            cmdOperation.Parameters["@ComcomitantSurgery2"].Value = ComcomitantSurgery2;
+            cmdOperation.Parameters["@ComcomitantSurgery3"].Value = ComcomitantSurgery3;
+            cmdOperation.Parameters["@ComcomitantSurgeryNotes"].Value = ComcomitantSurgeryNotes.Trim();
+
+            gClass.ExecuteDMLCommand(cmdOperation);
+            UpdatePatientData_InPatientWeightDataTable(StartNeck, StartWaist, StartHip);
+            strReturn = AdmitID; // IMPORTANT, DON'T CHANGE OR DELETE IT
+
+            gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value,
+                        Context.Request.Cookies["Logon_UserName"].Value,
+                        Context.Request.Url.Host, 
+                        "Operatoin Form", 2, "Add/Modify Operation - Other details information ", "Operation Code",
+                        strReturn);
+
+        }
+        catch (Exception err)
+        {
+            strReturn = err.ToString();
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                Context.Request.Cookies["Logon_UserName"].Value, "Operatoin Form " ,
+                "Save Operation - Other details information - SaveOperationProc_OtherDetails function", err.ToString());
+        }
+        return gClass.GetXmlDocument(Guid.NewGuid(), strReturn);
+    }
+    #endregion
+
+    #region private bool CanToSave(GlobalClass gClass)
+    private bool CanToSave(GlobalClass gClass)
+    {
+        bool flag = true;
+
+        return (flag);
+    }
+    #endregion
+
+    #region private void AddOleCommandParameters(GlobalClass gClass, string AdmitID, ref SqlCommand cmdOperation)
+    private void AddOleCommandParameters(GlobalClass gClass, string AdmitID, ref SqlCommand cmdOperation)
+    {
+        if (AdmitID == "0")
+            gClass.MakeStoreProcedureName(ref cmdOperation, "sp_PatientOperations_InsertData", true);
+        else
+            gClass.MakeStoreProcedureName(ref cmdOperation, "sp_PatientOperations_UpdateData", true);
+
+        cmdOperation.Parameters.Add("@PageNo", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@OrganizationCode", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@UserPracticeCode", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@PatientId", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@SurgeonId", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@HospitalCode", SqlDbType.VarChar, 6);
+        cmdOperation.Parameters.Add("@OperationDate", SqlDbType.DateTime);
+        cmdOperation.Parameters.Add("@Duration", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@SurgeryType", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@Approach", SqlDbType.VarChar, 50);
+        cmdOperation.Parameters.Add("@Category", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@Group", SqlDbType.VarChar, 3);
+        cmdOperation.Parameters.Add("@BloodLoss", SqlDbType.Decimal);
+        cmdOperation.Parameters.Add("@Banded", SqlDbType.Bit);
+        cmdOperation.Parameters.Add("@TubeSize", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@BPDIlealLength", SqlDbType.VarChar, 3);
+        cmdOperation.Parameters.Add("@VBGStomaWrap", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@RouxLimbLength", SqlDbType.VarChar, 3);
+        cmdOperation.Parameters.Add("@BPDChannelLength", SqlDbType.VarChar, 3);
+        cmdOperation.Parameters.Add("@VBGStomaSize", SqlDbType.VarChar, 3);
+        cmdOperation.Parameters.Add("@RouxEnterostomy", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@ReservoirSite", SqlDbType.VarChar, 30);
+        cmdOperation.Parameters.Add("@BPDDuodenalSwitch", SqlDbType.Bit);
+        cmdOperation.Parameters.Add("@RouxColic", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@BalloonVolume", SqlDbType.Decimal);
+        cmdOperation.Parameters.Add("@BPDStomachSize", SqlDbType.Decimal);
+        cmdOperation.Parameters.Add("@BandSize", SqlDbType.VarChar, 30);
+        cmdOperation.Parameters.Add("@RouxGastric", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@Pathway", SqlDbType.VarChar, 20);
+        cmdOperation.Parameters.Add("@GeneralNotes", SqlDbType.VarChar, 1024);
+        cmdOperation.Parameters.Add("@DaysInHospital", SqlDbType.Int);
+        cmdOperation.Parameters.Add("@OpWeight", SqlDbType.Decimal);
+
+        cmdOperation.Parameters.Add("@StartNeck", SqlDbType.Decimal);
+        cmdOperation.Parameters.Add("@StartWaist", SqlDbType.Decimal);
+        cmdOperation.Parameters.Add("@StartHip", SqlDbType.Decimal);
+        cmdOperation.Parameters.Add("@PreviousSurgery", SqlDbType.Bit);
+        cmdOperation.Parameters.Add("@PrevAbdoSurgery1", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@PrevAbdoSurgery2", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@PrevAbdoSurgery3", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@PrevAbdoSurgeryNotes", SqlDbType.VarChar, 255);
+        cmdOperation.Parameters.Add("@PrevPelvicSurgery", SqlDbType.Bit);
+        cmdOperation.Parameters.Add("@PrevPelvicSurgery1", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@PrevPelvicSurgery2", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@PrevPelvicSurgery3", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@PrevPelvicSurgeryNotes", SqlDbType.VarChar, 255);
+        cmdOperation.Parameters.Add("@ComcomitantSurgery", SqlDbType.Bit);
+        cmdOperation.Parameters.Add("@ComcomitantSurgery1", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@ComcomitantSurgery2", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@ComcomitantSurgery3", SqlDbType.VarChar, 10);
+        cmdOperation.Parameters.Add("@ComcomitantSurgeryNotes", SqlDbType.VarChar, 255);
+        gClass.InitialParameters(ref cmdOperation);
+        
+        if (AdmitID != "0") cmdOperation.Parameters.Add("@AdmitID", SqlDbType.Int).Value = Convert.ToInt32(AdmitID);
+
+        gClass.AddLogParameters(ref cmdOperation,
+                Context.Request.Cookies["Logon_UserName"].Value,
+                Context.Request.UserHostAddress, 
+                (AdmitID == "0") ? "insert" : "update");
+
+    }
+    #endregion
+
+    #region private void UpdatePatientData_InPatientWeightDataTable(string OperationDate, string OpWeight, SurgeryType, Approach, Category, Group, StartWeight)
+    private void UpdatePatientData_InPatientWeightDataTable(bool chkUpdateWeight, string OperationDate, string OpWeight, string SurgeryType, string Approach, string Category, string Group, string StartWeight, string Imperial)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SqlCommand cmdUpdate = CreatePatientDataUpdateCommand();
+        Decimal decResult = 0;
+        DateTime dtResult = DateTime.Now;
+        int intUserPracticeCode;
+
+        int.TryParse(Context.Request.Cookies["UserPracticeCode"].Value, out intUserPracticeCode);
+        ///gClass.FetchSystemDetails(Context.Request.Cookies["UserPracticeCode"].Value); // We call it to get Imperial status
+        gClass.FetchSystemDetails(intUserPracticeCode); // We call it to get Imperial status
+        cmdUpdate.Parameters["@OpWeight"].Value = Decimal.TryParse(OpWeight, out decResult) ? decResult : 0;
+        if (DateTime.TryParse(OperationDate, out dtResult))
+            cmdUpdate.Parameters["@OperationDate"].Value = dtResult;
+        else cmdUpdate.Parameters["@OperationDate"].Value = DBNull.Value;
+
+        if (chkUpdateWeight)
+        {
+            cmdUpdate.Parameters["@StartWeight"].Value = Decimal.TryParse(OpWeight, out decResult) ? decResult : 0;
+            if (gClass.SD_Imperial)
+                cmdUpdate.Parameters["@StartBMIWeight"].Value = Decimal.TryParse(OpWeight, out decResult) ? decResult : 0;
+            else
+                cmdUpdate.Parameters["@StartBMIWeight"].Value = Decimal.TryParse(OpWeight, out decResult) ? Convert.ToDecimal(decResult * ((decimal)0.545)) : 0;
+        }
+        else
+            if (Imperial.Equals("0"))
+                cmdUpdate.Parameters["@StartWeight"].Value = Decimal.TryParse(StartWeight, out decResult) ? decResult : 0;
+            else
+                cmdUpdate.Parameters["@StartWeight"].Value = Decimal.TryParse(StartWeight, out decResult) ? (decResult * ((decimal)0.45359237)) : 0;
+
+        cmdUpdate.Parameters["@SurgeryType"].Value = SurgeryType;
+        cmdUpdate.Parameters["@Approach"].Value = Approach;
+        cmdUpdate.Parameters["@Category"].Value = Category;
+        cmdUpdate.Parameters["@Group"].Value = Group;
+        gClass.ExecuteDMLCommand(cmdUpdate);
+
+        gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value,
+                        Context.Request.Cookies["Logon_UserName"].Value,
+                        Context.Request.Url.Host, 
+                        "Operatoin Form", 2, "Modify StartWeight, BMIWeight, SurgeryType, Approach and etc in tblPatientWeightData", "PatientID",
+                        Context.Request.Cookies["PatientID"].Value + "  Org : " + Context.Request.Cookies["OrganizationCode"].Value);
+        return;
+    }
+    #endregion
+
+    #region private void UpdatePatientData_InPatientWeightDataTable(string StartNeck, string StartWaist, string StartHip)
+    private void UpdatePatientData_InPatientWeightDataTable(string StartNeck, string StartWaist, string StartHip)
+    {
+        GlobalClass gClass = new GlobalClass();
+        SqlCommand cmdUpdate = CreatePatientDataUpdateCommand();
+        Decimal decResult = 0;
+
+        cmdUpdate.Parameters["@StartNeck"].Value = Decimal.TryParse(StartNeck, out decResult) ? decResult : 0;
+        cmdUpdate.Parameters["@StartWaist"].Value = Decimal.TryParse(StartWaist, out decResult) ? decResult : 0;
+        cmdUpdate.Parameters["@StartHip"].Value = Decimal.TryParse(StartHip, out decResult) ? decResult : 0;
+        
+        //try { cmdUpdate.Parameters["@StartNeck"].Value = Convert.ToDecimal(StartNeck); }catch { cmdUpdate.Parameters["@StartNeck"].Value = 0; }
+        //try { cmdUpdate.Parameters["@StartWaist"].Value = Convert.ToDecimal(StartWaist); } catch { cmdUpdate.Parameters["@StartWaist"].Value = 0; }
+        //try { cmdUpdate.Parameters["@StartHip"].Value = Convert.ToDecimal(StartHip); } catch { cmdUpdate.Parameters["@StartHip"].Value = 0; }
+        
+        cmdUpdate.Parameters["@PatientID"].Value = Convert.ToInt32(Context.Request.Cookies["PatientID"].Value);
+
+        gClass.ExecuteDMLCommand(cmdUpdate);
+        gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value,
+                Context.Request.Cookies["Logon_UserName"].Value,
+                Context.Request.Url.Host,
+                "Operatoin Form", 2, "Modify StartNeck, StartWaist, StartHip in tblPatientWeightData", "PatientID",
+                Context.Request.Cookies["PatientID"].Value);
+
+        return;
+    }
+    #endregion
+
+    #region private OleDbCommand CreatePatientDataUpdateCommand()
+    private SqlCommand CreatePatientDataUpdateCommand()
+    {
+        SqlCommand cmdUpdate = new SqlCommand();
+        GlobalClass gClass = new GlobalClass();
+
+        gClass.MakeStoreProcedureName(ref cmdUpdate, "sp_PatientData_cmdUpdateDataFromOperationEvent", true);
+        cmdUpdate.Parameters.Add("@OperationDate", SqlDbType.DateTime);
+        cmdUpdate.Parameters.Add("@OpWeight", SqlDbType.Decimal);
+        cmdUpdate.Parameters.Add("@StartBMIWeight", SqlDbType.Decimal);
+        cmdUpdate.Parameters.Add("@StartNeck", SqlDbType.Decimal);
+        cmdUpdate.Parameters.Add("@StartWaist", SqlDbType.Decimal);
+        cmdUpdate.Parameters.Add("@StartHip", SqlDbType.Decimal);
+        cmdUpdate.Parameters.Add("@StartWeight", SqlDbType.Decimal);
+
+        cmdUpdate.Parameters.Add("@SurgeryType", SqlDbType.VarChar, 10);
+        cmdUpdate.Parameters.Add("@Approach", SqlDbType.VarChar, 50);
+        cmdUpdate.Parameters.Add("@Category", SqlDbType.VarChar, 10);
+        cmdUpdate.Parameters.Add("@Group", SqlDbType.VarChar, 3);
+        gClass.InitialParameters(ref cmdUpdate);
+
+        cmdUpdate.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["PatientID"].Value);
+        cmdUpdate.Parameters.Add("@UserPracticeCode", SqlDbType.Int).Value  = Convert.ToInt32(Context.Request.Cookies["UserPracticeCode"].Value);
+        cmdUpdate.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(Context.Request.Cookies["OrganizationCode"].Value);
+        return (cmdUpdate);
+    }
+
+    #endregion
+}
+

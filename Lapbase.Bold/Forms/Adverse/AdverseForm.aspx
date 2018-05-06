@@ -1,0 +1,381 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="AdverseForm.aspx.cs" Inherits="Forms_Adverse_AdverseForm" %>
+
+<%@ Register TagPrefix="wucPatient" TagName="PatientTitle" Src="~/UserControl/PatientTitleDataWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucTextBox" TagName="TextBox" Src="~/UserControl/TextBoxWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucMenu" TagName="Menu" Src="~/UserControl/MenuWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucSystemCode" TagName="SystemCodeList" Src="~/UserControl/SystemCodeWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucAppSchema" TagName="AppSchema" Src="~/UserControl/AppSchemaWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucHospital" TagName="HospitalList" Src="~/UserControl/HospitalListWUCtrl.ascx" %>
+<%@ Register TagPrefix="wucDoctor" TagName="DoctorList" Src="~/UserControl/DoctorsListWUCtrl.ascx" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>LapBase - A Data Manager for Bariatric Surgery</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link href='<%$ AppSettings:CssUrl%>' rel="stylesheet" type="text/css" />
+    <!-- JavaScript -->
+
+    <script type="text/javascript" src="../../Scripts/Global.js"></script>
+
+    <script type="text/javascript" src="Includes/Complication.js"></script>
+
+    <!-- Calendar -->
+    <link rel="stylesheet" href="../../css/Calendar/calendar.css" media="screen" />
+
+    <script type="text/javascript" src="../../Scripts/Calendar/calendar.js"></script>
+
+</head>
+<body runat="server" id="bodyComplication">
+    <wucMenu:Menu runat="server" ID="mainMenu" />
+    <wucAppSchema:AppSchema runat="server" ID="AppSchemaMenu" currentItem="Complications" />
+    <form id="frmComplication" runat="server">
+        <asp:ScriptManager ID="_ScriptManager" runat="server">
+        </asp:ScriptManager>
+        <div class="contentArea">
+            <wucPatient:PatientTitle runat="server" ID="tblPatientTitle" />
+            <div class="greyContentWrap">
+                <div id="div_vComplications" class="visits">
+                    <div class="expandListManila">
+                        <div class="boxTop">
+                            <div class="expandListManilaTitle">
+                                <table border="0" cellpadding="3" cellspacing="0" width="100%">
+                                    <tbody>
+                                        <tr style="vertical-align: middle;">
+                                            <td style="width: 50%; text-align: left">
+                                                <label id="lblComplicationDataForm" runat="Server" style="font-weight: bold">
+                                                    Event Detail</label>
+                                            </td>
+                                            <td style="text-align: right" runat="server" id="btnColl">
+                                                <div style="float: right">
+                                                    <input id="btnCancelComplication" value="Add new Event" onclick="javascript:btnCancelComplication_onclick(this);"
+                                                        type="button" style="display: block; width: 150px" />
+                                                </div>
+                                                <div style="float: right">
+                                                    <input id="btnSaveComplication" value="Save" onclick="javascript:btnSaveComplication_onclick();"
+                                                        type="button" style="width: 150px; display: none;" />
+                                                </div>
+                                                <div style="float: right" runat="server" id="divBtnDelete">
+                                                    <input type="button" value="Delete" runat="server" id="btnDeleteComplication" style="width: 150px;
+                                                        display: none" onclick="javascript:btnDelete_onclick();" onserverclick="btnDeleteEvent_onserverclick" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="addVisitDetails" id="div_ComplicationsData" style="display: none">
+                                <table width="90%" border="0" cellpadding="0" cellspacing="0">
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" style="vertical-align: middle">
+                                                <div id="divErrorMessage" style="display: none;" runat="server">
+                                                    <span>
+                                                        <p id="pErrorMessage" runat="server">
+                                                        </p>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left">
+                                                &nbsp;<asp:Label runat="server" Text="Code" ID="lblCode_Com" /></td>
+                                            <td style="display: none">
+                                                <asp:Label runat="server" Text="Type" ID="lblType_Com" /></td>
+                                            <td>
+                                                <asp:Label runat="server" Text="Date" ID="lblDate_Com" /></td>
+                                            <td style="text-align: center">
+                                                <asp:Label ID="lblReAdmitted" Text="Admit" runat="server" /></td>
+                                            <td style="text-align: center">
+                                                <asp:Label ID="lblReOperation" Text="Surgery" runat="server" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 405px">
+                                                <wucSystemCode:SystemCodeList ID="cmbComplication_com" runat="server" Width="90"
+                                                    CriteriaString="ADEV" BoldData="ADEV" />
+                                            </td>
+                                            <td style="width: 100px; display: none">
+                                                <asp:DropDownList ID="cmbType_com" runat="server" Width="95%">
+                                                    <asp:ListItem Value="" Text="" Selected="true" />
+                                                    <asp:ListItem Value="C" Text="Complication" />
+                                                    <asp:ListItem Value="E" Text="Event" />
+                                                </asp:DropDownList>
+                                            </td>
+                                            <td style="width: 100px">
+                                                <wucTextBox:TextBox runat="server" ID="txtDate_com" width="70%" maxLength="10" />
+                                                &nbsp;
+                                                <asp:Label runat="Server" ID="lblDateFormat" Text="" Style="display: none" />
+                                                <a href="#this" type="button" id="aCalendar" onclick="javascript:aCalendar_onclick(this,'txtDate_com');">
+                                                    [...]</a>&nbsp;
+                                            </td>
+                                            <td style="width: 70px; text-align: center">
+                                                <asp:CheckBox runat="server" ID="chkReAdmitted_com" />
+                                            </td>
+                                            <td style="width: 70px; text-align: center">
+                                                <asp:CheckBox runat="server" ID="chkReOperation_com" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <table id="tblReasonACS" width="100%" border="0" cellpadding="0" cellspacing="0" style="display:block">
+                                                    <tr style="height: 25px" id="trReasonACS" runat="server">
+                                                        <td style="width: 100px">
+                                                            Suspected Reason
+                                                        </td>
+                                                        <td style="width: 350px">
+                                                            <wucSystemCode:SystemCodeList runat="Server" ID="cmbSuspectedReason" CriteriaString="ADMREASON"
+                                                                BoldData="ADMREASON" Width="75" />
+                                                        </td>
+                                                        <td style="width: 100px">
+                                                            &nbsp;</td>
+                                                        <td style="width: 200px">
+                                                            &nbsp;</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <br />
+                                                <table id="tblVisit" width="100%" border="0" cellpadding="0" cellspacing="0" style="display: none">
+                                                    <tr style="height: 25px">
+                                                        <td style="width: 100px">
+                                                            <label id="lblHospitalName" runat="server">
+                                                                Facility</label></td>
+                                                        <td style="width: 350px">
+                                                            <wucHospital:HospitalList runat="server" ID="cmbHospital" Width="90" />
+                                                        </td>
+                                                        <td style="width: 100px">
+                                                            <label id="lblOtherHospital" runat="server">
+                                                                Other</label></td>
+                                                        <td style="width: 200px">
+                                                            <wucTextBox:TextBox runat="server" ID="txtOtherHospital" width="100%" maxLength="100" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr style="height: 25px" id="trAdmissionACS" runat="server">
+                                                        <td>
+                                                            Date of Admission
+                                                        </td>
+                                                        <td>
+                                                            <wucTextBox:TextBox runat="server" ID="txtDateAdmit_com" width="30%" maxLength="10" />
+                                                            &nbsp; <a href="#this" type="button" id="a1" onclick="javascript:aCalendar_onclick(this,'txtDateAdmit_com');">
+                                                                [...]</a>&nbsp;
+                                                        </td>
+                                                        <td colspan="2">
+                                                            &nbsp;</td>
+                                                    </tr>
+                                                    <tr style="height: 25px" id="trDischargeACS" runat="server">
+                                                        <td>
+                                                            Date of Discharge
+                                                        </td>
+                                                        <td>
+                                                            <wucTextBox:TextBox runat="server" ID="txtDateDischarge_com" width="30%" maxLength="10" />
+                                                            &nbsp; <a href="#this" type="button" id="a2" onclick="javascript:aCalendar_onclick(this,'txtDateDischarge_com');">
+                                                                [...]</a>&nbsp;
+                                                        </td>
+                                                        <td colspan="2">
+                                                            &nbsp;</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>                                        
+                                        <tr>
+                                            <td colspan="5">
+                                                <table id="tblSurgery" width="100%" border="0" cellpadding="0" cellspacing="0" style="display: none">
+                                                    <tr style="height: 25px">
+                                                        <td style="width: 100px">
+                                                            <label id="lblDoctor" runat="server">
+                                                                Doctor</label></td>
+                                                        <td style="width: 350px">
+                                                            <wucDoctor:DoctorList runat="server" ID="cmbDoctor" Width="50" IsSurgeon="True" />
+                                                        </td>
+                                                        <td style="width: 100px">
+                                                            &nbsp;</td>
+                                                        <td style="width: 200px">
+                                                            &nbsp;</td>
+                                                    </tr>
+                                                    <tr style="height: 25px" id="trPerformACS" runat="server">
+                                                        <td>
+                                                            Date Performed
+                                                        </td>
+                                                        <td>
+                                                            <wucTextBox:TextBox runat="server" ID="txtDatePerform_com" width="30%" maxLength="10" />
+                                                            &nbsp; <a href="#this" type="button" id="a3" onclick="javascript:aCalendar_onclick(this,'txtDatePerform_com');">
+                                                                [...]</a>&nbsp;
+                                                        </td>
+                                                        <td colspan="2">
+                                                            &nbsp;</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <table id="tblSurgeryList" width="100%" border="0" cellpadding="0" cellspacing="0"
+                                                    style="display: block">
+                                                    <tr style="height: 25px">
+                                                        <td colspan="4">
+                                                            <label id="lblAdverseSurgery" runat="server">
+                                                                Operative Adverse Events</label>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="4">
+                                                            <table width="100%">
+                                                                <tr>
+                                                                    <td style="width: 30%">
+                                                                        <select id="listSurgery" multiple="true" size="10" runat="server" style="width: 280px"
+                                                                            ondblclick="javascript:BoldLists_dblclick('listSurgery', 'listSurgery_Selected', 'Add');" />
+                                                                        <wucSystemCode:SystemCodeList runat="server" ID="cmbAdverseSurgery" CriteriaString="ADEVST"
+                                                                            BoldData="ADEVST" Display="false" />
+                                                                    </td>
+                                                                    <td style="width: 5%; text-align: center; vertical-align: middle">
+                                                                        <a href="#this" onclick="javascript:BoldLButtonLinks_click('listSurgery', 'listSurgery_Selected', 'Add', false);">
+                                                                            ></a><br />
+                                                                        <a href="#this" onclick="javascript:BoldLButtonLinks_click('listSurgery', 'listSurgery_Selected', 'Add', true);">
+                                                                            >></a><br />
+                                                                        <a href="#this" onclick="javascript:BoldLButtonLinks_click('listSurgery_Selected', 'listSurgery', 'Remove', false);">
+                                                                            <</a><br />
+                                                                        <a href="#this" onclick="javascript:BoldLButtonLinks_click('listSurgery_Selected', 'listSurgery', 'Remove', true);">
+                                                                            <<</a><br />
+                                                                    </td>
+                                                                    <td style="width: 30%">
+                                                                        <select id="listSurgery_Selected" multiple="true" size="10" runat="server" style="width: 280px"
+                                                                            ondblclick="javascript:BoldLists_dblclick('listSurgery_Selected', 'listSurgery', 'Remove');" />
+                                                                    </td>
+                                                                    <td style="width: 35%">
+                                                                        &nbsp;</td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <%--</tbody>
+                            </table>
+                            <table width="100%" border="1">--%>
+                                        <tr>
+                                            <td colspan="5">
+                                            <br />
+                                                <asp:Label ID="lblNotes_com" Text="Notes" runat="server" Font-Bold="true" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <wucTextBox:TextBox ID="txtNotes_com" runat="server" textMode="MultiLine" width="100%"
+                                                    rows="3" maxLength="255" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <br />
+                                                <table id="tblPostopACS" runat="server" width="100%" border="0" cellpadding="0" cellspacing="0"
+                                                    style="display: none">
+                                                    <tr style="height: 25px">
+                                                        <td style="width: 350px">
+                                                            Number of blood transfusions within first 72 hours</td>
+                                                        <td style="width: 200px">
+                                                            <wucTextBox:TextBox runat="server" ID="txtBloodTranfusion" width="100%" maxLength="20" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            Unplanned Admission to the ICU within 30 days</td>
+                                                        <td>
+                                                            <input type="radio" name="rbUnplannedAdmission" id="rbUnplannedAdmissionY" value="Y"
+                                                                runat="server" />
+                                                            &nbsp;Yes &nbsp; &nbsp;
+                                                            <input type="radio" name="rbUnplannedAdmission" id="rbUnplannedAdmissionN" value="N"
+                                                                runat="server" />
+                                                            &nbsp;No &nbsp; &nbsp;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            Transfer of Acute Care Hospital within 30 days
+                                                        </td>
+                                                        <td>
+                                                            <input type="radio" name="rbTransfer" id="rbTransferY" value="Y" runat="server" />
+                                                            &nbsp;Yes &nbsp; &nbsp;
+                                                            <input type="radio" name="rbTransfer" id="rbTransferN" value="N" runat="server" />
+                                                            &nbsp;No &nbsp; &nbsp;</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="boxBtm">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expandList">
+                        <div class="boxTop">
+                            <div class="expandListTitle">
+                                <table width="100%" border="0" cellpadding="4" cellspacing="4">
+                                    <tbody>
+                                        <tr style="vertical-align: middle">
+                                            <th style="width: 25%">
+                                                <asp:Label Text="Code" runat="Server" ID="lblCode_Complications" />
+                                            </th>
+                                            <th style="width: 10%">
+                                                <asp:Label Text="Type" runat="server" ID="lblType_Complications" />
+                                            </th>
+                                            <th style="width: 15%; display: none">
+                                                <asp:Label Text="Complication / Event" runat="server" ID="lblCompication_Complications" />
+                                            </th>
+                                            <th style="width: 10%">
+                                                <asp:Label Text="Date" runat="server" ID="lblDate_Complications" />
+                                            </th>
+                                            <th style="width: 5%">
+                                                <asp:Label Text="Admit" runat="server" ID="lblAdmit_Complications" />
+                                            </th>
+                                            <th style="width: 5%">
+                                                <asp:Label Text="Surgery" runat="server" ID="lblSurgery_Complications" />
+                                            </th>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="expandListScroll" id="div_ComplicationsList">
+                                <table runat="server" id="tblComplication" width="100%" cellpadding="0" cellspacing="0"
+                                    border="0">
+                                </table>
+                            </div>
+                            <div class="boxBtm">
+                            </div>
+                            <asp:HiddenField ID="IsComorbidityViewed" runat="server" Value="0" />
+                            <asp:HiddenField ID="txtHComplicationID" runat="server" Value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="clr">
+                </div>
+            </div>
+        </div>
+        <asp:HiddenField runat="server" ID="txtHPatientID" Value="0" />
+        <asp:HiddenField runat="server" ID="txtHComplication" />
+        <asp:HiddenField runat="server" ID="txtHDateCreated" />
+        <asp:HiddenField runat="server" ID="txtHOperationDischargeDate"/>
+        <asp:HiddenField runat="server" ID="txtHPermissionLevel" />
+        <asp:HiddenField runat="server" ID="txtHDataClamp" />
+        <asp:HiddenField runat="server" ID="txtHApplicationURL" />
+        <asp:HiddenField runat="server" ID="txtHCurrentClientDate" Value="" />
+        <asp:HiddenField runat="server" ID="txtHCurrentDate" Value="" />
+        <asp:HiddenField runat="Server" ID="txtHCulture" />
+        <asp:HiddenField runat="Server" ID="TitleLoaded" Value="0" />
+        <asp:HiddenField runat="Server" ID="txtHDelete" Value="0" />
+        <asp:HiddenField runat="server" ID="txtHSurgery_Selected" />
+        <asp:HiddenField runat="server" ID="txtHDoctorBoldList" />
+        <asp:HiddenField runat="server" ID="txtHHospitalBoldList" />
+        <asp:UpdatePanel runat="server" ID="up_HiddenFields">
+            <ContentTemplate>
+                <asp:LinkButton runat="server" ID="linkBtnLoad" OnClick="linkBtnLoadOperation_OnClick" />
+            </ContentTemplate>
+            <Triggers>
+                <asp:AsyncPostBackTrigger ControlID="LinkBtnLoad" EventName="Click" />
+            </Triggers>
+        </asp:UpdatePanel>
+    </form>
+</body>
+</html>

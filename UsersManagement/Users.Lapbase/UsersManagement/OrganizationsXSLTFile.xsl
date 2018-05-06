@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+<xsl:template match="/">
+    <html>
+    <body>
+		<table style="width:500px" cellpadding = "0" cellspacing = "0" border="0" id ="tblOrganizationXSLT" class="testNameTable">
+			<xsl:for-each select="dsSchema/tblOrganizations">
+			<tr>
+				<td >
+					<xsl:if test='position() mod 2 = 1'>
+						<xsl:attribute name="class">row01</xsl:attribute>
+					</xsl:if>
+					<xsl:if test='position() mod 2 != 1'>
+						<xsl:attribute name="class">row02</xsl:attribute>
+					</xsl:if>
+					<table style="width:100%" cellpadding = "0" cellspacing = "0" border="0">
+						<xsl:attribute name="id">tblOrganizationsRow_<xsl:value-of select="Code"/></xsl:attribute>
+						<tr style="text-align:Left">
+							<xsl:attribute name ="onclick">javascript:OrganizationRow_onclick(this, <xsl:value-of select="Code"/>, '<xsl:value-of select="Language_Name"/>');</xsl:attribute>
+							<td style="width:200px">
+								<xsl:attribute name="id">OrganizationName_<xsl:value-of select="Code"/></xsl:attribute>
+								<xsl:value-of select="OrgDomainName"/>
+							</td>
+							<td  style="width:75px">
+								<xsl:attribute name="id">Version_<xsl:value-of select="Code"/></xsl:attribute>
+								<xsl:value-of select="VersionNo"/>
+							</td>
+              <td  style="width:125px">
+                <xsl:attribute name="id">Language_<xsl:value-of select="Code"/></xsl:attribute>
+                <xsl:choose >
+                  <xsl:when test ="string-length(LanguageCode) = 0"></xsl:when>
+                  <xsl:when test ="string-length(LanguageCode) != 0"><xsl:value-of select="Language_Name"/></xsl:when>
+                </xsl:choose>
+              </td>
+              <td style="width:50px">
+                <a href = "#">
+                  <xsl:attribute name="id">
+                    Deactivate_<xsl:value-of select="position()"/>
+                  </xsl:attribute>
+                  <xsl:attribute name ="onclick">
+                    javascript:hDeactivate_onclick(<xsl:value-of select="Code"/>, <xsl:value-of select="InactiveFlag"/>);
+                  </xsl:attribute>
+                  <xsl:choose>
+                    <xsl:when test ="InactiveFlag = 'true'">
+                      <xsl:attribute name="style">color:RED</xsl:attribute>
+                    </xsl:when>
+                    <xsl:when test ="InactiveFlag = 'false'">
+                      <xsl:attribute name="style">color:GREEN</xsl:attribute>
+                    </xsl:when>
+                  </xsl:choose>
+                  <xsl:value-of select="Active_Status"/>
+                </a>
+              </td>
+
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  SuperBill_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="SuperBill"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  DataClamp_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="DataClamp"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  RewritingURL_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="RewritingURL"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  DefaultSort_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="DefaultSort"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  EMR_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="EMR"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  SubmitData_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="SubmitData"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  PracticeBoldCode_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="PracticeBoldCode"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  AdminEmail_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="AdminEmail"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  Export_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="Export"/>
+              </td>
+              <td  style="display:none">
+                <xsl:attribute name="id">
+                  BSRExport_<xsl:value-of select="Code"/>
+                </xsl:attribute>
+                <xsl:value-of select="BSRExport"/>
+              </td>
+            </tr>
+					</table>
+				</td>
+			</tr>
+			</xsl:for-each>
+		</table>
+    </body>
+    </html>
+</xsl:template>
+
+</xsl:stylesheet> 
+

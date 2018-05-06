@@ -1,0 +1,266 @@
+﻿// JScript File
+
+function controlBar_Buttons_OnClick(buttonNo)
+{
+    var idx = 1;
+    
+    for(; idx <= 3; idx++) 
+        try{document.getElementById('li_Div' + idx).className = (idx != buttonNo) ? "" : "current";}
+        catch(e){}
+        
+    document.getElementById("div_Login").style.display = "none";
+    document.getElementById("div_Menu").style.display = "block";
+    try{document.getElementById("div_AllUsers").style.display = (buttonNo == 1) ? "block" : "none";}catch(e){}
+    try{document.getElementById("div_UserDetails").style.display = (buttonNo == 2) ? "block" : "none";}catch(e){}
+    try{document.getElementById("div_AllOrganizations").style.display = (buttonNo == 3) ? "block" : "none";}catch(e){}
+    
+    UserFields_ClearFields();
+    return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+function btnSave_onclick(){
+    
+    var ErrorMessage = "Please Enter ", flag = true;
+    
+    document.getElementById("divErrorMessage").style.display = "none";
+    SetInnerText(document.getElementById("pErrorMessage"), "");
+
+    if (document.forms[0].cmbOrganization.selectedIndex == 0){
+        ErrorMessage += "Organization";
+        flag = false;
+    }
+    
+    if (document.forms[0].txtUsername_txtGlobal.value.length == 0){
+        ErrorMessage += (!flag ? ", " : "") + "Username";
+        flag = false;
+    }
+    
+    if (document.forms[0].txtHUCode.value == 0 && document.forms[0].txtPassword_txtGlobal.value.length == 0){
+        ErrorMessage += (!flag ? ", " : "") + "Password";
+        flag = false;
+    }
+    
+    if (document.forms[0].txtFirstname_txtGlobal.value.length == 0){
+        ErrorMessage += (!flag ? ", " : "") + "Firstname";
+        flag = false;
+    }
+    
+    if (document.forms[0].txtLastname_txtGlobal.value.length == 0){
+        ErrorMessage += (!flag ? ", " : "") + "Lastname";
+        flag = false;
+    }
+    
+    if (!flag){
+        document.getElementById("divErrorMessage").style.display = "block";
+        SetInnerText(document.getElementById("pErrorMessage"), ErrorMessage);
+        document.forms[0].onsubmit = function(){return false;}
+    }
+    else{
+        ShowDivMessage('Saving user data is being done...', false);
+        ActivateElements(false);
+    }
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function ActivateElements(ActiveFlag){
+    document.forms[0].btnSave.disbaled = !ActiveFlag;
+    document.forms[0].btnSaveOrganization.disbaled = !ActiveFlag;
+    document.getElementById("ub_mnuItem01").disbaled = !ActiveFlag;
+    document.getElementById("ub_mnuItem02").disbaled = !ActiveFlag;
+    document.getElementById("ub_mnuItem03").disbaled = !ActiveFlag;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function UserFields_ClearFields(){
+    document.getElementById("divErrorMessage").style.display = "none";
+    SetInnerText(document.getElementById("pErrorMessage"), "");
+
+    document.forms[0].txtUsername_txtGlobal.value = "";
+    document.forms[0].txtPassword_txtGlobal.value = "";
+    document.forms[0].txtFirstname_txtGlobal.value = "";
+    document.forms[0].txtLastname_txtGlobal.value = "";
+    ///document.forms[0].cmbLanguage.selectedIndex = 0;
+    document.forms[0].txtHUCode.value = 0;
+    document.forms[0].chkReplicate.checked = false;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function hDelete_onclick(UCode, PermissionFlag){
+    if (window.confirm((PermissionFlag == 1) ? "Deny user?" : "Permitted user?")){
+        document.forms[0].txtHUCode.value = UCode +  ";" + ((PermissionFlag == 1) ? 0 : 1);
+        __doPostBack('btnDelete','');
+    }
+    else document.forms[0].onsubmit = function(){return false;}
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function UserRow_onclick(UCode, OrgCode){
+    var trRow = document.getElementById("TR_" + UCode);
+    
+    controlBar_Buttons_OnClick(2);
+    document.forms[0].txtHUCode.value = UCode;
+    document.forms[0].cmbOrganization.value = OrgCode;
+    document.forms[0].txtUsername_txtGlobal.value = (document.all) ? trRow.cells[1].innerText : trRow.cells[1].textContent;
+    document.forms[0].txtPassword_txtGlobal.value = "";
+    document.forms[0].txtFirstname_txtGlobal.value = (document.all) ? trRow.cells[4].innerText : trRow.cells[4].textContent;
+    document.forms[0].txtLastname_txtGlobal.value = (document.all) ? trRow.cells[5].innerText : trRow.cells[5].textContent;
+    
+    document.forms[0].cmbPermissionLvl.value = (document.all) ? trRow.cells[8].innerText : trRow.cells[8].textContent;
+    document.forms[0].txtHSurgeonID.value = (document.all) ? trRow.cells[9].innerText : trRow.cells[9].textContent;
+    document.forms[0].txtHRowClick.value = 1;
+    
+    __doPostBack('linkBtnOrganization','');
+}
+
+function checkNan(value){
+    if(value == "NaN" || value == null)
+        return "";
+    else
+        return value.trim();
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function btnSaveOrganization_onclick(){
+    var ErrorMessage = "Please Enter ", flag = true;
+    
+    document.getElementById("divErrorMessage").style.display = "none";
+    SetInnerText(document.getElementById("pErrorMessage"), "");
+
+    if (document.forms[0].txtDomainName_txtGlobal.value.length == 0){
+        ErrorMessage += "Organization name";
+        flag = false;
+    }
+    
+    /** /
+    if (document.forms[0].cmbVersion.selectedIndex == 0){
+        ErrorMessage += (!flag ? ", " : "") + "Version No";
+        flag = false;
+    }
+    /**/ 
+
+    if (!flag){
+        document.getElementById("divErrorMessage").style.display = "block";
+        SetInnerText(document.getElementById("pErrorMessage"), ErrorMessage);
+    }
+//    else CheckApplicationVersion();
+    else{
+        ShowDivMessage('Saving Organization data is being done...', false);
+        ActivateElements(false);
+        __doPostBack('linkbtnSaveOrganization','');
+    }
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function OrganizationRow_onclick(objRow, intCode, strLanguage){
+    var Xh = 0;
+    
+    document.forms[0].txtDomainName_txtGlobal.value = document.all ? objRow.cells[0].innerText : objRow.cells[0].textContent;
+    document.forms[0].cmbVersion.value = document.all ? objRow.cells[6].innerText : objRow.cells[6].textContent;
+    document.forms[0].txtHCode.value = intCode;
+    document.forms[0].txtHVersionNo.value  = document.all ? objRow.cells[1].innerText : objRow.cells[1].textContent;
+        
+
+    var superBill = document.all ? objRow.cells[4].innerText : objRow.cells[4].textContent;
+    if (superBill.toLowerCase() == "true")
+        document.forms[0].radioSuperBill_yes.checked = true;
+    else 
+        document.forms[0].radioSuperBill_no.checked = true;
+    
+    var dataClamp = document.all ? objRow.cells[5].innerText : objRow.cells[5].textContent;
+    if (dataClamp.toLowerCase() == "true")
+        document.forms[0].radioDataClamp_yes.checked = true;
+    else 
+        document.forms[0].radioDataClamp_no.checked = true;
+    
+    var defaultSort = document.all ? objRow.cells[7].innerText : objRow.cells[7].textContent;
+    if (defaultSort > 0)
+        document.forms[0].cmbSort.value = defaultSort;
+    else 
+        document.forms[0].cmbSort.selectedIndex = 3;
+        
+    var emr = document.all ? objRow.cells[8].innerText : objRow.cells[8].textContent;
+    if (emr.toLowerCase() == "true")
+        document.forms[0].radioEMR_yes.checked = true;
+    else 
+        document.forms[0].radioEMR_no.checked = true;
+                
+    var submitData = document.all ? objRow.cells[9].innerText : objRow.cells[9].textContent;
+    if (submitData.trim() != "")
+        document.forms[0].cmbSubmitData.value = submitData;
+    else 
+        document.forms[0].cmbSubmitData.selectedIndex = 0;
+                
+    document.forms[0].txtBoldCode_txtGlobal.value = document.all ? objRow.cells[10].innerText : objRow.cells[10].textContent;
+    
+    if (strLanguage.length != 0){
+        for (; Xh < document.forms[0].cmbLanguage.options.length; Xh++){
+            if (document.forms[0].cmbLanguage.options[Xh].text.indexOf(strLanguage) > -1)
+                document.forms[0].cmbLanguage.selectedIndex = Xh;
+        }
+    }
+    else document.forms[0].cmbLanguage.selectedIndex = 0;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function cmbVersion_onchange(){
+    document.forms[0].txtHNewVersionNo.value = document.forms[0].cmbVersion.options[document.forms[0].cmbVersion.selectedIndex].text;
+    
+//    document.getElementById("div_NewVersion").style.display = (document.forms[0].cmbVersion.value == "0") ? "block" : "none";
+//    if (document.forms[0].cmbVersion.value == "0"){
+//        document.forms[0].txtNewVersionNo_txtGlobal.value = "";
+//        document.forms[0].txtNewVersionTitle_txtGlobal.value = "";
+//    }
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function CheckApplicationVersion(){
+    var requestURL, strActionURL, strSOAP;
+    
+    strSOAP = 
+        '<?xml version="1.0" encoding="utf-8"?>'+
+        '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' + 
+                        'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' + 
+                        'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'+
+            '<soap:Body><CheckWebSite xmlns="http://tempuri.org/"/></soap:Body>'+
+        '</soap:Envelope>';
+
+    if (document.forms[0].cmbVersion.value == 0) // Other version
+        requestURL = document.forms[0].txtDomainName_txtGlobal.value + "/" + document.forms[0].txtNewVersionTitle_txtGlobal.value;
+    else
+        requestURL = document.forms[0].txtDomainName_txtGlobal.value + "/" + document.forms[0].cmbVersion.options[document.forms[0].cmbVersion.selectedIndex].text;
+        
+    strActionURL = "http://"+ requestURL + "WebServices/GlobalWebService.asmx";
+
+	try{SubmitSOAPXmlHttp(strSOAP, CheckApplicationVersion_CallBack, strActionURL, "http://tempuri.org/CheckWebSite");}
+	catch(ex){
+	    alert(ex.message);
+	    document.getElementById("divErrorMessage").style.display = "block";
+        SetInnerText(document.getElementById("pErrorMessage"), "The domain name and version no are not valid...");
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+function CheckApplicationVersion_CallBack(){
+    if (XmlHttp.readyState == 4)
+        if (XmlHttp.status == 200){
+            ShowDivMessage('Saving Organization data is being done...', false);
+            ActivateElements(false);
+            __doPostBack('linkbtnSaveOrganization','');
+        }
+        else{
+            document.getElementById("divErrorMessage").style.display = "block";
+            SetInnerText(document.getElementById("pErrorMessage"), "The domain name and version no are not valid...");
+        }
+    return;
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+function ResetData_OnClick(orgCode){
+    document.forms[0].txtHCode.value = orgCode;
+    __doPostBack('btnOrganizationResetData','');
+}
+
+String.prototype.trim = function () {
+    return this.replace(/^\s*/, "").replace(/\s*$/, "");
+}

@@ -1,0 +1,24 @@
+using System;
+using System.Data;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+
+public partial class UserControl_MenuWUCtrl : System.Web.UI.UserControl
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (Request.Cookies["PermissionLevel"].Value == "1o" || Request.Cookies["PermissionLevel"].Value == "2t" || (Request.Cookies["PermissionLevel"].Value == "3f" && Request.Cookies["SurgeonID"].Value == "0"))
+            menuReports.Visible = false;
+        //if (Request.Cookies["PermissionLevel"].Value == "1o" || Request.Cookies["PermissionLevel"].Value == "2t" || Request.Cookies["PermissionLevel"].Value == "3f")
+        if (Convert.ToInt32(Request.Cookies["OrganizationCode"].Value) != 2 && Convert.ToInt32(Request.Cookies["OrganizationCode"].Value) != 122 && Convert.ToInt32(Request.Cookies["OrganizationCode"].Value) != 88)
+            menuImport.Visible = false;
+        if (Convert.ToInt32(Request.Cookies["OrganizationCode"].Value) != 2 && Convert.ToInt32(Request.Cookies["OrganizationCode"].Value) != 122 && Convert.ToInt32(Request.Cookies["OrganizationCode"].Value) != 208)
+            menuImportCSV.Visible = false;
+    }
+}

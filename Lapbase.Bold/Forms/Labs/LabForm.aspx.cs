@@ -1,0 +1,490 @@
+using System;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using System.IO;
+using System.Globalization;
+using System.Xml;
+using Microsoft.Web.UI;
+using NHapi.Base.Model;
+using NHapi.Base.Parser;
+using NHapi.Base;
+using NHapi.Model.V23;
+using NHapi.Model.V23.Message;
+using NHapi.Model.V23.Segment;
+using Lapbase.Configuration.ConfigurationApplication;
+
+
+
+/// <summary>
+/// This form is called when a paritcular patient in Patients list is selected
+/// </summary>
+public partial class Forms_Labs_LabForm : System.Web.UI.Page
+{
+    GlobalClass gClass = new GlobalClass();
+    Int16 IsDoneSaveFlag = 0;
+
+
+    #region protected void Page_Load(object sender, EventArgs e)
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.CacheControl = "no-cache";
+        Response.AddHeader("Pragma", "no-cache");
+        Response.Expires = -1;
+
+        gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+
+        try
+        {
+            gClass.LanguageCode = Request.Cookies["LanguageCode"].Value;
+            txtHCulture.Value = Request.Cookies["CultureInfo"].Value;
+            if (gClass.IsUserLogoned(Session.SessionID, Request.Cookies["UserPracticeCode"].Value, Request.Url.Host))
+            {
+                RegisterClientScriptBlock();
+                if (!IsPostBack)
+                {
+                    gClass.SaveUserLogFile(Request.Cookies["UserPracticeCode"].Value,
+                                            Request.Cookies["Logon_UserName"].Value,
+                                            Request.Url.Host,
+                                            "Lab Form", 2, "Browse", "PatientCode",
+                                            Request.Cookies["PatientID"].Value);
+
+                    gClass.SaveActionLog(gClass.OrganizationCode,
+                                         Request.Cookies["UserPracticeCode"].Value,
+                                         Request.Url.Host,
+                                         System.Configuration.ConfigurationManager.AppSettings["LabPage"].ToString(),
+                                         System.Configuration.ConfigurationManager.AppSettings["LogRead"].ToString(),
+                                         "Load " + System.Configuration.ConfigurationManager.AppSettings["LabPage"].ToString() + " List ",
+                                         Request.Cookies["PatientID"].Value,
+                                         "");
+
+                    txtHPermissionLevel.Value = Request.Cookies["PermissionLevel"].Value;
+                    txtHDataClamp.Value = Request.Cookies["DataClamp"].Value;
+
+                    if (Request.Cookies["SubmitData"].Value.IndexOf("submitbold") >= 0 || Request.Cookies["PermissionLevel"].Value == "1o" || Request.Cookies["PermissionLevel"].Value == "2t" || Request.Cookies["PermissionLevel"].Value == "3f" || Request.Cookies["PermissionLevel"].Value == "4s")
+                        divBtnDelete.Style["display"] = "none";
+
+                    if (Request.Cookies["PermissionLevel"].Value == "1o")
+                    {
+                        btnColl.Style["display"] = "none";
+                    }
+                }
+            }
+            else { gClass.ReturnToLoginPage(Request.Url.Host, Request.Cookies["LanguageCode"].Value, Response); return; }
+        }
+        catch (Exception err)
+        {
+            string strLanguageCode;
+            try
+            {
+                strLanguageCode = Request.Cookies["LanguageCode"].Value;
+                gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Lab Form", "Loading Lab List (Page_Load function)", err.ToString());
+            }
+            catch { strLanguageCode = "en-US"; }
+            gClass.ReturnToLoginPage(Request.Url.Host, strLanguageCode, Response);
+        }
+        LoadLabHistory();
+        if (Request.QueryString.Count > 0)
+        {
+            if (txtHLabID.Value == "0" && Request.QueryString["PatID"].ToString() != "")
+            {
+                LoadLabData(Request.QueryString["PatID"].ToString());
+            }
+        }
+        return;
+
+    }
+    #endregion
+
+    #region protected void linkBtnLoad_OnClick(object sender, EventArgs e)
+    protected void linkBtnLoad_OnClick(object sender, EventArgs e)
+    {
+        Response.Redirect("~/Forms/Labs/LabForm.aspx?PatID=" + txtHLabID.Value, false);
+    }
+    #endregion
+
+    #region private void RegisterClientScriptBlock()
+    private void RegisterClientScriptBlock()
+    {
+        txtHApplicationURL.Value = Request.Url.Scheme + "://" + Request.Url.Host + Request.ApplicationPath + "/";
+        Page.Culture = Request.Cookies["CultureInfo"].Value;
+
+        System.Globalization.CultureInfo myCI = new System.Globalization.CultureInfo(Request.Cookies["CultureInfo"].Value, false);
+
+        bodyLab.Attributes.Add("onload", "javascript:InitializePage();");
+
+        txtHCurrentDate.Value = DateTime.Now.ToShortDateString();
+    }
+    #endregion
+
+    #region protected void linkBtnSave_OnClick(object sender, EventArgs e)
+    protected void linkBtnSave_OnClick(object sender, EventArgs e)
+    {
+        SqlCommand cmdSave = new SqlCommand();
+        SqlCommand cmdLoad = new SqlCommand();
+
+        DataSet dsPathologyID;
+        int newPathologyID = 0;
+        try
+        {
+            gClass.MakeStoreProcedureName(ref cmdSave, "sp_PatientPathology_UpdatePathology", true);
+
+            //save pathology id
+            cmdSave.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+            cmdSave.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+            cmdSave.Parameters.Add("@PathologyBaseline", SqlDbType.VarChar).Value = "progress";
+            cmdSave.Parameters.Add("@DeletedByUser", SqlDbType.VarChar, 50).Value = Context.Request.Cookies["Logon_UserName"].Value;
+            cmdSave.Parameters.Add("@DateDeleted", SqlDbType.DateTime).Value = Convert.ToDateTime(txtHCurrentDate.Value);
+
+
+            gClass.ExecuteDMLCommand(cmdSave);
+            gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                                    Context.Request.Url.Host, "EMR Form", 2, "Save Pathology", "PID:", Context.Request.Cookies["PatientID"].Value);
+
+
+
+            gClass.MakeStoreProcedureName(ref cmdLoad, "sp_PatientPathology_LastPathologyID", true);
+            cmdLoad.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+            cmdLoad.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+
+            dsPathologyID = gClass.FetchData(cmdLoad, "tblPatientPathology");
+
+            Int32.TryParse(dsPathologyID.Tables[0].Rows[0]["PathologyID"].ToString(), out newPathologyID);
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                        Context.Request.Cookies["Logon_UserName"].Value, "EMR PID : " + Context.Request.Cookies["PatientID"].Value, "Save Pathology", err.ToString());
+        }
+
+        if (newPathologyID > 0)
+        {
+            //save pathology data
+            try
+            {
+                string strDocumentName = "";
+                string strFilePath = GetFilePath(txtFile.PostedFile.FileName);
+
+                if (strFilePath.Trim() != "")
+                {
+                    if (System.IO.File.Exists(strFilePath))
+                        System.IO.File.Delete(strFilePath);
+                    strDocumentName = txtFile.PostedFile.FileName;
+
+                    txtFile.PostedFile.SaveAs(strFilePath);
+
+                    StreamReader streamReader = new StreamReader(strFilePath);
+
+                    string message = streamReader.ReadToEnd();
+                    streamReader.Close();
+
+                    PipeParser parser = new PipeParser();
+                    IMessage m = parser.Parse(message);
+
+                    ORU_R01 oruR01 = m as ORU_R01;
+                    oruR01 = oruR01;
+
+                    string testID = "";
+                    string testName = "";
+                    string testValue = "";
+                    string testUnit = "";
+                    string testRange = "";
+                    string testStatus = "";
+                    string testDate = "";
+                    string pathologyDate = "";
+                    string year = "";
+                    string month = "";
+                    string date = "";
+
+                    gClass.MakeStoreProcedureName(ref cmdSave, "sp_PatientPathology_InsertPathologyData", true);
+                    cmdSave.Parameters.Clear();
+
+                    cmdSave.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+                    cmdSave.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+                    cmdSave.Parameters.Add("@PathologyID", SqlDbType.Int).Value = newPathologyID;
+                    cmdSave.Parameters.Add("@PathologyDataDate", SqlDbType.DateTime);
+                    cmdSave.Parameters.Add("@SectionID", SqlDbType.Int);
+                    cmdSave.Parameters.Add("@TestID", SqlDbType.VarChar);
+                    cmdSave.Parameters.Add("@TestName", SqlDbType.VarChar);
+                    cmdSave.Parameters.Add("@TestValue", SqlDbType.VarChar);
+                    cmdSave.Parameters.Add("@TestUnit", SqlDbType.VarChar);
+                    cmdSave.Parameters.Add("@TestRange", SqlDbType.VarChar);
+                    cmdSave.Parameters.Add("@TestStatus", SqlDbType.VarChar);
+
+                    //gClass.TruncateDate(dvPatient[0]["BirthDate"].ToString().Trim(), Request.Cookies["CultureInfo"].Value, 1);
+
+                    for (int i = 0; i < oruR01.RESPONSERepetitionsUsed; i++)
+                    {
+                        for (int j = 0; j < oruR01.GetRESPONSE(i).ORDER_OBSERVATIONRepetitionsUsed; j++)
+                        {
+                            testDate = oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).OBR.RequestedDateTime.TimeOfAnEvent.Value.ToString();
+
+                            year = testDate.Substring(0, 4);
+                            month = testDate.Substring(4, 2);
+                            date = testDate.Substring(6, 2);
+                            pathologyDate = date + "-" + month + "-" + year;
+
+                            cmdSave.Parameters["@PathologyDataDate"].Value = gClass.TruncateDate(pathologyDate, Request.Cookies["CultureInfo"].Value, 1);
+                            for (int k = 0; k < oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).OBSERVATIONRepetitionsUsed; k++)
+                            {
+                                testID = CheckNull(oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).GetOBSERVATION(k).OBX.ObservationIdentifier.Identifier.Value);
+                                testName = CheckNull(oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).GetOBSERVATION(k).OBX.ObservationIdentifier.Text.Value);
+                                testValue = CheckNull(oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).GetOBSERVATION(k).OBX.GetObservationValue(0).Data);
+                                testUnit = CheckNull(oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).GetOBSERVATION(k).OBX.Units.Identifier.Value);
+                                testRange = CheckNull(oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).GetOBSERVATION(k).OBX.ReferencesRange.Value);
+                                testStatus = CheckNull(oruR01.GetRESPONSE(i).GetORDER_OBSERVATION(j).GetOBSERVATION(k).OBX.AbnormalFlagsRepetitionsUsed);
+
+                                cmdSave.Parameters["@SectionID"].Value = i;
+                                cmdSave.Parameters["@TestID"].Value = testID;
+                                cmdSave.Parameters["@TestName"].Value = testName;
+                                cmdSave.Parameters["@TestValue"].Value = testValue;
+                                cmdSave.Parameters["@TestUnit"].Value = testUnit;
+                                cmdSave.Parameters["@TestRange"].Value = testRange;
+                                cmdSave.Parameters["@TestStatus"].Value = testStatus;
+
+                                gClass.ExecuteDMLCommand(cmdSave);
+                                gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                                                        Context.Request.Url.Host, "EMR Form", 2, "Save Pathology Data", "PID:", Context.Request.Cookies["PatientID"].Value);
+                            }
+                        }
+                    }
+                    
+                    if (pathologyDate != "")
+                    {
+                        gClass.MakeStoreProcedureName(ref cmdSave, "sp_PatientPathology_UpdatePathology", true);
+                        cmdSave.Parameters.Clear();
+                        //save pathology id
+                        cmdSave.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+                        cmdSave.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+                        cmdSave.Parameters.Add("@PathologyID", SqlDbType.Int).Value = Convert.ToInt32(newPathologyID);
+                        cmdSave.Parameters.Add("@PathologyDate", SqlDbType.DateTime).Value = gClass.TruncateDate(pathologyDate, Request.Cookies["CultureInfo"].Value, 1);
+
+
+                        gClass.ExecuteDMLCommand(cmdSave);
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                            Context.Request.Cookies["Logon_UserName"].Value, "PID : " + Context.Request.Cookies["PatientID"].Value, "Save Pathology Data", err.ToString());
+            }
+            Response.Redirect("~/Forms/Labs/LabForm.aspx?PatID=" + newPathologyID, false);
+        }
+    }
+    #endregion
+
+    #region private string LoadLabHistory()
+    private void LoadLabHistory()
+    {
+        SqlCommand cmdSelect = new SqlCommand();
+        DataSet dsLab = new DataSet();
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_PatientPathology_LoadPathologyList", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+        cmdSelect.Parameters.Add("@PatientID", SqlDbType.Int).Value = Convert.ToInt64(Request.Cookies["PatientID"].Value);
+        dsLab = gClass.FetchData(cmdSelect, "tblLabs");
+        
+        DataColumn dcTemp = new DataColumn();
+        dcTemp.DataType = Type.GetType("System.String");
+        dcTemp.DefaultValue = 0;
+        dcTemp.ColumnName = "str_LabDate";
+        dcTemp.Caption = "str_LabDate";
+        dsLab.Tables[0].Columns.Add(dcTemp);
+        
+        for (int Idx = 0; Idx < dsLab.Tables[0].Rows.Count; Idx++)
+        {
+            try { dsLab.Tables[0].Rows[Idx]["str_LabDate"] = Convert.ToDateTime(dsLab.Tables[0].Rows[Idx]["PathologyDate"].ToString().Trim()).ToShortDateString(); }
+            catch { }
+            
+            //dsLab.Tables[0].Rows[Idx]["str_LabDate"] = gClass.TruncateDate(dsLab.Tables[0].Rows[Idx]["PathologyDate"].ToString().Trim(), Request.Cookies["CultureInfo"].Value, 1);
+        }
+
+        dsLab.Tables[0].AcceptChanges();
+
+        div_LabsList.InnerHtml = gClass.ShowSchema(dsLab, Server.MapPath(".") + @"\Includes\LabXSLTFile.xsl");
+
+        dsLab.Dispose();
+    }
+    #endregion
+
+    #region protected void LoadLabData(string intLabID)
+    protected void LoadLabData(string intLabID)
+    {
+        string strScript = String.Empty;
+        SqlCommand cmdSelect = new SqlCommand();
+        DataSet dsPatient = new DataSet();
+        string baseline = "";
+
+        string pathologyResult = "";
+        string name = "";
+        string unit = "";
+        string range = "";
+        string status = "";
+        string value = "";
+        string previousSection = "";
+
+        string fontColor;
+        string fontNormal = "black";
+        string fontAbNormal = "red";
+
+        txtHLabID.Value = intLabID;
+
+        try
+        {
+            gClass.MakeStoreProcedureName(ref cmdSelect, "sp_PatientPathology_LoadSingleData", true);
+            cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+            cmdSelect.Parameters.Add("@PathologyID", System.Data.SqlDbType.Int).Value = Convert.ToInt32(intLabID);
+
+            dsPatient = gClass.FetchData(cmdSelect, "tblPatient");
+
+
+            txtHIsBaseline.Value = "0";
+
+            if (dsPatient.Tables.Count > 0 && dsPatient.Tables[0].Rows.Count > 0)
+            {
+                pathologyResult += "<table>";
+
+                if (dsPatient.Tables[0].Rows[0]["PathologyBaseline"].ToString() == "baseline")
+                {
+                    baseline = " - " + UppercaseFirst(dsPatient.Tables[0].Rows[0]["PathologyBaseline"].ToString());
+                    txtHIsBaseline.Value = "1";
+                }
+                pathologyResult += "<tr><td><b>Test Date: " + gClass.TruncateDate(dsPatient.Tables[0].Rows[0]["PathologyDate"].ToString(), Request.Cookies["CultureInfo"].Value, 1) + baseline + "</b><br><br></td></tr>";
+                for (int Xh = 0; Xh < dsPatient.Tables[0].Rows.Count; Xh++)
+                {
+                    if (previousSection != "" && previousSection != dsPatient.Tables[0].Rows[Xh]["SectionID"].ToString())
+                    {
+                        pathologyResult += "<tr><td><br></td></tr>";
+                    }
+
+                    name = dsPatient.Tables[0].Rows[Xh]["TestName"].ToString();
+                    unit = dsPatient.Tables[0].Rows[Xh]["TestUnit"].ToString();
+                    range = dsPatient.Tables[0].Rows[Xh]["TestRange"].ToString().Trim();
+                    if (range != "")
+                        range = "(" + range + ")";
+                    status = dsPatient.Tables[0].Rows[Xh]["TestStatus"].ToString();
+                    value = dsPatient.Tables[0].Rows[Xh]["TestValue"].ToString();
+                    value = value.Replace("\\.br\\", "<br>");
+
+                    if (status == "1")
+                        fontColor = fontAbNormal;
+                    else
+                        fontColor = fontNormal;
+
+                    pathologyResult += "<tr><td>" + name + " <font color='" + fontColor + "'/>" + value + "</font> " + unit + " " + range + "</td></tr>";
+                    previousSection = dsPatient.Tables[0].Rows[Xh]["SectionID"].ToString();
+                }
+                pathologyResult += "</table>";
+
+                pathologyResultTable.InnerHtml = pathologyResult;
+            }
+
+
+            strScript = "javascript:ShowLabFormDiv(1);";
+            ScriptManager.RegisterStartupScript(btnSaveLab, btnSaveLab.GetType(), Guid.NewGuid().ToString(), strScript, true);
+        
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Patient Data Form", "Loading Patient Pathology - LoadPatientData function", err.ToString());
+        }
+    }
+    #endregion
+
+    #region protected void btnDeleteLab_onserverclick(object sender, EventArgs e)
+    /*
+     * this function is to delete visit data
+     */
+    protected void btnDeleteLab_onserverclick(object sender, EventArgs e)
+    {
+        SqlCommand cmdUpdate = new SqlCommand();
+        string strScript = String.Empty;
+
+        if (txtHDelete.Value == "1")
+        {
+            gClass.MakeStoreProcedureName(ref cmdUpdate, "sp_PatientPathology_Delete", true);
+            cmdUpdate.Parameters.Add("@OrganizationCode", SqlDbType.Int).Value = Convert.ToInt32(gClass.OrganizationCode);
+            cmdUpdate.Parameters.Add("@PatientId", SqlDbType.Int).Value = Convert.ToInt32(Request.Cookies["PatientID"].Value);
+            cmdUpdate.Parameters.Add("@PathologyId", SqlDbType.Int).Value = Convert.ToInt32(txtHLabID.Value);
+
+            cmdUpdate.Parameters.Add("@DeletedByUser", SqlDbType.VarChar, 50).Value = Context.Request.Cookies["Logon_UserName"].Value;
+            cmdUpdate.Parameters.Add("@DateDeleted", SqlDbType.DateTime).Value = Convert.ToDateTime(txtHCurrentDate.Value);
+
+            try
+            {
+                gClass.ExecuteDMLCommand(cmdUpdate);
+                gClass.SaveUserLogFile(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Cookies["Logon_UserName"].Value,
+                                        Context.Request.Url.Host, "Lab Form", 2, "Delete Lab Data", "Lab Code", txtHLabID.Value);
+
+                Response.Redirect("~/Forms/Labs/LabForm.aspx", false);
+            }
+            catch (Exception err)
+            {
+                gClass.AddErrorLogData(Context.Request.Cookies["UserPracticeCode"].Value, Context.Request.Url.Host,
+                            Context.Request.Cookies["Logon_UserName"].Value, "Lab PID : " + Context.Request.Cookies["PatientID"].Value, "Data deleting lab - Event_DeleteProc function", err.ToString());
+            }
+        }
+    }
+    #endregion
+
+    #region private string GetFilePath
+    private string GetFilePath(string fileName)
+    {
+        int intLastIndex = fileName.LastIndexOf("\\");
+        if (intLastIndex == 0)
+            intLastIndex = fileName.LastIndexOf("/");
+
+        fileName = fileName.Substring(intLastIndex + 1);
+        return System.IO.Path.Combine(GetDocumentPath(), Request.Cookies["PatientID"].Value + "_" + fileName);
+    }
+    #endregion
+
+    #region private void GetDocumentPath()
+    private string GetDocumentPath()
+    {
+        string uploadFolder, strFolder = "";
+        System.IO.DirectoryInfo di;
+        strFolder = "Documents";
+
+        uploadFolder = System.IO.Path.Combine(this.Context.ApplicationInstance.Request.PhysicalApplicationPath, strFolder);
+
+        di = new System.IO.DirectoryInfo(uploadFolder);
+        if (di.Exists == false) // Create the directory only if it does not already exist.
+            di.Create();
+        return (uploadFolder);
+    }
+    #endregion
+
+    #region private string CheckNull(Object oData)
+    private string CheckNull(Object oData)
+    {
+        string returnString = "";
+
+        if (oData != null)
+            returnString = oData.ToString();
+
+        return returnString;
+    }
+    #endregion
+
+    #region  static UppercaseFirst(String s)
+    static string UppercaseFirst(String s)
+    {
+        // Check for empty string.
+        if (string.IsNullOrEmpty(s))
+        {
+            return string.Empty;
+        }
+        // Return char and concat substring.
+        return char.ToUpper(s[0]) + s.Substring(1);
+    }
+        #endregion
+}
+

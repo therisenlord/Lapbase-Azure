@@ -1,0 +1,372 @@
+using System;
+using System.Data;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+using System.Diagnostics;
+using System.IO;
+
+public partial class Forms_UploadDocument_UploadDocumentForm : System.Web.UI.Page
+{
+    #region  variables
+    private GlobalClass gClass = new GlobalClass();
+    private string strDocumentName = "";
+    private long FileSize = 0;
+    private byte[] oDocumentByteArray;
+    private int intUserPracticeCode = 0, intOrganizationCode;
+    #endregion
+
+    #region protected void Page_Load
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Page.Culture = Request.Cookies["CultureInfo"].Value;
+        gClass.OrganizationCode = Request.Cookies["OrganizationCode"].Value;
+        txtHApplicationURL.Value = Request.Url.Scheme + "://" + Request.Url.Host + Request.ApplicationPath + "/";
+        txtHCulture.Value = Request.Cookies["CultureInfo"].Value;
+        intUserPracticeCode = Convert.ToInt32(Request.Cookies["UserPracticeCode"].Value);
+        intOrganizationCode = Convert.ToInt32(gClass.OrganizationCode);
+        lblPatientID.Text = "Patient ID: " + Request.Cookies["PatientCustomID"].Value;
+        if (! IsPostBack)
+        {
+            gClass.PatientID = Convert.ToInt64(Request.Cookies["PatientID"].Value);
+            txtDate.Text = DateTime.Now.ToShortDateString();
+            txtHCurrentDate.Value = DateTime.Now.ToShortDateString();
+            switch (Request.QueryString.Count)
+            {
+                case 0 :
+                    UploadFileProc();
+                    break;
+                case 1:    // called by AJAX when the EVENT TYPE is changed
+                    Response.Clear();
+                    FetchEventDate();
+                    Response.End();
+                    break;
+
+                case 2:    // called in VISIT Form when user clicks ADD DOCUMENT Button
+                    listEventName.Value = Request.QueryString["ET"];
+                    listEventName.Disabled = true;
+                    txtHEventID.Value = Request.QueryString["EID"];
+                    txtHEventDate.Value = GetEventDate();
+                    listEventDate.Disabled = true;
+                    break;
+
+                case 3:     // check Parent URL to redirect after uploading is finished
+                    CheckParentURL();
+                    break;
+            }
+        }
+        return;
+    }
+    #endregion
+
+    #region private void CheckParentURL()
+    private void CheckParentURL()
+    {
+        switch (Request.QueryString["PCode"])
+        {
+            case "1" :
+                //txtHParentURL.Value = "../PatientsVisits/ConsultFU1/ConsultFU1Form.aspx";
+                txtHParentURL.Value = "ConsultFU1Form.aspx";
+                // called in VISIT Form when user clicks ADD DOCUMENT Button
+                listEventName.Value = Request.QueryString["ET"];
+                listEventName.Disabled = true;
+                txtHEventID.Value = Request.QueryString["EID"];
+                txtHEventDate.Value = GetEventDate();
+                listEventDate.Disabled = true;
+                break;
+
+            case "2" :
+                txtHParentURL.Value = "../FileManagement/FileManagementForm.ASPX?ReLoad=1&QSN=" + Request.QueryString["QSN"];
+                txtHParentURL.Value += "&SD=" + Request.QueryString["SD"];
+                break;
+        }
+        return;
+    }
+    #endregion
+
+    #region private void UploadFileProc
+    private void UploadFileProc()
+    {
+        try
+        {
+            strDocumentName = uploadDocFile.PostedFile.FileName.ToUpper();
+
+            string strFilePath = GetFilePath(strDocumentName, Convert.ToByte(txtHFileType.Value));
+
+            if (System.IO.File.Exists(strFilePath))
+                System.IO.File.Delete(strFilePath);
+
+            uploadDocFile.PostedFile.SaveAs(strFilePath);
+            if (IsMovieFile(System.IO.Path.GetExtension(uploadDocFile.PostedFile.FileName))) // the type of document is VIDEO
+            {
+                Convert2FLVfile(strFilePath);
+            }
+            else
+            {
+                GetFileSize(strFilePath);
+                GetFileBinaryData(strFilePath);
+                strDocumentName = System.IO.Path.GetFileNameWithoutExtension(uploadDocFile.PostedFile.FileName);
+                strDocumentName += System.IO.Path.GetExtension(uploadDocFile.PostedFile.FileName);
+            }
+            SaveVisitDocumentData(strDocumentName, Convert.ToByte(txtHFileType.Value), txtDocLabel.Text.Trim(), txtDescription.Text.Trim());
+    
+            gClass.AddDocumentEventLog(intOrganizationCode.ToString(), Convert.ToInt32(txtHDocumentID.Value), 1, intUserPracticeCode, Request.Url.Host, "Upload file");
+            listEventName.SelectedIndex = 0; // Set the eventname to baseline after saving
+            txtHUploadResult.Value = "1";
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Upload Document Form", "Upload document", err.ToString());
+            txtHUploadResult.Value = "2";
+        }
+        Response.Clear();
+        return;
+    }
+    #endregion
+
+    #region private bool IsMovieFile
+    private bool IsMovieFile(string strExtention)
+    {
+        bool flag = false;
+        switch (strExtention.ToUpper().Replace(".", ""))
+        {
+            case "MOV" :
+            case "WMV":
+            case "AVI":
+            case "MPG":
+            case "MPEG":
+            case "RM":
+                flag = true;
+                break;
+        }
+        return (flag);
+    }
+    #endregion
+
+    #region private void Convert2FLVfile(string strVideoFileName)
+    private void Convert2FLVfile(string strVideoFileName)
+    {
+        System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo(System.IO.Path.Combine(Request.PhysicalApplicationPath, @"ffmpeg\ffmpeg.exe"));
+        startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Minimized;
+
+        System.Diagnostics.Process myProcess;
+        string strArguments, strFLVFileName ;
+
+        //startInfo.Arguments = "-y -i c:\\ffmpeg\\crysis.mpg -acodec mp3 -ar 22050 -sameq -f flv c:\\ffmpeg\\crysis.flv";
+
+        strDocumentName = System.IO.Path.GetFileNameWithoutExtension(uploadDocFile.PostedFile.FileName) + ".flv";
+        strArguments = "-y -i \"" + strVideoFileName + "\" -acodec mp3 -ar 22050 -sameq -f flv ";
+        //strFLVFileName = System.IO.Path.Combine(GetDocumentPath(Convert.ToByte(listDocType.selectedValue)),
+        strFLVFileName = System.IO.Path.Combine(GetDocumentPath(Convert.ToByte(txtHFileType.Value)),
+                            Request.Cookies["PatientID"].Value + "_" + strDocumentName);
+//                            System.IO.Path.GetFileNameWithoutExtension(uploadDocFile.PostedFile.FileName) + ".flv");
+
+        startInfo.Arguments = strArguments + "\"" + strFLVFileName + "\"";
+        myProcess = System.Diagnostics.Process.Start(startInfo);
+        //txtHFileName.Value = System.IO.Path.GetFileNameWithoutExtension(uploadDocFile.PostedFile.FileName) + ".flv";
+        //txtHPID.Value = myProcess.Id.ToString();
+        
+        //Response.Write(myProcess.StartTime.ToString() + "<br/>");
+        while (!myProcess.HasExited)
+        {
+            myProcess.Refresh();
+            System.Threading.Thread.Sleep(5000); // wait for 5 seconds, then check it again
+        }
+        //Response.Write(myProcess.ExitTime.ToString() + "<br/>");
+        myProcess.Dispose();
+
+        GetFileSize(strFLVFileName);
+        GetFileBinaryData(strFLVFileName);
+    }
+    #endregion
+
+    #region private string GetFilePath
+    private string GetFilePath(string fileName, int intFileType)
+    {
+        int intLastIndex = fileName.LastIndexOf("\\");
+        if (intLastIndex == 0)
+            intLastIndex = fileName.LastIndexOf("/");
+
+        fileName = fileName.Substring(intLastIndex + 1);
+        return System.IO.Path.Combine(GetDocumentPath(intFileType), Request.Cookies["PatientID"].Value + "_" + fileName);
+    }
+    #endregion
+
+    #region private void GetDocumentPath(int intFileType)
+    private string GetDocumentPath(int intFileType)
+    {
+        string uploadFolder, strFolder = "";
+        System.IO.DirectoryInfo di;
+
+        switch (intFileType)
+        {
+            case 1:
+                strFolder = "Photos";
+                break;
+            case 2:
+                strFolder = "Videos";
+                break;
+            case 3:
+                strFolder = "Documents";
+                break;
+        }
+
+        uploadFolder = System.IO.Path.Combine(this.Context.ApplicationInstance.Request.PhysicalApplicationPath, strFolder);
+
+        di = new System.IO.DirectoryInfo(uploadFolder);
+        if (di.Exists == false) // Create the directory only if it does not already exist.
+            di.Create();
+        return (uploadFolder);
+    }
+    #endregion
+
+    #region private void GetFileSize
+    private void GetFileSize(string strFileName)
+    {
+        System.IO.FileInfo finfo = new System.IO.FileInfo(strFileName);
+        FileSize = finfo.Length;
+    }
+    #endregion
+
+    #region private void SaveVisitDocumentData
+    private void SaveVisitDocumentData(string fileName, int filetype, string strDocumentName, string strDoc_Description)
+    {
+        string filePath = GetFilePath(fileName, filetype), strReturn;
+        GlobalClass gClass = new GlobalClass();
+        System.Data.SqlClient.SqlCommand    cmdSave = new System.Data.SqlClient.SqlCommand(),
+                                            cmdSaveContent = new System.Data.SqlClient.SqlCommand();
+
+        gClass.MakeStoreProcedureName(ref cmdSave, "sp_FileManagement_PatientDocuments_InsertData", true);
+        gClass.MakeStoreProcedureName(ref cmdSaveContent, "sp_FileManagement_PatientDocumentsContent_InsertData", true);
+
+        // Adding Parameters
+        cmdSave.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = intOrganizationCode;
+        cmdSave.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSave.Parameters.Add("@PatientID", System.Data.SqlDbType.Int);
+        cmdSave.Parameters.Add("@EventID", System.Data.SqlDbType.Int);
+        cmdSave.Parameters.Add("@EventDate", System.Data.SqlDbType.DateTime);
+        cmdSave.Parameters.Add("@EventLink", System.Data.SqlDbType.Char);
+        cmdSave.Parameters.Add("@DocumentType", System.Data.SqlDbType.SmallInt);
+        cmdSave.Parameters.Add("@DocumentFileName", System.Data.SqlDbType.VarChar, 100);
+        cmdSave.Parameters.Add("@DocumentName", System.Data.SqlDbType.VarChar, 50);
+        cmdSave.Parameters.Add("@DocumentFileSize", System.Data.SqlDbType.Int);
+        cmdSave.Parameters.Add("@UploadDate", System.Data.SqlDbType.DateTime);
+        cmdSave.Parameters.Add("@Doc_Description", System.Data.SqlDbType.VarChar, 1024);
+
+        cmdSaveContent.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = intOrganizationCode;
+        cmdSaveContent.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSaveContent.Parameters.Add("@tblPatientDocumentsID", System.Data.SqlDbType.Int);
+        cmdSaveContent.Parameters.Add("@ContentFile", System.Data.SqlDbType.Image);
+
+        // Initialising Parameters
+        cmdSave.Parameters["@PatientID"].Value = Convert.ToInt64(Request.Cookies["PatientID"].Value);
+        if (txtHEventID.Value.Equals("0") || (txtHEventID.Value.Trim() == "0"))
+            txtHEventID.Value = Request.Cookies["ConsultID"].Value;
+        cmdSave.Parameters["@EventID"].Value = Convert.ToInt64(txtHEventID.Value);
+
+        cmdSave.Parameters["@EventLink"].Value = listEventName.Value[0];
+
+        try { 
+            if (listEventName.Value[0] == 'B')
+                cmdSave.Parameters["@EventDate"].Value = Convert.ToDateTime(txtDate.Text); 
+            else
+                cmdSave.Parameters["@EventDate"].Value = Convert.ToDateTime(txtHEventDate.Value); 
+        }
+        catch { cmdSave.Parameters["@EventDate"].Value = DBNull.Value; }
+
+        
+        cmdSave.Parameters["@DocumentType"].Value = filetype;
+        cmdSave.Parameters["@DocumentFileName"].Value = fileName;
+        cmdSave.Parameters["@DocumentName"].Value = strDocumentName;
+        cmdSave.Parameters["@DocumentFileSize"].Value = FileSize;
+        try{cmdSave.Parameters["@UploadDate"].Value = Convert.ToDateTime(txtDate.Text);}
+        catch{cmdSave.Parameters["@UploadDate"].Value = DBNull.Value;}
+        cmdSave.Parameters["@Doc_Description"].Value = strDoc_Description;
+        cmdSaveContent.Parameters["@ContentFile"].Value = oDocumentByteArray;
+        try
+        {
+            txtHDocumentID.Value = gClass.SaveDocumentAndContent(cmdSave, cmdSaveContent).ToString();
+            strReturn = string.Empty;
+
+            gClass.SaveActionLog(gClass.OrganizationCode,
+                                 Request.Cookies["UserPracticeCode"].Value,
+                                 Request.Url.Host,
+                                 System.Configuration.ConfigurationManager.AppSettings["DocumentPage"].ToString(),
+                                 System.Configuration.ConfigurationManager.AppSettings["LogCreate"].ToString(),
+                                 "Save " + System.Configuration.ConfigurationManager.AppSettings["DocumentPage"].ToString() + " Data",
+                                 Request.Cookies["PatientID"].Value,
+                                 txtHDocumentID.Value);
+
+        }
+        catch (Exception err)
+        {
+            gClass.AddErrorLogData(Request.Cookies["UserPracticeCode"].Value, Request.Url.Host, Request.Cookies["Logon_UserName"].Value, "Upload Document Form", "SaveVisitDocumentData function", err.ToString());
+        }
+        return;
+    }
+    #endregion
+
+    #region private void GetFileBinaryData
+    private void GetFileBinaryData(string filePath)
+    {
+        System.IO.FileStream oImg;
+        System.IO.BinaryReader oBinaryReader;
+
+        oImg = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+        oBinaryReader = new System.IO.BinaryReader(oImg);
+        oDocumentByteArray = oBinaryReader.ReadBytes((int)oImg.Length);
+        oBinaryReader.Close();
+        oImg.Close();
+    }
+    #endregion
+
+    #region private void FetchEventDate()
+    private void FetchEventDate()
+    {
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand();
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_FileManagement_PatientDocuments_LoadEventDate", true);
+        cmdSelect.Parameters.Add("@OrganizationCode", System.Data.SqlDbType.Int).Value = intOrganizationCode;
+        cmdSelect.Parameters.Add("@UserPracticeCode", System.Data.SqlDbType.Int).Value = intUserPracticeCode;
+        cmdSelect.Parameters.Add("@PatientID", System.Data.SqlDbType.Int).Value = Convert.ToInt64(Request.Cookies["PatientID"].Value); 
+        cmdSelect.Parameters.Add("@EventType", System.Data.SqlDbType.Char).Value = Request.QueryString["ET"][0];
+        try{Response.Write(gClass.FetchData(cmdSelect, "tblEventDate").GetXml());}
+        catch (Exception err){Response.Write(err.ToString());}
+        Response.End();
+        return;
+    }
+    #endregion
+
+    #region private string GetEventDate
+    private string GetEventDate()
+    {
+        System.Data.SqlClient.SqlCommand cmdSelect = new System.Data.SqlClient.SqlCommand();
+        DataSet dsEvent;
+        string strDate = "";
+
+        gClass.MakeStoreProcedureName(ref cmdSelect, "sp_UploadDocument_LoadEventData", true);
+        cmdSelect.Parameters.Add("@EventID", System.Data.SqlDbType.Int).Value = Convert.ToInt32(Request.QueryString["EID"]);
+        cmdSelect.Parameters.Add("@EventType", System.Data.SqlDbType.Char).Value = Request.QueryString["ET"][0];
+
+        dsEvent = gClass.FetchData(cmdSelect, "tblEventData");
+        if ((dsEvent.Tables.Count > 0) && (dsEvent.Tables[0].Rows.Count > 0))
+            strDate = dsEvent.Tables[0].Rows[0]["EventDate"].ToString();
+        else strDate = "";
+        dsEvent.Dispose();
+
+        return (strDate);
+    }
+    #endregion
+
+    #region protected void btnUpload_onclick
+    protected void btnUpload_OnClick(object sender, EventArgs e)
+    {
+        UploadFileProc();
+    }
+    #endregion
+}

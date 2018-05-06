@@ -1,0 +1,325 @@
+<html xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+  <head>
+    <META http-equiv="Content-Type" content="text/html; charset=utf-16">
+    <title>LapBase - A Data Manager for Bariatric Surgery</title>
+    <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style type="text/css" media="screen">
+	    hr {
+		    border: 0px;
+		    border-top: 4px solid #d51c1c;
+		    height: 1px;
+		    background-color: #fff;
+		    color: #fff;
+		    margin: 10px 0;
+		    }
+	    table {
+		    padding: 0;
+		    }
+	    table tr {
+		    padding: 0;
+		    }
+	    table td {
+		    padding: 0;
+		    }
+	    .noPrint {
+		    margin: 0 0 20px 0;
+		    }	
+	    .printPage {
+		    border: 1px solid #ccc;
+		    width: 100%
+		    }
+	    .row01 {
+		    padding: 5px 0;
+		    background-color: #fdf1c1;
+		    }
+	    .row02 {
+		    padding: 5px 0;
+		    background-color: #f7eda8;
+		    border-bottom: 1px solid #e0d385;
+		    }	
+    </style>
+    <style type="text/css" media="print">
+		hr {
+		border: 0px;
+		border-top: 4px solid #d51c1c;
+		height: 1px;
+		background-color: #fff;
+		color: #fff;
+		margin: 10px 0;
+		}
+		.noPrint {
+		display: none;
+		}
+		.printPage {
+		margin: 0 auto;
+		border: 1px solid #666;
+		width: 98%;
+		page-break-after:always;
+		}
+		.row01 {
+		padding: 5px 0;
+		border-bottom: 1px solid #ccc;
+		}
+		.row02 {
+		padding: 5px 0;
+		border-bottom: 1px solid #ccc;
+		}
+	</style>
+  </head>
+  <body>
+    <div>
+      <table class="printPage" cellpadding="0" cellspacing="0">
+        <tr>
+          <td colspan="3"></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="&#xA;              font-size : large; font-weight:bold;&#xA;              padding:5cm 0 0 0&#xA;            ">
+          </td>
+          <td style="&#xA;              font-weight:bold;&#xA;              padding:5cm 0 0 0&#xA;            ">
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="font-size:medium; font-weight:bold;">
+          </td>
+          <td style="font-weight:bold;">
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+          </td>
+          <td style="font-weight:bold;">
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2"></td>
+          <td>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3"><br></td>
+        </tr>
+        <tr>
+          <td colspan="2"></td>
+          <td style="width:30%">Tuesday, April 27, 2010</td>
+        </tr>
+        <tr>
+          <td colspan="3"><br></td>
+        </tr>
+        <tr>
+          <td colspan="2">Dr Helen Tom</td>
+          <td style="width:30%"></td>
+        </tr>
+        <tr>
+          <td colspan="3">Golden City Medical Clinic</td>
+        </tr>
+        <tr>
+          <td colspan="3">103 Bridge Street</td>
+        </tr>
+        <tr>
+          <td colspan="3">BENDIGO   VIC   3550</td>
+        </tr>
+        <tr>
+          <td colspan="3"><br></td>
+        </tr>
+        <tr>
+          <td colspan="3">
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3"><br></td>
+        </tr>
+        <tr>
+          <td colspan="3"><br></td>
+        </tr>
+        <tr>
+          <td colspan="3"><label id="lblRe">RE : </label>  <span style="font-weight:bold;">Mrs. Kim Manley</span>   RSD L355  LOCKWOOD  3551  Age  35 yrs
+					</td>
+        </tr>
+        <tr>
+          <td colspan="3">Kim<label id="lblWasRecently">  was recently reviewed and a copy of  follow-up details are enclosed.</label></td>
+        </tr>
+        <tr>
+          <td colspan="3"><br></td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <hr>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <h3 id="lblInitialAssessment">Initial Assessment</h3>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <table style="width:50%" border="0" cellpadding="0" cellspacing="0">
+              <tr style="height:20px">
+                <td style="width:12%;" id="lblHeight">Height :</td>
+                <td style="width:8%">174</td>
+                <td style="width:7%">cms</td>
+                <td style="width:20%" id="lblIdealWeight">Ideal Weight : </td>
+                <td style="width:8%">75</td>
+                <td style="width:7%">kg</td>
+              </tr>
+              <tr style="height:20px">
+                <td id="lblWeight">Weight : </td>
+                <td>140.1</td>
+                <td>kg</td>
+                <td id="lblTargetWeight">Target Weight : </td>
+                <td>97.1</td>
+                <td>kg</td>
+              </tr>
+              <tr style="height:20px">
+                <td id="lblBMI">BMI : </td>
+                <td>46</td>
+                <td></td>
+                <td id="lblAboveIdealWeight">% above Ideal  Weight : </td>
+                <td>
+                </td>
+                <td></td>
+              </tr>
+              <tr style="height:20px">
+                <td id="lblOperationDate">Operation Date : </td>
+                <td colspan="2">30-Jun-2008</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <hr>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <h3 id="lblFollowUp">Follow Up</h3>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <table style="width:100%" border="0">
+              <tr style="text-align:Left; height:25px; font-size:small; font-family:Arial">
+                <td style="width:15%"></td>
+                <td style="width:15%" id="lblDate_TC">Date</td>
+                <td style="width:10%" id="lblWeeks_TC">Weeks</td>
+                <td style="width:10%"><label id="lblCurrent_TC">Current</label> (kg)
+								</td>
+                <td style="width:10%"><label id="lblLoss_TC">Loss</label> (kg)
+								</td>
+                <td style="width:10%" id="lblBMI_TC">BMI</td>
+                <td style="width:10%" id="lblEWL_TC">% EWL</td>
+                <td style="width:15%" id="lblReservoirVolume_TC">Reservoir Volume</td>
+                <td></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <hr style="border-top: 1px solid #ccc;" color="brown" size="3">
+          </td>
+        </tr>
+        <tr class="row02">
+          <td colspan="3">
+            <table border="0" style="width:100%">
+              <tr>
+                <td style="width:15%">Prof Paul O`Brien</td>
+                <td style="width:15%">30-Jun-2008</td>
+                <td style="width:10%"></td>
+                <td style="width:10%">140.1</td>
+                <td style="width:10%">0</td>
+                <td style="width:10%">46.24</td>
+                <td style="width:10%">
+                </td>
+                <td style="width:15%">4.0 mls
+											  </td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td colspan="7">Routine placement APS band (liver biopsy)</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div><br></body>
+</html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head id="PageHeader"><title>
+	LapBase - A Data Manager for Bariatric Surgery
+</title><link rel="stylesheet" type="text/css" href="http://192.168.100.79/css/admin_common.css" />
+    <style type="text/css" media="screen">
+	    body {
+		    margin: 0;
+		    padding: 40px 20px 20px 20px;
+		    color: #000;
+		    font-size: 76%;
+		    font-family: "lucida grande", arial, verdana, helvetica, sans-serif;
+		    }
+	</style>
+	<style type="text/css" media="print">
+	    body {
+		    margin: 0;
+		    padding: 0;
+		    color: #000;
+		    font-size: 76%;
+		    font-family: arial, verdana, helvetica, sans-serif;
+		    }
+    </style>
+    <script type = "text/javascript" src = "../Scripts/Global.js"></script>
+    <script type = "text/javascript" language = "javascript">
+        function body_onload(){
+            InitializePage('frmBuildReport');
+            window.setTimeout("javascript:btnBuildReport_onclientclick();", 10);
+        }
+        function btnBuildReport_onclientclick(){
+            ShowDivMessage("The '" + document.title + "' is being built...", false);
+            __doPostBack('btnBuildReport','');
+        }
+    </script>
+</head>
+<body id="bodyReport">
+    <form name="frmBuildReport" method="post" action="BuildReportPage.aspx?RP=RDL&amp;PID=4632&amp;Param=0101000%3bTomH" id="frmBuildReport">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="7xJI4jbf9P5J2m/XaNQOUqohWVWW4Sq4RIkWmTiijHE=" />
+
+<script type="text/javascript">
+<!--
+var theForm = document.forms['frmBuildReport'];
+if (!theForm) {
+    theForm = document.frmBuildReport;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+// -->
+</script>
+
+
+        <a onclick="javascript:btnBuildReport_onclientclick();" id="btnBuildReport" href="javascript:__doPostBack('btnBuildReport','')" style="display:none">Build Report</a>
+        <div style="width:100%;text-align:right" class="noPrint">
+            <input value="Print" onclick="javascript:window.print();" type="button" style="width:75px" id="btnPrint"/>
+	        <input name="btnClose" type="button" id="btnClose" value="Close" onclick="javascript:window.close();" style="width:75px" />
+        </div>
+        <span id="tcXML"></span>
+        
+        
+        <input type="hidden" name="TitleLoaded" id="TitleLoaded" value="0" />
+        <input type="hidden" name="txtReportCode" id="txtReportCode" value="RDL" />
+        <input type="hidden" name="txtReportName" id="txtReportName" value="Ref. Doctor Letter" />
+    
+<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="" /></form>
+</body>
+<script type = "text/javascript" language = "javascript">
+    document.title = document.forms[0].txtReportName.value;
+</script>
+</html>
